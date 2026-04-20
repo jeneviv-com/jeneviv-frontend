@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Jeneviv — Collections, Handled.",
+  title: "Jeneviv — Track bulk payments with ease.",
   description: "Jeneviv gives any group coordinator a payment link, real-time dashboard, and verified payer report — without a single screenshot or spreadsheet.",
 };
 
