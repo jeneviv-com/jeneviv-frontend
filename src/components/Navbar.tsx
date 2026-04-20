@@ -18,7 +18,6 @@ export default function Navbar({ scrolled, mobileOpen, setMobileOpen, scrollTo }
           <li><button className="nav-link-btn" onClick={() => scrollTo("how")}>How it works</button></li>
           <li><button className="nav-link-btn" onClick={() => scrollTo("who")}>For who</button></li>
           <li><button className="nav-link-btn" onClick={() => scrollTo("pricing")}>Pricing</button></li>
-          <li><button className="nav-pill" onClick={() => scrollTo("waitlist")}>Join waitlist →</button></li>
         </ul>
         <button className="hamburger" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Menu">
           <span></span><span></span><span></span>
@@ -29,7 +28,6 @@ export default function Navbar({ scrolled, mobileOpen, setMobileOpen, scrollTo }
         <button onClick={() => scrollTo("how")}>How it works</button>
         <button onClick={() => scrollTo("who")}>For who</button>
         <button onClick={() => scrollTo("pricing")}>Pricing</button>
-        <button className="mob-cta" onClick={() => scrollTo("waitlist")}>Join waitlist →</button>
       </div>
     </>
   );
