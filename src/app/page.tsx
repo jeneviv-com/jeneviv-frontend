@@ -365,7 +365,7 @@ export default function Home() {
         <div className="cta-circle-1"></div><div className="cta-circle-2"></div>
         <h2>Ready to end<br />the <em>receipt chaos?</em></h2>
         <p>Join coordinators across Nigeria — universities, PTAs, cooperatives, associations — collecting smarter with Jeneviv.</p>
-        <a href="mailto:hello@jeneviv.ng" className="cta-btn">Get early access →</a>
+        <a href="mailto:myjeneviv@gmail.com" className="cta-btn">Contact us</a>
       </div>
 
       {/* FOOTER */}
@@ -381,7 +381,7 @@ export default function Home() {
             <li><button onClick={() => scrollTo("pricing")}>Pricing</button></li>
           </ul></div>
           <div className="ft-col"><h4>Company</h4><ul>
-            <li><a href="#">About</a></li><li><a href="#">Blog</a></li><li><a href="mailto:hello@jeneviv.ng">Contact</a></li>
+            <li><a href="#">About</a></li><li><a href="#">Blog</a></li><li><a href="mailto:myjeneviv@gmail.com">Contact</a></li>
           </ul></div>
           <div className="ft-col"><h4>Legal</h4><ul>
             <li><a href="#">Privacy Policy</a></li><li><a href="#">Terms of Service</a></li><li><a href="#">Refund Policy</a></li>
