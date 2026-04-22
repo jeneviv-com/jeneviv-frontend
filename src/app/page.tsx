@@ -108,7 +108,7 @@ export default function Home() {
                 <div>
                   <div className="dash-collection-sub">Active Collection</div>
                   <div className="dash-collection-name">
-                    300L ENG4201 Handout
+                    300L CSC311 Handout
                   </div>
                 </div>
                 <div className="live-chip">LIVE</div>
