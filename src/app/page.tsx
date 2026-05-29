@@ -1,32 +1,97 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
+
+const USE_CASES = [
+  {
+    eyebrow: "Universities",
+    title: "Course rep collections",
+    amount: "₦1.4M",
+    progress: 78,
+    sub: "Handouts, manuals, departmental levies",
+  },
+  {
+    eyebrow: "PTA",
+    title: "Project levy",
+    amount: "₦820k",
+    progress: 64,
+    sub: "Termly fees and school projects",
+  },
+  {
+    eyebrow: "Cooperative",
+    title: "Monthly thrift",
+    amount: "₦2.3M",
+    progress: 88,
+    sub: "Member contributions and dues",
+  },
+  {
+    eyebrow: "Association",
+    title: "Annual dues",
+    amount: "₦615k",
+    progress: 52,
+    sub: "Professional & alumni groups",
+  },
+];
+
+const CHECKLIST = [
+  "Dedicated virtual account per payer — no narration matching, no ambiguity",
+  "Webhook-verified payments — cryptographically confirmed, fraud structurally impossible",
+  "Same-day settlement twice daily including weekends",
+  "One-click PDF payer report — name, ID number, amount, date, transaction reference",
+  "Automated reminders to non-payers with a single tap",
+  "Duplicate payment detection — same ID cannot pay the same collection twice",
+  "No app download required for payers — works on any phone, any browser",
+];
+
+const TRUST = [
+  {
+    title: "Regulated infrastructure",
+    body: "Payments processed by Flutterwave — a CBN-licensed payment service provider operating under full regulatory compliance in Nigeria.",
+  },
+  {
+    title: "We never see your card",
+    body: "Jeneviv does not store, process, or transmit card numbers. All card handling is delegated to Flutterwave, which is PCI-DSS Level 1 certified.",
+  },
+  {
+    title: "Your data, protected",
+    body: "We collect only what we need — name, ID number, and email. Data is encrypted at rest and never sold. We are compliant with Nigeria's Data Protection Act 2023.",
+  },
+  {
+    title: "Two-factor authentication",
+    body: "Coordinator accounts are protected with email OTP verification. No password alone is sufficient to access a Jeneviv coordinator account.",
+  },
+  {
+    title: "Fraud-proof by design",
+    body: "Every payment is confirmed via Flutterwave webhook — not by reading a screenshot, checking a narration, or trusting a user's word. A payment either happened or it didn't.",
+  },
+  {
+    title: "Reconciliation runs continuously",
+    body: "A background job queries Flutterwave every 15 minutes to catch any payment where money left a payer's bank but the webhook was delayed. Nothing falls through.",
+  },
+];
+
+const STATS = [
+  { n: "274", l: "Accredited Nigerian universities" },
+  { n: "35,000+", l: "Secondary schools with active PTAs" },
+  { n: "20,000+", l: "Registered cooperative societies" },
+  { n: "₦25B+", l: "Estimated annual informal collection value" },
+  { n: "8 hrs", l: "Average time wasted per collection manually" },
+  { n: "0", l: "Platforms built for this problem — until now" },
+];
+
+const LAUNCH_UNIS = ["FOCOSA", "NACOS", "UNIUYO"];
+
+const ACTIVE_UNIS = ["FOCOSA", "NACOS", "UNIUYO"];
 
 export default function Home() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [activeTab, setActiveTab] = useState("uni");
-  const [collectingWord, setCollectingWord] = useState("collecting.");
-  const [wordVisible, setWordVisible] = useState(true);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const synonyms = ["collecting.", "gathering.", "compiling.", "banking."];
-    let idx = 0;
-    const interval = setInterval(() => {
-      setWordVisible(false);
-      setTimeout(() => {
-        idx = (idx + 1) % synonyms.length;
-        setCollectingWord(synonyms[idx]);
-        setWordVisible(true);
-      }, 350);
-    }, 2200);
-    return () => clearInterval(interval);
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
@@ -34,10 +99,10 @@ export default function Home() {
       (entries) => {
         entries.forEach((e, i) => {
           if (e.isIntersecting)
-            setTimeout(() => e.target.classList.add("vis"), i * 80);
+            setTimeout(() => e.target.classList.add("vis"), i * 70);
         });
       },
-      { threshold: 0.08 },
+      { threshold: 0.12 },
     );
     document
       .querySelectorAll(".reveal, .stagger")
@@ -60,726 +125,556 @@ export default function Home() {
       />
 
       {/* HERO */}
-      <div className="hero-wrap">
-        <div className="blob blob-1"></div>
-        <div className="blob blob-2"></div>
-        <div className="hero-inner">
-          <div className="hero-left">
-            <h1>
-              Stop verifying
-              <br />
-              <span className="line-italic">WhatsApp receipts.</span>
-              Start{" "}
-              <span
-                className={`highlight collecting-word${wordVisible ? " vis" : " out"}`}
-              >
-                {collectingWord}
-              </span>
+      <section className="k-hero">
+        <div className="k-hero-inner reveal">
+          <div className="k-hero-copy">
+            <h1 className="k-h1">
+              One place to <span className="k-h1-accent">collect it all</span>
             </h1>
-            <p className="hero-sub">
-              Jeneviv gives any group coordinator a payment link, real-time
-              dashboard, and verified payer report — without a single screenshot
-              or spreadsheet.
+            <p className="k-lede">
+              Jeneviv gives course reps, PTA chairs, cooperative secretaries,
+              and group coordinators a payment link, real-time dashboard, and
+              verified payer report — without a single screenshot, spreadsheet,
+              or WhatsApp message.
             </p>
-            <div className="hero-actions">
+            <div className="k-hero-cta">
+              <Link href="/auth/signup" className="k-btn-primary">
+                Get started
+              </Link>
               <button
-                className="btn-primary"
-                onClick={() => scrollTo("waitlist")}
+                className="k-btn-ghost"
+                onClick={() => scrollTo("how")}
+                type="button"
               >
-                See how it works
-              </button>
-              <button className="btn-demo" onClick={() => scrollTo("how")}>
-                ▶ Watch a demo
+                See how it works ↓
               </button>
             </div>
           </div>
-          <div className="hero-visual">
-            <div className="char-blob char-blob-1"></div>
-            <div className="char-blob char-blob-2"></div>
-            <div className="notif notif-1">
-              <div className="notif-icon">✅</div>
-              <div>
-                <div className="notif-title">Payment confirmed</div>
-                <div className="notif-sub">Receipt sent · just now</div>
+          <div className="k-hero-laptop" aria-hidden="true">
+            <div className="k-laptop">
+              <div className="k-laptop-bezel">
+                <div className="k-laptop-camera"></div>
+                <div className="k-laptop-screen">
+                  <div className="k-lap-top">
+                    <span className="k-lap-brand">jeneviv</span>
+                    <div className="k-lap-top-actions">
+                      <span className="k-lap-dot k-lap-dot-1"></span>
+                      <span className="k-lap-dot k-lap-dot-2"></span>
+                      <span className="k-lap-dot k-lap-dot-3"></span>
+                    </div>
+                  </div>
+                  <div className="k-lap-body">
+                    <aside className="k-lap-side">
+                      <div className="k-lap-side-item active">
+                        <span className="k-lap-ic">▦</span> Dashboard
+                      </div>
+                      <div className="k-lap-side-item">
+                        <span className="k-lap-ic">▤</span> Collections
+                      </div>
+                      <div className="k-lap-side-item">
+                        <span className="k-lap-ic">▣</span> Payers
+                      </div>
+                      <div className="k-lap-side-item">
+                        <span className="k-lap-ic">◈</span> Wallet
+                      </div>
+                      <div className="k-lap-side-item">
+                        <span className="k-lap-ic">⇄</span> Transactions
+                      </div>
+                      <div className="k-lap-side-item">
+                        <span className="k-lap-ic">↺</span> Refunds
+                      </div>
+                      <div className="k-lap-side-label">Accept payments</div>
+                      <div className="k-lap-side-item">
+                        <span className="k-lap-ic">▪</span> Jeneviv Pay
+                      </div>
+                      <div className="k-lap-side-item">
+                        <span className="k-lap-ic">⊞</span> Payment Link
+                      </div>
+                      <div className="k-lap-side-item">
+                        <span className="k-lap-ic">⊟</span> Settlements
+                      </div>
+                      <div className="k-lap-contact">Contact us</div>
+                    </aside>
+                    <div className="k-lap-main">
+                      <div className="k-lap-feature">
+                        <div className="k-lap-feature-text">
+                          <h4>Start a collection today</h4>
+                          <p>
+                            Effortless, secure, and instant collections for
+                            Nigerian groups with Jeneviv&apos;s payment links.
+                          </p>
+                          <button className="k-lap-feature-btn">
+                            Create collection
+                          </button>
+                        </div>
+                      </div>
+                      <div className="k-lap-section-title">
+                        Collections overview
+                      </div>
+                      <div className="k-lap-stats">
+                        <div className="k-lap-stat">
+                          <div className="k-lap-stat-l">Today</div>
+                          <div className="k-lap-stat-n">₦1,652.50</div>
+                        </div>
+                        <div className="k-lap-stat">
+                          <div className="k-lap-stat-l">This week</div>
+                          <div className="k-lap-stat-n">₦184,500</div>
+                        </div>
+                        <div className="k-lap-stat">
+                          <div className="k-lap-stat-l">This month</div>
+                          <div className="k-lap-stat-n">₦612,300</div>
+                        </div>
+                      </div>
+                      <div className="k-lap-chart">
+                        <div className="k-lap-chart-head">
+                          <span>Collections</span>
+                          <span className="k-lap-chart-peak">₦4,000</span>
+                        </div>
+                        <svg
+                          className="k-lap-chart-svg"
+                          viewBox="0 0 300 90"
+                          preserveAspectRatio="none"
+                        >
+                          <defs>
+                            <linearGradient
+                              id="kFill"
+                              x1="0"
+                              x2="0"
+                              y1="0"
+                              y2="1"
+                            >
+                              <stop
+                                offset="0"
+                                stopColor="#FE4900"
+                                stopOpacity="0.25"
+                              />
+                              <stop
+                                offset="1"
+                                stopColor="#FE4900"
+                                stopOpacity="0"
+                              />
+                            </linearGradient>
+                          </defs>
+                          <path
+                            d="M0,70 C30,55 50,40 75,55 C105,72 130,30 160,40 C195,52 215,15 250,28 L300,18 L300,90 L0,90 Z"
+                            fill="url(#kFill)"
+                          />
+                          <path
+                            d="M0,70 C30,55 50,40 75,55 C105,72 130,30 160,40 C195,52 215,15 250,28 L300,18"
+                            stroke="#FE4900"
+                            strokeWidth="2"
+                            fill="none"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="dash-card">
-              <div className="dash-top">
-                <div>
-                  <div className="dash-collection-sub">Active Collection</div>
-                  <div className="dash-collection-name">
-                    300L CSC311 Handout
-                  </div>
-                </div>
-                <div className="live-chip">LIVE</div>
-              </div>
-              <div className="dash-body">
-                <div className="amount-display">
-                  <div>
-                    <div className="amount-label">Total collected</div>
-                    <div className="amount-main">₦340,000</div>
-                  </div>
-                  <div className="amount-target">
-                    <div className="amount-label">Target</div>
-                    <div className="t-num">₦500,000</div>
-                  </div>
-                </div>
-                <div className="prog-wrap">
-                  <div className="prog-labels">
-                    <span>136 of 200 paid</span>
-                    <span className="prog-pct">68%</span>
-                  </div>
-                  <div className="prog-track">
-                    <div className="prog-bar"></div>
-                  </div>
-                </div>
-                <div className="payers">
-                  <div className="payer">
-                    <div className="payer-av" style={{ background: "#3D1F8F" }}>
-                      A
-                    </div>
-                    <div className="payer-info">
-                      <div className="payer-name">Adaeze Okonkwo</div>
-                      <div className="payer-reg">20/ENG/001</div>
-                    </div>
-                    <span className="status-pill s-paid">Paid</span>
-                  </div>
-                  <div className="payer">
-                    <div className="payer-av" style={{ background: "#fe4900" }}>
-                      E
-                    </div>
-                    <div className="payer-info">
-                      <div className="payer-name">Emeka Nwosu</div>
-                      <div className="payer-reg">20/ENG/004</div>
-                    </div>
-                    <span className="status-pill s-paid">Paid</span>
-                  </div>
-                  <div className="payer">
-                    <div className="payer-av" style={{ background: "#2ABFAA" }}>
-                      F
-                    </div>
-                    <div className="payer-info">
-                      <div className="payer-name">Fatima Musa</div>
-                      <div className="payer-reg">20/ENG/007</div>
-                    </div>
-                    <span className="status-pill s-pend">Pending</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="notif notif-2">
-              <div className="notif-icon">📄</div>
-              <div>
-                <div className="notif-title">Report ready</div>
-                <div className="notif-sub">136 payers · PDF export</div>
+              <div className="k-laptop-base">
+                <div className="k-laptop-notch"></div>
               </div>
             </div>
           </div>
         </div>
-        {/* MARQUEE */}
-        <div className="marquee-section">
-          <div className="marquee-track">
-            {[
-              { color: "#8B6BF5", text: "No more WhatsApp receipts" },
-              { color: "#fe4900", text: "Instant verification" },
-              { color: "#2ABFAA", text: "One-click PDF reports" },
-              { color: "#fe4900", text: "Free for coordinators" },
-              { color: "#8B6BF5", text: "Flutterwave powered" },
-              { color: "#fe4900", text: "Zero fraud risk" },
-              { color: "#2ABFAA", text: "Built for Nigeria" },
-              { color: "#8B6BF5", text: "No more WhatsApp receipts" },
-              { color: "#fe4900", text: "Instant verification" },
-              { color: "#2ABFAA", text: "One-click PDF reports" },
-              { color: "#fe4900", text: "Free for coordinators" },
-              { color: "#8B6BF5", text: "Flutterwave powered" },
-              { color: "#fe4900", text: "Zero fraud risk" },
-              { color: "#2ABFAA", text: "Built for Nigeria" },
-            ].map((item, i) => (
-              <span key={i} className="m-item">
-                <span
-                  className="m-gem"
-                  style={{ background: item.color }}
-                ></span>
-                {item.text}
+      </section>
+
+      {/* LAUNCHING AT */}
+      <section className="k-launch">
+        <span className="k-launch-label">Organization who use Jeneviv</span>
+        <div className="k-launch-pills">
+          {LAUNCH_UNIS.map((u) => (
+            <span key={u} className="k-launch-pill">
+              {u}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* FEATURE 1 — for coordinators */}
+      <section className="k-feat" id="how">
+        <div className="k-feat-inner reveal">
+          <div className="k-feat-copy">
+            <span className="k-feat-eyebrow">For Coordinators</span>
+            <h2 className="k-h2">
+              Create a collection. Share a link. We handle everything else.
+            </h2>
+            <p className="k-body">
+              Set up a payment collection in under two minutes — name it, set
+              the amount, configure what info you need from each payer, and
+              share a unique link. Jeneviv automatically verifies every payment
+              via Flutterwave, captures payer identity, and updates your
+              dashboard in real time. No receipt chasing. No manual
+              spreadsheets. No follow-up calls.
+            </p>
+            <Link href="/auth/signup" className="k-link-arrow">
+              Create your first collection <span aria-hidden>→</span>
+            </Link>
+          </div>
+          <div className="k-feat-visual k-feat-visual-1" aria-hidden="true">
+            <div className="k-mock-card">
+              <div className="k-mock-card-head">
+                <span className="k-mock-live">● LIVE</span>
+                <span className="k-mock-tag">CSC311 Handout</span>
+              </div>
+              <div className="k-mock-amt">₦340,000</div>
+              <div className="k-mock-sub">collected from 136 of 200 payers</div>
+              <div className="k-mock-track">
+                <div className="k-mock-bar" style={{ width: "68%" }} />
+              </div>
+              <div className="k-mock-rows">
+                {[
+                  ["Adaeze Okonkwo", "20/ENG/001", "on"],
+                  ["Emeka Nwosu", "20/ENG/004", "on"],
+                  ["Fatima Musa", "20/ENG/007", ""],
+                ].map(([n, id, m]) => (
+                  <div className="k-mock-row" key={n}>
+                    <div className="k-mock-name">{n}</div>
+                    <div className="k-mock-id">{id}</div>
+                    <div className={`k-mock-mark${m === "on" ? " on" : ""}`}>
+                      {m === "on" ? "+" : "·"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURE 2 — for payers */}
+      <section className="k-feat k-feat-alt">
+        <div className="k-feat-inner reveal reverse">
+          <div className="k-feat-copy">
+            <span className="k-feat-eyebrow">For Payers</span>
+            <h2 className="k-h2">Pay in 60 seconds. Receipt in your inbox.</h2>
+            <p className="k-body">
+              Open the link your coordinator shared, enter your name and ID
+              number, and transfer the exact amount to your dedicated account.
+              Jeneviv confirms your payment automatically — no login, no app
+              download, no sending screenshots to prove you paid. Your receipt
+              arrives by email within 60 seconds and stays downloadable forever.
+            </p>
+            <Link href="/auth/signup" className="k-link-arrow">
+              See how paying works <span aria-hidden>→</span>
+            </Link>
+          </div>
+          <div className="k-feat-visual k-feat-visual-2" aria-hidden="true">
+            <div className="k-phone">
+              <div className="k-phone-notch" />
+              <div className="k-phone-screen">
+                <div className="k-phone-bar">9:41</div>
+                <div className="k-phone-h">Pay your levy</div>
+                <div className="k-phone-card">
+                  <div className="k-phone-row">
+                    <span>Amount</span>
+                    <strong>₦2,500</strong>
+                  </div>
+                  <div className="k-phone-row">
+                    <span>Bank</span>
+                    <strong>Wema</strong>
+                  </div>
+                  <div className="k-phone-row">
+                    <span>Account</span>
+                    <strong>3911 4928 19</strong>
+                  </div>
+                </div>
+                <div className="k-phone-toast">
+                  <div className="k-phone-toast-ico">+</div>
+                  <div>
+                    <div className="k-phone-toast-t">Payment confirmed</div>
+                    <div className="k-phone-toast-s">Receipt sent · now</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURE 3 — for everyone (STAT CARDS) */}
+      <section className="k-feat k-feat-cream" id="who">
+        <div className="k-feat-inner reveal">
+          <div className="k-feat-copy">
+            <span className="k-feat-eyebrow">Built for Nigeria</span>
+            <h2 className="k-h2">
+              From universities to cooperatives — one platform for every group
+              collection
+            </h2>
+            <p className="k-body">
+              Jeneviv starts where the pain is most acute — Nigerian university
+              course reps collecting for handouts, manuals, and departmental
+              levies. But the same infrastructure works for PTAs collecting
+              school fees, cooperative societies running monthly thrift,
+              professional associations collecting annual dues, and faith
+              communities running building fund drives. Any coordinator. Any
+              group. Any collection.
+            </p>
+            <Link href="/auth/signup" className="k-link-arrow">
+              See all use cases <span aria-hidden>→</span>
+            </Link>
+          </div>
+          <div className="k-usecase-grid stagger">
+            {USE_CASES.map((u) => (
+              <div className="k-usecase" key={u.title}>
+                <span className="k-usecase-eyebrow">{u.eyebrow}</span>
+                <h3 className="k-usecase-title">{u.title}</h3>
+                <div className="k-usecase-amt">{u.amount}</div>
+                <div className="k-usecase-track">
+                  <div
+                    className="k-usecase-bar"
+                    style={{ width: `${u.progress}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURE 4 — settlement */}
+      <section className="k-feat" id="payments">
+        <div className="k-feat-inner reveal reverse">
+          <div className="k-feat-copy">
+            <span className="k-feat-eyebrow">Settlement</span>
+            <h2 className="k-h2">
+              Funds in your account the same day. Not tomorrow.
+            </h2>
+            <p className="k-body">
+              Every payment made on Jeneviv settles to your bank account twice
+              daily — including weekends and public holidays — powered by
+              Flutterwave&apos;s infrastructure. No waiting until the next
+              business day. No holding funds on a platform wallet. When your
+              students pay on Saturday morning, you have the money by Saturday
+              evening. Exactly when you need it.
+            </p>
+            <Link href="/auth/signup" className="k-link-arrow">
+              Learn about settlement <span aria-hidden>→</span>
+            </Link>
+          </div>
+          <div className="k-feat-visual k-feat-visual-3" aria-hidden="true">
+            <div className="k-settle">
+              <div className="k-settle-row">
+                <div className="k-settle-time">10:00</div>
+                <div className="k-settle-line">
+                  <span className="k-settle-dot on" />
+                  <div className="k-settle-body">
+                    <strong>Morning settlement</strong>
+                    <span>₦184,500 sent to Wema ••2104</span>
+                  </div>
+                </div>
+              </div>
+              <div className="k-settle-row">
+                <div className="k-settle-time">22:00</div>
+                <div className="k-settle-line">
+                  <span className="k-settle-dot on" />
+                  <div className="k-settle-body">
+                    <strong>Evening settlement</strong>
+                    <span>₦96,300 sent to Wema ••2104</span>
+                  </div>
+                </div>
+              </div>
+              <div className="k-settle-row">
+                <div className="k-settle-time">Sat</div>
+                <div className="k-settle-line">
+                  <span className="k-settle-dot" />
+                  <div className="k-settle-body">
+                    <strong>Weekend payouts included</strong>
+                    <span>Same schedule. Every day. No exceptions.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CHECKLIST */}
+      <section className="k-check">
+        <div className="k-check-inner reveal">
+          <h2 className="k-h2 k-h2-center">
+            Built for the way Nigerian groups actually collect money
+          </h2>
+          <ul className="k-check-list stagger">
+            {CHECKLIST.map((c) => (
+              <li key={c}>
+                <span className="k-check-ic" aria-hidden="true">+</span>
+                <span>{c}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* TRUST */}
+      <section className="k-trust">
+        <div className="k-trust-inner reveal">
+          <div className="k-trust-head">
+            <h2 className="k-h2">Your collections are safe with us</h2>
+            <p className="k-body">
+              Every naira collected through Jeneviv is handled by regulated,
+              licenced payment infrastructure. We never touch card data, never
+              hold funds on a platform wallet, and never process a payment that
+              hasn&apos;t been cryptographically verified.
+            </p>
+          </div>
+          <div className="k-trust-grid stagger">
+            {TRUST.map((t) => (
+              <div className="k-trust-card" key={t.title}>
+                <h4 className="k-trust-title">{t.title}</h4>
+                <p className="k-trust-body">{t.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* STATS */}
+      <section className="k-stats">
+        <div className="k-stats-inner reveal">
+          <h2 className="k-h2">The problem in numbers</h2>
+          <div className="k-stats-grid stagger">
+            {STATS.map((s) => (
+              <div className="k-stat" key={s.l}>
+                <div className="k-stat-n">{s.n}</div>
+                <div className="k-stat-l">{s.l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* WHERE WE'RE ACTIVE */}
+      <section className="k-active">
+        <div className="k-active-inner reveal">
+          <h2 className="k-h2">Where we&apos;re launching</h2>
+          <p className="k-body k-body-max">
+            Jeneviv launches across Nigerian universities in 2026, starting with
+            federal, state, and private institutions in Lagos, Rivers, Akwa
+            Ibom, Imo, Enugu, Oyo, Kwara, and Adamawa — then expanding to
+            secondary schools, cooperatives, and associations nationwide.
+          </p>
+          <div className="k-active-pills">
+            {ACTIVE_UNIS.map((u) => (
+              <span key={u} className="k-active-pill">
+                {u}
               </span>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* LOGOS */}
-      <div className="logos-band">
-        <span className="logos-label">Launching at</span>
-        {[
-          "UNILAG",
-          "UNIBEN",
-          "OAU",
-          "LAUTECH",
-          "FUTA",
-          "UNIZIK",
-          "ABU",
-          "UNIUYO",
-        ].map((u) => (
-          <span key={u} className="uni-pill">
-            {u}
-          </span>
-        ))}
-      </div>
-
-      {/* HOW IT WORKS */}
-      <div
-        style={{
-          background: "var(--card)",
-          borderTop: "1px solid var(--rule)",
-        }}
-      >
-        <div className="sec reveal" id="how">
-          <div className="stag-label">// How it works</div>
-          <h2>
-            From link to <em>documentation</em>
-            <br />
-            in under 60 seconds
-          </h2>
-          <p className="sec-sub">
-            Create a collection, share a link, let Flutterwave confirm every
-            payment. Your payer list builds itself.
+      {/* CTA BAND */}
+      <section className="k-cta" id="waitlist">
+        <div className="k-cta-inner reveal">
+          <h2 className="k-cta-h">Ready to end the receipt chaos?</h2>
+          <p className="k-cta-body">
+            Join coordinators across Nigeria — universities, PTAs, cooperatives,
+            associations, and faith groups — who are collecting smarter with
+            Jeneviv. Free to start. Takes two minutes.
           </p>
-          <div className="hiw-grid stagger">
-            <div className="hiw-card">
-              <div className="hiw-num">01</div>
-              <h3>Create a collection</h3>
-              <p>
-                Set name, amount, deadline, and member fields. Done in 2 minutes
-                — no IT department, no approval needed.
-              </p>
-            </div>
-            <div className="hiw-card">
-              <div className="hiw-num">02</div>
-              <h3>Share the link</h3>
-              <p>
-                Unique payment URL and QR code generated instantly. Drop it in
-                your WhatsApp group — no app download needed.
-              </p>
-            </div>
-            <div className="hiw-card">
-              <div className="hiw-num">03</div>
-              <h3>Members pay instantly</h3>
-              <p>
-                Bank transfer via Flutterwave. Webhook confirms in seconds.
-                Receipt email sent. Dashboard updates live.
-              </p>
-            </div>
-            <div className="hiw-card">
-              <div className="hiw-num">04</div>
-              <h3>Export your report</h3>
-              <p>
-                One-click PDF — name, ID, amount, date. Ready for your HOD,
-                vendor, auditor, or board.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* FOR WHO */}
-      <div
-        style={{
-          background: "var(--cream)",
-          borderTop: "1px solid var(--rule)",
-          borderBottom: "1px solid var(--rule)",
-        }}
-      >
-        <div className="sec reveal" id="who">
-          <div className="stag-label">// Who uses Jeneviv</div>
-          <h2>
-            One platform.
-            <br />
-            <em>Every</em> group collection.
-          </h2>
-          <p className="sec-sub">
-            Course reps, PTA chairs, cooperative secretaries, alumni treasurers,
-            church coordinators — anyone who collects from a group and needs
-            documentation.
+          <Link href="/auth/signup" className="k-cta-btn">
+            Get started <span aria-hidden>→</span>
+          </Link>
+          <p className="k-cta-sub">
+            No payment required. No app download. Cancel anytime.
           </p>
-          <div className="aud-tabs">
-            {[
-              { id: "uni", label: "🎓 Universities" },
-              { id: "pta", label: "🏫 Schools & PTAs" },
-              { id: "coop", label: "🤝 Cooperatives" },
-              { id: "assoc", label: "⚖️ Associations" },
-              { id: "faith", label: "⛪ Faith Groups" },
-            ].map((t) => (
-              <button
-                key={t.id}
-                className={`aud-tab${activeTab === t.id ? " active" : ""}`}
-                onClick={() => setActiveTab(t.id)}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          {/* UNI */}
-          <div
-            className={`who-grid aud-panel${activeTab === "uni" ? " active" : ""}`}
-          >
-            <div className="who-card who-rep">
-              <div className="who-deco"></div>
-              <div className="who-chip">Course Representatives</div>
-              <h3 className="who-rep-h3">You collect. We document.</h3>
-              <p className="who-rep-p">
-                Create collections, monitor payments in real time, send
-                reminders, close with a verified report. No WhatsApp chaos.
-              </p>
-              <ul className="who-feats">
-                {[
-                  "Real-time payment dashboard",
-                  "Shareable link + QR code",
-                  "One-click reminders to non-payers",
-                  "PDF payer report with reg numbers",
-                  "Zero receipt verification",
-                ].map((f) => (
-                  <li key={f}>
-                    <span className="feat-check">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="who-card who-payer">
-              <div className="who-deco"></div>
-              <div className="who-chip who-payer-chip">Students</div>
-              <h3>Pay in 60 seconds. Done.</h3>
-              <p className="who-payer-p">
-                Open the link, enter your reg number, pay via bank transfer.
-                Instant receipt in your inbox.
-              </p>
-              <ul className="who-feats who-feats-payer">
-                {[
-                  "No account needed to pay",
-                  "Bank transfer via Flutterwave",
-                  "Instant PDF receipt by email",
-                  "Payment history dashboard",
-                  "Re-download receipts anytime",
-                ].map((f) => (
-                  <li key={f}>
-                    <span className="feat-check feat-check-teal">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* PTA */}
-          <div
-            className={`who-grid aud-panel${activeTab === "pta" ? " active" : ""}`}
-          >
-            <div
-              className="who-card"
-              style={{ background: "linear-gradient(135deg,#1A5C3A,#2E8B57)" }}
-            >
-              <div className="who-deco"></div>
-              <div className="who-chip">PTA Chairs & Admins</div>
-              <h3 className="who-rep-h3">
-                Collect every levy. Document every parent.
-              </h3>
-              <p className="who-rep-p">
-                Textbook fees, excursion levies, uniform contributions — one
-                link per term, PDF report for the principal.
-              </p>
-              <ul className="who-feats">
-                {[
-                  "Per-term collection scheduling",
-                  "Parent + ward name capture",
-                  "Verified payer list for school records",
-                  "Deadline-based auto-closure",
-                  "Export for school management",
-                ].map((f) => (
-                  <li key={f}>
-                    <span className="feat-check">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="who-card who-payer">
-              <div className="who-deco"></div>
-              <div className="who-chip who-payer-chip">Parents</div>
-              <h3>Pay from anywhere. No queues. No cash.</h3>
-              <p className="who-payer-p">
-                Click the link, pay in 60 seconds, get a receipt that proves
-                your child{"'"}s levy is sorted.
-              </p>
-              <ul className="who-feats who-feats-payer">
-                {[
-                  "No app download required",
-                  "Pay for multiple children easily",
-                  "Instant receipt for school records",
-                  "Full payment history per child",
-                  "Re-download anytime",
-                ].map((f) => (
-                  <li key={f}>
-                    <span className="feat-check feat-check-teal">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* COOP */}
-          <div
-            className={`who-grid aud-panel${activeTab === "coop" ? " active" : ""}`}
-          >
-            <div
-              className="who-card"
-              style={{ background: "linear-gradient(135deg,#7A3B00,#C4620A)" }}
-            >
-              <div className="who-deco"></div>
-              <div className="who-chip">Cooperative Secretaries</div>
-              <h3 className="who-rep-h3">Monthly thrift. Zero paperwork.</h3>
-              <p className="who-rep-p">
-                Run monthly contributions on Jeneviv. Every member pays to their
-                dedicated account. AGM report in one click.
-              </p>
-              <ul className="who-feats">
-                {[
-                  "Monthly recurring collections",
-                  "Member registry + payment history",
-                  "Instant default detection",
-                  "Annual summary export",
-                  "No cash handling",
-                ].map((f) => (
-                  <li key={f}>
-                    <span className="feat-check">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="who-card who-payer">
-              <div className="who-deco"></div>
-              <div className="who-chip who-payer-chip">Cooperative Members</div>
-              <h3>Pay your thrift. Proof always on hand.</h3>
-              <p className="who-payer-p">
-                Transfer monthly contribution. Receipt arrives instantly. Full
-                history always accessible.
-              </p>
-              <ul className="who-feats who-feats-payer">
-                {[
-                  "Dedicated account per member",
-                  "Instant receipt every month",
-                  "Full contribution history",
-                  "Dispute-proof documentation",
-                  "No app needed",
-                ].map((f) => (
-                  <li key={f}>
-                    <span className="feat-check feat-check-teal">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* ASSOC */}
-          <div
-            className={`who-grid aud-panel${activeTab === "assoc" ? " active" : ""}`}
-          >
-            <div
-              className="who-card"
-              style={{ background: "linear-gradient(135deg,#1A2E6B,#2D4DB8)" }}
-            >
-              <div className="who-deco"></div>
-              <div className="who-chip">Association Treasurers</div>
-              <h3 className="who-rep-h3">
-                Dues collected. Members documented.
-              </h3>
-              <p className="who-rep-p">
-                Alumni dues, professional levies, chapter contributions — one
-                link reaches thousands.
-              </p>
-              <ul className="who-feats">
-                {[
-                  "Scales to thousands of members",
-                  "Annual dues + special levies",
-                  "Member verification layer",
-                  "Compliance-ready reports",
-                  "Committee-level reporting",
-                ].map((f) => (
-                  <li key={f}>
-                    <span className="feat-check">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="who-card who-payer">
-              <div className="who-deco"></div>
-              <div className="who-chip who-payer-chip">Association Members</div>
-              <h3>Pay your dues. Stay in good standing.</h3>
-              <p className="who-payer-p">
-                Pay annual dues in 60 seconds. Proof of payment is instant,
-                downloadable, always available.
-              </p>
-              <ul className="who-feats who-feats-payer">
-                {[
-                  "One-time or recurring dues",
-                  "Instant membership receipt",
-                  "Downloadable proof of payment",
-                  "History across years",
-                  "No bank visit needed",
-                ].map((f) => (
-                  <li key={f}>
-                    <span className="feat-check feat-check-teal">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* FAITH */}
-          <div
-            className={`who-grid aud-panel${activeTab === "faith" ? " active" : ""}`}
-          >
-            <div
-              className="who-card"
-              style={{ background: "linear-gradient(135deg,#4A1A6B,#7B3AAD)" }}
-            >
-              <div className="who-deco"></div>
-              <div className="who-chip">Church & Mosque Coordinators</div>
-              <h3 className="who-rep-h3">
-                Building fund. Welfare drive. All documented.
-              </h3>
-              <p className="who-rep-p">
-                Run building fund drives and welfare collections with full
-                transparency. Every naira accounted for.
-              </p>
-              <ul className="who-feats">
-                {[
-                  "Named project collections",
-                  "Open-ended or deadline collections",
-                  "Real-time total for announcements",
-                  "Full contributor documentation",
-                  "Transparent fund tracking",
-                ].map((f) => (
-                  <li key={f}>
-                    <span className="feat-check">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="who-card who-payer">
-              <div className="who-deco"></div>
-              <div className="who-chip who-payer-chip">
-                Congregation Members
-              </div>
-              <h3>Give from anywhere. Anytime.</h3>
-              <p className="who-payer-p">
-                Contribute via a simple payment link — from home, from work.
-                Your giving is recorded and receipted immediately.
-              </p>
-              <ul className="who-feats who-feats-payer">
-                {[
-                  "Give without attending physically",
-                  "Named contribution receipt",
-                  "Contribute to multiple funds",
-                  "Full giving history",
-                  "No account needed",
-                ].map((f) => (
-                  <li key={f}>
-                    <span className="feat-check feat-check-teal">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
         </div>
-      </div>
-
-      {/* PAYMENT INFRASTRUCTURE */}
-      <div className="pay-band" id="payments">
-        <div className="pay-inner reveal">
-          <div className="pay-copy">
-            <div className="stag-label gold">// Payment infrastructure</div>
-            <h2 className="white">
-              Powered by
-              <br />
-              <em className="gold-em">Flutterwave.</em>
-            </h2>
-            <p className="white-muted">
-              Every payer gets a dedicated virtual bank account — just a
-              standard bank transfer, no card needed. Flutterwave confirms in
-              seconds via webhook.
-            </p>
-            <div className="pay-metrics">
-              <div className="pay-metric">
-                <div className="pay-metric-n">&lt;5s</div>
-                <div className="pay-metric-l">Payment confirmation</div>
-              </div>
-              <div className="pay-metric">
-                <div className="pay-metric-n">₦100 + 1.5%</div>
-                <div className="pay-metric-l">Platform fee per payer</div>
-              </div>
-              <div className="pay-metric">
-                <div className="pay-metric-n">100%</div>
-                <div className="pay-metric-l">Webhook-verified payments</div>
-              </div>
-              <div className="pay-metric">
-                <div className="pay-metric-n">0</div>
-                <div className="pay-metric-l">Manual receipt checks</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* TESTIMONIALS */}
-      <div style={{ background: "var(--card)" }}>
-        <div className="sec reveal">
-          <div className="stag-label">// What they say</div>
-          <h2>
-            From universities to
-            <br />
-            <em>everywhere else.</em>
-          </h2>
-          <p className="sec-sub">
-            Real feedback from coordinators across every group Jeneviv serves.
-          </p>
-          <div className="testi-grid stagger">
-            {[
-              {
-                q: "I used to spend the entire weekend sorting screenshots. Jeneviv closed a 200-student collection in one afternoon with a clean report for my HOD.",
-                name: "Chidi Eze",
-                role: "Course Rep, Engineering · UNILAG",
-                av: "C",
-                bg: "#0D6B5E",
-              },
-              {
-                q: "Our PTA used to chase parents for weeks. With Jeneviv I shared one link and had 80% payment rate in 3 days.",
-                name: "Blessing Adeyemi",
-                role: "PTA Chair · Ikeja Grammar School, Lagos",
-                av: "B",
-                bg: "#1A5C3A",
-              },
-              {
-                q: "I run a 60-member cooperative. Before Jeneviv I argued every month about who paid. Now the system does it.",
-                name: "Onyeka Mbah",
-                role: "Secretary · Enugu Staff Cooperative",
-                av: "O",
-                bg: "#7A3B00",
-              },
-            ].map((t) => (
-              <div key={t.name} className="tc">
-                <div className="tc-stars">
-                  {"★★★★★".split("").map((s, i) => (
-                    <span key={i}>{s}</span>
-                  ))}
-                </div>
-                <p className="tc-text">&ldquo;{t.q}&rdquo;</p>
-                <div className="tc-author">
-                  <div className="tc-av" style={{ background: t.bg }}>
-                    {t.av}
-                  </div>
-                  <div>
-                    <div className="tc-name">{t.name}</div>
-                    <div className="tc-role">{t.role}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* CTA */}
-      <div className="cta-section" id="waitlist">
-        <div className="cta-circle-1"></div>
-        <div className="cta-circle-2"></div>
-        <h2>
-          Ready to end
-          <br />
-          the <em>receipt chaos?</em>
-        </h2>
-        <p>
-          Join coordinators across Nigeria — universities, PTAs, cooperatives,
-          associations — collecting smarter with Jeneviv.
-        </p>
-        <a href="mailto:myjeneviv@gmail.com" className="cta-btn">
-          Contact us
-        </a>
-      </div>
+      </section>
 
       {/* FOOTER */}
-      <footer>
-        <div className="footer-grid">
-          <div>
-            <a href="#" className="ft-logo">
-              Jeneviv<span className="ft-logo-dot"></span>
-            </a>
-            <p className="ft-desc">
-              Collections, handled. Built for every Nigerian group that needs
-              better payment documentation.
+      <footer className="k-foot">
+        <div className="k-foot-inner">
+          <div className="k-foot-brand">
+            <Link href="/" className="k-foot-logo">
+              <span>Jeneviv.</span>
+            </Link>
+            <p className="k-foot-tag">Collections, handled.</p>
+            <p className="k-foot-desc">
+              Built for every Nigerian group that collects money from its
+              members and needs documentation to prove it.
             </p>
           </div>
-          <div className="ft-col">
-            <h4>Product</h4>
-            <ul>
-              <li>
-                <button onClick={() => scrollTo("how")}>How it works</button>
-              </li>
-              <li>
-                <button onClick={() => scrollTo("who")}>For who</button>
-              </li>
-              <li>
-                <button onClick={() => scrollTo("payments")}>
-                  Payment infrastructure
-                </button>
-              </li>
-            </ul>
-          </div>
-          <div className="ft-col">
-            <h4>Company</h4>
-            <ul>
-              <li>
-                <a href="#">About</a>
-              </li>
-              <li>
-                <a href="#">Blog</a>
-              </li>
-              <li>
-                <a href="mailto:myjeneviv@gmail.com">Contact</a>
-              </li>
-            </ul>
-          </div>
-          <div className="ft-col">
-            <h4>Legal</h4>
-            <ul>
-              <li>
-                <a href="#">Privacy Policy</a>
-              </li>
-              <li>
-                <a href="#">Terms of Service</a>
-              </li>
-              <li>
-                <a href="#">Refund Policy</a>
-              </li>
-            </ul>
+          <div className="k-foot-cols">
+            <div>
+              <h5>Product</h5>
+              <ul>
+                <li>
+                  <a href="#">How it works</a>
+                </li>
+                <li>
+                  <a href="#">For universities</a>
+                </li>
+                <li>
+                  <a href="#">For PTAs</a>
+                </li>
+                <li>
+                  <a href="#">For cooperatives</a>
+                </li>
+                <li>
+                  <a href="#">For associations</a>
+                </li>
+                <li>
+                  <a href="#">Pricing</a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h5>Company</h5>
+              <ul>
+                <li>
+                  <a href="#">About</a>
+                </li>
+                <li>
+                  <a href="#">Blog</a>
+                </li>
+                <li>
+                  <a href="#">Careers</a>
+                </li>
+                <li>
+                  <a href="mailto:myjeneviv@gmail.com">Contact</a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h5>Legal</h5>
+              <ul>
+                <li>
+                  <a href="#">Privacy Policy</a>
+                </li>
+                <li>
+                  <a href="#">Terms of Service</a>
+                </li>
+                <li>
+                  <a href="#">Refund Policy</a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h5>Developers</h5>
+              <ul>
+                <li>
+                  <a href="#">API docs</a>
+                </li>
+                <li>
+                  <a href="#">Webhook reference</a>
+                </li>
+                <li>
+                  <a href="#">Sandbox</a>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
-        <div className="footer-bottom">
-          <p className="ft-copy">
-            © 2026 Jeneviv Limited. Built in Nigeria, for Nigeria.
-          </p>
-          <div className="ft-tags">
-            <span className="ft-tag">Flutterwave Powered</span>
-            <span className="ft-tag">NDPA Compliant</span>
-            <span className="ft-tag">CAC Registered</span>
+        <div className="k-foot-bottom">
+          <div className="k-foot-tags">
+            <span className="k-foot-tag">Flutterwave Powered</span>
+            <span className="k-foot-tag">NDPA Compliant</span>
+            <span className="k-foot-tag">CAC Registered</span>
           </div>
+          <p className="k-foot-copy">
+            © 2026 Acadeva Limited. Built in Nigeria, for Nigeria.
+          </p>
         </div>
       </footer>
     </>

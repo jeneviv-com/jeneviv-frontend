@@ -1,9 +1,11 @@
+import { Providers } from "@/components/Providers";
 import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Jeneviv — Track bulk payments with ease.",
-  description: "Jeneviv gives any group coordinator a payment link, real-time dashboard, and verified payer report — without a single screenshot or spreadsheet.",
+  description:
+    "Jeneviv gives any group coordinator a payment link, real-time dashboard, and verified payer report — without a single screenshot or spreadsheet.",
 };
 
 export default function RootLayout({
@@ -20,7 +22,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
