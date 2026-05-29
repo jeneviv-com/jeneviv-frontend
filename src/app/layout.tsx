@@ -1,4 +1,3 @@
-import { Providers } from "@/components/Providers";
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -22,9 +21,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>
-        <Providers>{children}</Providers>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
