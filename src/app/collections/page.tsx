@@ -1,7 +1,7 @@
 "use client";
 
 import { DashboardNav } from "@/components/DashboardNav";
-import { EmptyState } from "@/components/EmptyState";
+import EmptyState from "@/components/EmptyState";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
