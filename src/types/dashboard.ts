@@ -1,5 +1,4 @@
 export type BankStatus = "pending" | "approved" | "rejected";
-export type CollectionStatus = "active" | "closed" | "expired";
 
 export interface DashboardUser {
   firstName: string;
@@ -18,7 +17,7 @@ export interface DashboardBalances {
 export interface DashboardStats {
   activeCollections: number;
   totalPayers: number;
-  TotalAmount: number;
+  totalAmount: number;
 }
 
 export interface Collection {
@@ -30,8 +29,8 @@ export interface Collection {
   amountCollected: number;
   payerCount: number;
   pendingCount: number;
-  status: CollectionStatus;
-  createdAt: string;
+  is_active: boolean;
+  created_at: string;
 }
 
 export interface DashboardData {

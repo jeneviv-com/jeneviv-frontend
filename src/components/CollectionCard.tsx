@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { Collection, CollectionStatus } from "@/types/dashboard";
+import type { Collection } from "@/types/dashboard";
 
 interface CollectionCardProps {
   collection: Collection;
@@ -13,12 +13,6 @@ const naira = new Intl.NumberFormat("en-NG", {
   maximumFractionDigits: 0,
 });
 
-const STATUS_CONFIG: Record<CollectionStatus, { label: string; cls: string; dot: string }> = {
-  active:  { label: "Live",   cls: "bg-emerald-50 text-emerald-700",  dot: "bg-emerald-500" },
-  closed:  { label: "Closed", cls: "bg-line text-ink-muted",          dot: "bg-ink-muted" },
-  expired: { label: "Expired",cls: "bg-danger-soft text-danger",      dot: "bg-danger" },
-};
-
 export default function CollectionCard({ collection }: CollectionCardProps) {
   const pct = Math.min(
     100,
@@ -27,7 +21,9 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
       : 0,
   );
 
-  const cfg = STATUS_CONFIG[collection.status];
+  const cfg = collection.is_active
+    ? { label: "Live", cls: "bg-emerald-50 text-emerald-700", dot: "bg-emerald-500" }
+    : { label: "Inactive", cls: "bg-line text-ink-muted", dot: "bg-ink-muted" };
 
   return (
     <Link
@@ -45,7 +41,7 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
           </p>
         </div>
         <span className={["flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide", cfg.cls].join(" ")}>
-          <span className={["h-1.5 w-1.5 rounded-full", cfg.dot, collection.status === "active" ? "animate-pulse" : ""].join(" ")} />
+          <span className={["h-1.5 w-1.5 rounded-full", cfg.dot, collection.is_active ? "animate-pulse" : ""].join(" ")} />
           {cfg.label}
         </span>
       </div>
@@ -65,7 +61,7 @@ export default function CollectionCard({ collection }: CollectionCardProps) {
         <div
           className={[
             "h-full rounded-full transition-all",
-            collection.status === "active" ? "bg-brand-orange" : "bg-ink-muted/40",
+            collection.is_active ? "bg-brand-orange" : "bg-ink-muted/40",
           ].join(" ")}
           style={{ width: `${pct}%` }}
         />

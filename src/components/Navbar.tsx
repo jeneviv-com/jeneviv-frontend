@@ -88,38 +88,3 @@ export function Navbar() {
     </nav>
   );
 }
-        </ul>
-        <div className="nav-right">
-          <Link href="/auth/login" className="nav-login">
-            Sign in
-          </Link>
-          <Link href="/auth/signup" className="nav-cta">
-            Get started
-          </Link>
-        </div>
-        <button
-          className="hamburger"
-          onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Menu"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-      </nav>
-
-      <div className={`mobile-menu${mobileOpen ? " open" : ""}`}>
-        <button onClick={() => scrollTo("how")}>Product</button>
-        <button onClick={() => scrollTo("who")}>Solutions</button>
-        <button onClick={() => scrollTo("payments")}>Company</button>
-        <button onClick={() => scrollTo("waitlist")}>Pricing</button>
-        <Link href="/auth/login" className="mob-link">
-          Sign in
-        </Link>
-        <Link href="/auth/signup" className="mob-cta">
-          Get started
-        </Link>
-      </div>
-    </>
-  );
-}

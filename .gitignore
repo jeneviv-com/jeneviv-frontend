@@ -75,3 +75,13 @@ coverage/
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Documentation artifacts
+DOCUMENTATION_INDEX.md
+FINAL_SUMMARY.md
+HOW_TO_RUN.md
+INTEGRATION_*.md
+PAYMENT_FLOW_GUIDE.md
+QUICKSTART.md
+README_INTEGRATION.md
+RUN_APPLICATION.md

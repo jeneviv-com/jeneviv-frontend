@@ -3,8 +3,10 @@ import type { Config } from "tailwindcss";
 const config: Config = {
   content: [
     "./src/app/**/*.{ts,tsx}",
+    "./src/landing/**/*.{ts,tsx}",
     "./src/components/**/*.{ts,tsx}",
     "./src/hooks/**/*.{ts,tsx}",
+    "./webapp/src/**/*.{ts,tsx,jsx}",
   ],
   corePlugins: {
     preflight: false,

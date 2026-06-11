@@ -70,7 +70,9 @@ body {
   padding: 0 5vw;
   background: var(--white);
   border-bottom: 1px solid transparent;
-  transition: border-color 0.3s, background 0.3s;
+  transition:
+    border-color 0.3s,
+    background 0.3s;
   position: fixed;
   top: 0;
   left: 0;
@@ -185,6 +187,203 @@ body {
   background: var(--orange-hover);
   border-color: var(--orange-hover);
 }
+
+/* Landing Navbar Styles */
+.k-nav {
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 78px;
+  padding: 0 5vw;
+  background: var(--white);
+  border-bottom: 1px solid transparent;
+  transition:
+    border-color 0.3s,
+    background 0.3s;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.k-nav.scrolled {
+  background: rgba(255, 255, 255, 0.96);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--line);
+}
+
+.k-nav-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  flex: 1;
+}
+
+.k-nav-link {
+  cursor: pointer;
+  color: var(--ink);
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.k-nav-link:hover {
+  color: var(--orange);
+}
+
+.k-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.k-nav-login {
+  background: var(--white);
+  color: var(--black);
+  cursor: pointer;
+  border: 1.5px solid var(--black);
+  border-radius: 8px;
+  padding: 11px 26px;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.k-nav-login:hover {
+  background: var(--ink);
+  color: var(--white);
+}
+
+.k-nav-cta {
+  background: var(--orange);
+  color: var(--white);
+  cursor: pointer;
+  border: 1.5px solid var(--orange);
+  border-radius: 8px;
+  padding: 11px 26px;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.k-nav-cta:hover {
+  background: var(--orange-hover);
+  border-color: var(--orange-hover);
+}
+
+.k-hamburger {
+  cursor: pointer;
+  background: none;
+  border: none;
+  flex-direction: column;
+  gap: 5px;
+  padding: 4px;
+  display: none;
+}
+
+.k-hamburger span {
+  background: var(--ink);
+  border-radius: 2px;
+  width: 22px;
+  height: 2px;
+  transition: all 0.3s;
+  display: block;
+}
+
+.k-mobile-menu {
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+  z-index: 199;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 5vw 24px;
+  display: none;
+  position: fixed;
+  top: 78px;
+  left: 0;
+  right: 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.k-mobile-menu.open {
+  display: flex;
+}
+
+.k-mobile-link {
+  cursor: pointer;
+  color: var(--ink);
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 8px 0;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.k-mobile-login {
+  background: var(--white);
+  color: var(--black);
+  cursor: pointer;
+  border: 1.5px solid var(--black);
+  border-radius: 8px;
+  padding: 11px 26px;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+  display: block;
+  text-align: center;
+}
+
+.k-mobile-login:hover {
+  background: var(--ink);
+  color: var(--white);
+}
+
+.k-mobile-cta {
+  background: var(--orange);
+  color: var(--white);
+  cursor: pointer;
+  border: 1.5px solid var(--orange);
+  border-radius: 8px;
+  padding: 11px 26px;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+  display: block;
+  text-align: center;
+}
+
+.k-mobile-cta:hover {
+  background: var(--orange-hover);
+  border-color: var(--orange-hover);
+}
+
+@media (max-width: 768px) {
+  .k-nav-center {
+    display: none;
+  }
+
+  .k-hamburger {
+    display: flex;
+  }
+}
+
 .nav-pill {
   background: var(--orange);
   color: #fff;
@@ -197,6 +396,7 @@ body {
   font-weight: 600;
   transition: all 0.2s;
 }
+
 .nav-pill:hover {
   background: var(--orange-hover);
 }
@@ -268,14 +468,22 @@ body {
   position: absolute;
 }
 .blob-1 {
-  background: radial-gradient(circle, rgba(254, 73, 0, 0.05) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(254, 73, 0, 0.05) 0%,
+    transparent 70%
+  );
   width: 600px;
   height: 600px;
   top: -150px;
   right: -200px;
 }
 .blob-2 {
-  background: radial-gradient(circle, rgba(77, 24, 16, 0.04) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(77, 24, 16, 0.04) 0%,
+    transparent 70%
+  );
   width: 400px;
   height: 400px;
   bottom: -100px;
@@ -315,7 +523,9 @@ h1 {
   display: none;
 }
 .collecting-word {
-  transition: opacity 0.35s, transform 0.35s;
+  transition:
+    opacity 0.35s,
+    transform 0.35s;
   display: inline-block;
   color: var(--orange);
 }
@@ -420,8 +630,13 @@ h1 {
     0 40px 80px rgba(0, 0, 0, 0.04);
 }
 @keyframes cardFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 .dash-top {
   background: var(--brown);
@@ -465,8 +680,13 @@ h1 {
   animation: 1.5s ease-in-out infinite liveDot;
 }
 @keyframes liveDot {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 .dash-body {
   padding: 20px 22px;
@@ -528,8 +748,12 @@ h1 {
   animation: 1.8s cubic-bezier(0.4, 0, 0.2, 1) both fillProg;
 }
 @keyframes fillProg {
-  0% { width: 0; }
-  to { width: 68%; }
+  0% {
+    width: 0;
+  }
+  to {
+    width: 68%;
+  }
 }
 .payers {
   flex-direction: column;
@@ -612,12 +836,22 @@ h1 {
   left: -28px;
 }
 @keyframes notifFloat1 {
-  0%, 100% { transform: translateY(0) rotate(-1deg); }
-  50% { transform: translateY(-8px) rotate(1deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
 }
 @keyframes notifFloat2 {
-  0%, 100% { transform: translateY(0) rotate(1deg); }
-  50% { transform: translateY(-6px) rotate(-1deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(1deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(-1deg);
+  }
 }
 .notif-icon {
   font-size: 22px;
@@ -665,8 +899,12 @@ h1 {
   background: var(--orange) !important;
 }
 @keyframes marquee {
-  0% { transform: translate(0); }
-  to { transform: translate(-50%); }
+  0% {
+    transform: translate(0);
+  }
+  to {
+    transform: translate(-50%);
+  }
 }
 
 /* ============== LOGOS BAND (greyscale "Trusted by") ============== */
@@ -1193,7 +1431,10 @@ h2 .gold-em {
   border-radius: var(--r-lg);
   border: 1px solid var(--line);
   padding: 32px;
-  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  transition:
+    transform 0.25s,
+    box-shadow 0.25s,
+    border-color 0.25s;
   position: relative;
   overflow: hidden;
 }
@@ -1897,7 +2138,9 @@ footer {
 /* ============== ANIMATIONS ============== */
 .reveal {
   opacity: 0;
-  transition: opacity 0.6s, transform 0.6s;
+  transition:
+    opacity 0.6s,
+    transform 0.6s;
   transform: translateY(28px);
 }
 .reveal.vis {
@@ -1906,7 +2149,9 @@ footer {
 }
 .stagger > * {
   opacity: 0;
-  transition: opacity 0.5s, transform 0.5s;
+  transition:
+    opacity 0.5s,
+    transform 0.5s;
   transform: translateY(20px);
 }
 .stagger.vis > :first-child {
@@ -2406,8 +2651,13 @@ footer {
 .auth-flag-ng {
   width: 24px;
   height: 16px;
-  background:
-    linear-gradient(to right, #008753 33.33%, #fff 33.33%, #fff 66.66%, #008753 66.66%);
+  background: linear-gradient(
+    to right,
+    #008753 33.33%,
+    #fff 33.33%,
+    #fff 66.66%,
+    #008753 66.66%
+  );
   border-radius: 2px;
   border: 1px solid #d8d8d8;
 }
@@ -2451,7 +2701,9 @@ footer {
   font-family: inherit;
   cursor: not-allowed;
   margin-top: 8px;
-  transition: background 0.16s, transform 0.06s;
+  transition:
+    background 0.16s,
+    transform 0.06s;
 }
 .auth-submit.ready {
   background: var(--orange);
@@ -2484,6 +2736,52 @@ footer {
   font-size: inherit;
   cursor: pointer;
   padding: 0;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.auth-google {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ink);
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.auth-google:hover {
+  background: var(--line-soft);
+  border-color: var(--muted);
+}
+
+.auth-google-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
 }
 
 /* CONFIRM */
@@ -3246,7 +3544,10 @@ footer {
   border: 0;
   cursor: pointer;
   text-decoration: none;
-  transition: transform 0.15s, background 0.18s, box-shadow 0.18s;
+  transition:
+    transform 0.15s,
+    background 0.18s,
+    box-shadow 0.18s;
 }
 .k-btn-primary:hover {
   background: var(--orange-hover);
@@ -3264,7 +3565,9 @@ footer {
   border: 1.5px solid var(--ink);
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.18s, color 0.18s;
+  transition:
+    background 0.18s,
+    color 0.18s;
 }
 .k-btn-ghost:hover {
   background: var(--ink);
@@ -3286,8 +3589,13 @@ footer {
   animation: k-lap-float 8s ease-in-out infinite;
 }
 @keyframes k-lap-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 .k-laptop-bezel {
   background: #1a1a1a;
@@ -3337,9 +3645,15 @@ footer {
   border-radius: 50%;
   background: #e0e0e0;
 }
-.k-lap-dot-1 { background: #ff5f57; }
-.k-lap-dot-2 { background: #febc2e; }
-.k-lap-dot-3 { background: #28c840; }
+.k-lap-dot-1 {
+  background: #ff5f57;
+}
+.k-lap-dot-2 {
+  background: #febc2e;
+}
+.k-lap-dot-3 {
+  background: #28c840;
+}
 .k-lap-body {
   flex: 1;
   display: grid;
@@ -3530,7 +3844,9 @@ footer {
   font-weight: 600;
   color: var(--ink);
   letter-spacing: 0.01em;
-  transition: transform 0.18s, border-color 0.18s;
+  transition:
+    transform 0.18s,
+    border-color 0.18s;
 }
 .k-launch-pill:hover {
   transform: translateY(-2px);
@@ -3627,15 +3943,21 @@ footer {
   background: #fff;
   border-radius: 18px;
   padding: 24px;
-  box-shadow: 0 30px 60px -20px rgba(20, 20, 20, 0.18),
+  box-shadow:
+    0 30px 60px -20px rgba(20, 20, 20, 0.18),
     0 8px 16px -8px rgba(20, 20, 20, 0.08);
   border: 1px solid var(--line);
   transform: rotate(-1deg);
   animation: k-float 6s ease-in-out infinite;
 }
 @keyframes k-float {
-  0%, 100% { transform: rotate(-1deg) translateY(0); }
-  50% { transform: rotate(-1deg) translateY(-8px); }
+  0%,
+  100% {
+    transform: rotate(-1deg) translateY(0);
+  }
+  50% {
+    transform: rotate(-1deg) translateY(-8px);
+  }
 }
 .k-mock-card-head {
   display: flex;
@@ -3646,7 +3968,7 @@ footer {
 .k-mock-live {
   font-size: 11px;
   font-weight: 700;
-  color: #1FAE5C;
+  color: #1fae5c;
   letter-spacing: 0.08em;
 }
 .k-mock-tag {
@@ -3682,7 +4004,9 @@ footer {
   animation: k-grow 1.4s ease-out forwards;
 }
 @keyframes k-grow {
-  from { width: 0 !important; }
+  from {
+    width: 0 !important;
+  }
 }
 .k-mock-rows {
   display: flex;
@@ -3720,7 +4044,7 @@ footer {
   font-weight: 800;
 }
 .k-mock-mark.on {
-  background: #1FAE5C;
+  background: #1fae5c;
   color: #fff;
 }
 
@@ -3791,7 +4115,7 @@ footer {
   color: var(--ink);
 }
 .k-phone-toast {
-  background: #1FAE5C;
+  background: #1fae5c;
   color: #fff;
   border-radius: 12px;
   padding: 12px;
@@ -3801,8 +4125,13 @@ footer {
   animation: k-toast 2.5s ease-out infinite;
 }
 @keyframes k-toast {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 .k-phone-toast-ico {
   width: 28px;
@@ -3834,7 +4163,9 @@ footer {
   border-radius: 14px;
   padding: 22px 22px 24px;
   border: 1px solid var(--line);
-  transition: transform 0.22s, box-shadow 0.22s;
+  transition:
+    transform 0.22s,
+    box-shadow 0.22s;
 }
 .k-usecase:hover {
   transform: translateY(-4px);
@@ -3923,8 +4254,8 @@ footer {
   margin-top: 2px;
 }
 .k-settle-dot.on {
-  background: #1FAE5C;
-  border-color: #1FAE5C;
+  background: #1fae5c;
+  border-color: #1fae5c;
   box-shadow: 0 0 0 4px rgba(31, 174, 92, 0.15);
 }
 .k-settle-body strong {
@@ -4003,7 +4334,10 @@ footer {
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 16px;
-  transition: transform 0.22s, border-color 0.22s, box-shadow 0.22s;
+  transition:
+    transform 0.22s,
+    border-color 0.22s,
+    box-shadow 0.22s;
   position: relative;
 }
 .k-trust-card::before {
@@ -4102,7 +4436,10 @@ footer {
   font-size: 13px;
   font-weight: 600;
   color: var(--ink);
-  transition: transform 0.18s, border-color 0.18s, color 0.18s;
+  transition:
+    transform 0.18s,
+    border-color 0.18s,
+    color 0.18s;
 }
 .k-active-pill:hover {
   transform: translateY(-2px);
@@ -4170,7 +4507,10 @@ footer {
   font-weight: 700;
   font-size: 16px;
   text-decoration: none;
-  transition: transform 0.18s, background 0.18s, box-shadow 0.18s;
+  transition:
+    transform 0.18s,
+    background 0.18s,
+    box-shadow 0.18s;
   box-shadow: 0 12px 30px -10px rgba(254, 73, 0, 0.45);
 }
 .k-cta-btn:hover {
@@ -4557,4 +4897,3 @@ footer {
     grid-template-columns: 1fr;
   }
 }
-

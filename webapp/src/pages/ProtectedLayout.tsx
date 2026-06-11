@@ -1,5 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 
 export default function ProtectedLayout() {
   const { isAuthenticated, loading } = useAuth();
@@ -23,7 +23,7 @@ export default function ProtectedLayout() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Placeholder - will be populated by routes */}
+      <Outlet />
     </div>
   );
 }

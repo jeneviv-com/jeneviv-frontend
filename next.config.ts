@@ -1,15 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  rewrites: async () => {
-    return {
-      beforeFiles: [
-        {
-          source: "/app/:path*",
-          destination: `${process.env.NEXT_PUBLIC_VITE_URL || "http://localhost:5173"}/app/:path*`,
-        },
-      ],
-    };
+  // CSS and PostCSS are handled automatically by Next.js
+  // Make sure postcss.config.js and tailwind.config.ts are present
+  webpack: (config) => {
+    // Ensure CSS modules and regular CSS are handled properly
+    return config;
   },
 };
 
