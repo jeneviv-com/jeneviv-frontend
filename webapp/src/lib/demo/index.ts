@@ -276,6 +276,8 @@ async function route(ctx: Ctx) {
       return fail(400, "Password must be at least 6 characters.");
 
     const signup = database.signedUpUser;
+    const SEED_EMAIL = "coordinator@jeneviv.test";
+    const SEED_USER_ID = "user_demo_001";
     if (signup && signup.user.email.toLowerCase() === email) {
       database.user = signup.user;
       if (database.merchant.userId !== signup.user.id) {
@@ -295,6 +297,16 @@ async function route(ctx: Ctx) {
         role: "user",
       };
     }
+
+    // Signing back in with the seeded coordinator email restores the canonical
+    // seeded workspace (approved merchant, collections, transactions), even if
+    // a previous session's sign-up corrupted the demo user/merchant in place.
+    // The seed user id is the invariant: only user_demo_001 owns the approved
+    // merchant_demo_001, so any other id means the workspace was overwritten.
+    if (email === SEED_EMAIL && database.user.id !== SEED_USER_ID) {
+      resetDemoData();
+    }
+
     database.token = `demo_${Math.random().toString(36).slice(2, 12)}`;
     persist();
     return respond(200, {
