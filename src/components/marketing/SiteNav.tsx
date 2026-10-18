@@ -190,6 +190,13 @@ export default function SiteNav() {
       <div className="m-wrap">
         <nav className="m-nav" aria-label="Main">
           <Link href="/" className="m-logo" aria-label="Jeneviv home">
+            <img
+              src="/assets/images/jeneviv.png"
+              alt=""
+              width={28}
+              height={28}
+              className="m-logo-mark"
+            />
             jeneviv<em>.</em>
           </Link>
 

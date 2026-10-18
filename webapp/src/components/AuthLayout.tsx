@@ -36,8 +36,17 @@ export default function AuthLayout({
           aria-hidden="true"
         />
         <div className="relative flex items-center justify-between">
-          <Link to="/" className="text-[22px] font-extrabold tracking-[-0.05em] text-white">
-            jeneviv<span className="text-brand">.</span>
+          <Link to="/" className="flex items-center gap-2.5">
+            <img
+              src="/assets/images/jeneviv.png"
+              alt="Jeneviv"
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-[10px] object-cover"
+            />
+            <span className="text-[22px] font-extrabold tracking-[-0.05em] text-white">
+              jeneviv<span className="text-brand">.</span>
+            </span>
           </Link>
           <a
             href={landing}

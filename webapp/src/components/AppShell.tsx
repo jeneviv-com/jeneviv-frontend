@@ -148,11 +148,20 @@ export default function AppShell() {
         }`}
       >
         <div className="flex items-center justify-between px-5 py-5">
-          <Link to="/dashboard" className="flex items-baseline gap-0.5">
-            <span className="text-[21px] font-extrabold tracking-[-0.05em] text-white">
-              jeneviv
+          <Link to="/dashboard" className="flex items-center gap-2.5">
+            <img
+              src="/assets/images/jeneviv.png"
+              alt="Jeneviv"
+              width={30}
+              height={30}
+              className="h-[30px] w-[30px] rounded-[9px] object-cover"
+            />
+            <span className="flex items-baseline gap-0.5">
+              <span className="text-[21px] font-extrabold tracking-[-0.05em] text-white">
+                jeneviv
+              </span>
+              <span className="text-[24px] leading-none text-brand">.</span>
             </span>
-            <span className="text-[24px] leading-none text-brand">.</span>
           </Link>
           <button
             type="button"
