@@ -1,101 +1,190 @@
-import { useAuth } from "@/context/AuthContext";
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Check } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
+import { errorMessage } from "@/hooks/useApi";
+import AuthLayout from "@/components/AuthLayout";
+import { Button, Field, InlineNote, Input } from "@/components/ui";
+
+function strength(password: string) {
+  let score = 0;
+  if (password.length >= 8) score += 1;
+  if (/[A-Z]/.test(password)) score += 1;
+  if (/[0-9]/.test(password)) score += 1;
+  if (/[^A-Za-z0-9]/.test(password)) score += 1;
+  return score;
+}
 
 export default function Signup() {
+  const { signup } = useAuth();
+  const { success, error: toastError } = useToast();
   const navigate = useNavigate();
-  const { signup, error } = useAuth();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [accepted, setAccepted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const score = useMemo(() => strength(password), [password]);
+  const canSubmit =
+    name.trim().length > 1 &&
+    email.includes("@") &&
+    password.length >= 8 &&
+    accepted;
+
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setFormError(null);
-    setLoading(true);
 
+    if (!accepted) {
+      setFormError("Please accept the terms to continue.");
+      return;
+    }
+
+    setSubmitting(true);
     try {
-      await signup(name, email, password);
+      await signup(name.trim(), email.trim(), password);
+      success(
+        "Account created",
+        "Tell us what you collect so we can approve your workspace.",
+      );
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to sign up.";
-      setFormError(message);
+      setFormError(errorMessage(err));
+      toastError("We could not create your account", errorMessage(err));
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
+  const bars = [0, 1, 2, 3].map((index) => index < score);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl border border-slate-200">
-        <h1 className="text-3xl font-bold text-slate-900 mb-4">Sign Up</h1>
-        <p className="text-sm text-slate-500 mb-8">
-          Create your Jeneviv account and start collecting.
-        </p>
-
-        {(formError || error) && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {formError || error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">
-              Full name
-            </span>
-            <input
-              type="text"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              required
-              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
-            />
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">Email</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
-            />
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">Password</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
-            />
-          </label>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-2xl bg-orange-500 px-4 py-3 text-white font-semibold hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {loading ? "Creating account..." : "Create account"}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-slate-600">
+    <AuthLayout
+      title="Create your workspace"
+      subtitle="Free to start. You only pay a fee when money actually moves."
+      footer={
+        <>
           Already have an account?{" "}
           <Link
             to="/login"
-            className="font-semibold text-orange-600 hover:text-orange-700"
+            className="font-semibold text-brand underline underline-offset-2"
           >
             Sign in
           </Link>
-        </p>
-      </div>
-    </div>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Field label="Full name" htmlFor="name">
+          <Input
+            id="name"
+            autoComplete="name"
+            required
+            placeholder="Ifeanyi Adebayo"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+        </Field>
+
+        <Field label="Email address" htmlFor="signup-email">
+          <Input
+            id="signup-email"
+            type="email"
+            autoComplete="email"
+            required
+            placeholder="you@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+        </Field>
+
+        <Field
+          label="Password"
+          htmlFor="signup-password"
+          hint="At least 8 characters. A number or symbol makes it stronger."
+        >
+          <Input
+            id="signup-password"
+            type="password"
+            autoComplete="new-password"
+            required
+            placeholder="••••••••"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+          {password ? (
+            <div className="mt-2 flex items-center gap-2">
+              <div className="flex flex-1 gap-1">
+                {bars.map((filled, index) => (
+                  <span
+                    key={index}
+                    className={`h-1 flex-1 rounded-pill ${
+                      filled
+                        ? score <= 2
+                          ? "bg-warning"
+                          : score === 3
+                            ? "bg-brand"
+                            : "bg-success"
+                        : "bg-line"
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="font-mono text-3xs text-ink-muted">
+                {["weak", "weak", "fair", "good", "strong"][score]}
+              </span>
+            </div>
+          ) : null}
+        </Field>
+
+        <label className="flex items-start gap-2.5 text-[12.5px] leading-relaxed text-ink-soft">
+          <input
+            type="checkbox"
+            checked={accepted}
+            onChange={(event) => setAccepted(event.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-line text-brand focus:ring-brand/30"
+          />
+          <span>
+            I agree to the{" "}
+            <a
+              href={`${import.meta.env.VITE_PUBLIC_APP_URL || ""}/terms`}
+              className="font-semibold text-brand underline underline-offset-2"
+            >
+              terms of service
+            </a>{" "}
+            and{" "}
+            <a
+              href={`${import.meta.env.VITE_PUBLIC_APP_URL || ""}/privacy`}
+              className="font-semibold text-brand underline underline-offset-2"
+            >
+              privacy policy
+            </a>
+            .
+          </span>
+        </label>
+
+        {formError ? <InlineNote tone="error">{formError}</InlineNote> : null}
+
+        <Button type="submit" size="lg" loading={submitting} disabled={!canSubmit}>
+          Create account
+        </Button>
+      </form>
+
+      <ul className="mt-6 space-y-2">
+        {[
+          "No card required to start",
+          "Create collections before approval",
+          "Settle to your own bank account",
+        ].map((item) => (
+          <li key={item} className="flex items-center gap-2 text-[12.5px] text-ink-muted">
+            <Check size={14} className="text-success" /> {item}
+          </li>
+        ))}
+      </ul>
+    </AuthLayout>
   );
 }

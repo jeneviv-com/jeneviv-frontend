@@ -1,87 +1,150 @@
-import { useAuth } from "@/context/AuthContext";
 import { FormEvent, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
+import { errorMessage } from "@/hooks/useApi";
+import AuthLayout from "@/components/AuthLayout";
+import { Button, Field, InlineNote, Input } from "@/components/ui";
+import { isDemoMode } from "@/lib/demo";
 
 export default function Login() {
+  const { login, loading: bootstrapping, connection } = useAuth();
+  const { success, error: toastError } = useToast();
   const navigate = useNavigate();
-  const { login, error } = useAuth();
+  const location = useLocation();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const redirectTo =
+    (location.state as { from?: string } | null)?.from || "/dashboard";
+
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setFormError(null);
-    setLoading(true);
-
+    setSubmitting(true);
     try {
-      await login(email, password);
-      navigate("/dashboard", { replace: true });
+      await login(email.trim(), password);
+      success("Welcome back", "You are signed in to your workspace.");
+      navigate(redirectTo, { replace: true });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unable to login.";
-      setFormError(message);
+      setFormError(errorMessage(err));
+      toastError("Sign in failed", errorMessage(err));
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
+  const demo = isDemoMode() || connection === "demo";
+
+  const fillDemo = () => {
+    setEmail("coordinator@jeneviv.test");
+    setPassword("jeneviv1234");
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl border border-slate-200">
-        <h1 className="text-3xl font-bold text-slate-900 mb-4">Login</h1>
-        <p className="text-sm text-slate-500 mb-8">
-          Access your Jeneviv dashboard.
-        </p>
-
-        {(formError || error) && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {formError || error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">Email</span>
-            <input
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
-            />
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">Password</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              className="mt-2 w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
-            />
-          </label>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-2xl bg-orange-500 px-4 py-3 text-white font-semibold hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-slate-600">
-          Don’t have an account?{" "}
+    <AuthLayout
+      title="Sign in to Jeneviv"
+      subtitle="Pick up where your collections left off."
+      footer={
+        <>
+          New to Jeneviv?{" "}
           <Link
             to="/signup"
-            className="font-semibold text-orange-600 hover:text-orange-700"
+            className="font-semibold text-brand underline underline-offset-2"
           >
-            Sign up
+            Create an account
           </Link>
-        </p>
-      </div>
-    </div>
+        </>
+      }
+    >
+      {demo ? (
+        <InlineNote tone="warning" title="Demo workspace">
+          The backend host is offline, so sign in with any credentials — or{" "}
+          <button
+            type="button"
+            onClick={fillDemo}
+            className="font-semibold underline underline-offset-2"
+          >
+            use the seeded coordinator
+          </button>
+          .
+        </InlineNote>
+      ) : null}
+
+      <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+        <Field label="Email address" htmlFor="email">
+          <div className="relative">
+            <Mail
+              size={15}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint"
+            />
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              required
+              className="pl-9"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+          </div>
+        </Field>
+
+        <Field label="Password" htmlFor="password">
+          <div className="relative">
+            <Lock
+              size={15}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint"
+            />
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              required
+              className="pl-9 pr-10"
+              placeholder="••••••••"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((value) => !value)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-faint transition-colors hover:text-ink"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+            </button>
+          </div>
+        </Field>
+
+        {formError ? <InlineNote tone="error">{formError}</InlineNote> : null}
+
+        <Button
+          type="submit"
+          size="lg"
+          loading={submitting || bootstrapping}
+          disabled={!email || !password}
+        >
+          Sign in
+        </Button>
+      </form>
+
+      <p className="hint mt-4 text-center">
+        Forgot your password? Email{" "}
+        <a
+          className="font-semibold text-brand underline underline-offset-2"
+          href="mailto:myjeneviv@gmail.com"
+        >
+          myjeneviv@gmail.com
+        </a>{" "}
+        and we will reset it for you.
+      </p>
+    </AuthLayout>
   );
 }

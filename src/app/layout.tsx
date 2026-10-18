@@ -1,11 +1,54 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { RootLayoutClient } from "./layout-client";
+import "./marketing.css";
+
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173";
 
 export const metadata: Metadata = {
-  title: "Jeneviv — Track bulk payments with ease.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://jeneviv.com",
+  ),
+  title: {
+    default: "Jeneviv — Group collections, finally under control",
+    template: "%s · Jeneviv",
+  },
   description:
-    "Jeneviv gives any group coordinator a payment link, real-time dashboard, and verified payer report — without a single screenshot or spreadsheet.",
+    "Jeneviv gives course reps, PTAs, cooperatives and associations a payment link, a live dashboard and a verified payer list. Every naira confirmed, every payer accounted for.",
+  keywords: [
+    "group collections Nigeria",
+    "school fees collection",
+    "course rep collection",
+    "payment link Nigeria",
+    "cooperative dues",
+    "PTA levies",
+    "Jeneviv",
+  ],
+  applicationName: "Jeneviv",
+  authors: [{ name: "Acadeva Limited" }],
+  creator: "Jeneviv",
+  openGraph: {
+    type: "website",
+    locale: "en_NG",
+    url: "/",
+    siteName: "Jeneviv",
+    title: "Jeneviv — Group collections, finally under control",
+    description:
+      "One payment link. A live dashboard. A verified payer list. Built for the way Nigerian groups actually collect money.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Jeneviv — Group collections, finally under control",
+    description:
+      "One payment link. A live dashboard. A verified payer list. Built for the way Nigerian groups actually collect money.",
+  },
+  robots: { index: true, follow: true },
+  alternates: { canonical: "/" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#ff4a00",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -18,13 +61,17 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap"
           rel="stylesheet"
         />
+        <link rel="preconnect" href={appUrl} />
       </head>
-      <body>
-        <RootLayoutClient>{children}</RootLayoutClient>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

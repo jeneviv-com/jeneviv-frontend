@@ -1,250 +1,358 @@
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  adminAPI,
   APIError,
+  apiFetch,
+  banksAPI,
   collectionsAPI,
   merchantsAPI,
   payoutsAPI,
   templatesAPI,
   transactionsAPI,
+  type AdminStats,
+  type AuditLog,
+  type Bank,
+  type BankAccount,
+  type Collection,
+  type CollectionField,
+  type Merchant,
+  type MerchantStatus,
+  type Payout,
+  type Refund,
+  type Template,
+  type Transaction,
+  type User,
 } from "@/lib/api";
-import { useCallback, useEffect, useState } from "react";
+import { isDemoMode, onDemoDataChanged } from "@/lib/demo";
 
-interface UseAsyncState<T> {
-  data: T | null;
-  loading: boolean;
-  error: string | null;
+export function errorMessage(error: unknown) {
+  if (error instanceof APIError) return error.message;
+  if (error instanceof Error) return error.message;
+  return "Something went wrong. Please try again.";
 }
 
-// Generic hook for async operations
-export function useAsync<T>(asyncFunction: () => Promise<T>, immediate = true) {
-  const [state, setState] = useState<UseAsyncState<T>>({
-    data: null,
-    loading: immediate,
-    error: null,
-  });
+export interface Resource<T> {
+  data: T | null;
+  error: string | null;
+  loading: boolean;
+  refreshing: boolean;
+  refetch: () => void;
+  setData: (value: T | null) => void;
+}
 
-  const execute = useCallback(async () => {
-    setState({ data: null, loading: true, error: null });
-    try {
-      const response = await asyncFunction();
-      setState({ data: response, loading: false, error: null });
-      return response;
-    } catch (error) {
-      const message =
-        error instanceof APIError ? error.message : "An error occurred";
-      setState({ data: null, loading: false, error: message });
-      throw error;
-    }
-  }, [asyncFunction]);
+interface ResourceOptions {
+  enabled?: boolean;
+  pollMs?: number;
+}
+
+/**
+ * Small data-fetching primitive: aborts in-flight requests, keeps the previous
+ * value while refreshing, and re-runs when `deps` change.
+ */
+export function useResource<T>(
+  fetcher: (signal: AbortSignal) => Promise<T>,
+  deps: unknown[] = [],
+  options: ResourceOptions = {},
+): Resource<T> {
+  const { enabled = true, pollMs } = options;
+  const [data, setData] = useState<T | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(enabled);
+  const [refreshing, setRefreshing] = useState(false);
+  const [nonce, setNonce] = useState(0);
+
+  const fetcherRef = useRef(fetcher);
+  fetcherRef.current = fetcher;
+  const hasLoaded = useRef(false);
+  const depKey = JSON.stringify(deps);
 
   useEffect(() => {
-    if (immediate) {
-      execute();
+    if (!enabled) {
+      setLoading(false);
+      return;
     }
-  }, [execute, immediate]);
 
-  return { ...state, execute, refetch: execute };
-}
+    let cancelled = false;
+    const controller = new AbortController();
 
-// ============================================================================
-// COLLECTIONS HOOKS
-// ============================================================================
-
-export function useCollections() {
-  return useAsync(() => collectionsAPI.list().then((r) => r.collections));
-}
-
-export function useCollection(id: string | null) {
-  return useAsync(
-    () =>
-      id
-        ? collectionsAPI.get(id).then((r) => r.collection)
-        : Promise.reject("No ID provided"),
-    !!id,
-  );
-}
-
-export function useCollectionTransactions(collectionId: string) {
-  return useAsync(() =>
-    collectionsAPI.transactions(collectionId).then((r) => r.transactions),
-  );
-}
-
-export function useCreateCollection() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const create = useCallback(
-    async (data: {
-      name: string;
-      description: string;
-      amount: number;
-      currency: string;
-      template_id?: string;
-    }) => {
-      setLoading(true);
-      setError(null);
+    const load = async () => {
+      if (hasLoaded.current) setRefreshing(true);
+      else setLoading(true);
       try {
-        const result = await collectionsAPI.create(data);
-        return result.collection;
+        const result = await fetcherRef.current(controller.signal);
+        if (cancelled) return;
+        setData(result);
+        setError(null);
+        hasLoaded.current = true;
       } catch (err) {
-        const message =
-          err instanceof APIError ? err.message : "Failed to create collection";
-        setError(message);
-        throw err;
+        if (cancelled) return;
+        if ((err as Error)?.name === "AbortError") return;
+        setError(errorMessage(err));
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
-    },
-    [],
-  );
+    };
 
-  return { create, loading, error };
+    load();
+    let timer: ReturnType<typeof setInterval> | undefined;
+    if (pollMs) timer = setInterval(load, pollMs);
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+      if (timer) clearInterval(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [depKey, enabled, pollMs, nonce]);
+
+  /* Demo mode mutates its store directly — refresh so the UI stays truthful. */
+  useEffect(() => {
+    if (!enabled) return;
+    const unsubscribe = onDemoDataChanged(() =>
+      setNonce((value) => value + 1),
+    );
+    return () => {
+      unsubscribe();
+    };
+  }, [enabled]);
+
+  const refetch = useCallback(() => setNonce((value) => value + 1), []);
+
+  return { data, error, loading, refreshing, refetch, setData };
 }
 
-// ============================================================================
-// TRANSACTIONS HOOKS
-// ============================================================================
+/* -------------------------------------------------------------- collections */
 
-export function useTransaction(id: string | null) {
-  return useAsync(
+export function useCollections(params?: { status?: string; search?: string }) {
+  const deps = [params?.status ?? "", params?.search ?? ""];
+  return useResource(
+    () => collectionsAPI.list(params).then((r) => r.collections),
+    deps,
+  );
+}
+
+export type CollectionWithStats = Collection & {
+  stats?: {
+    paid: number;
+    collected: number;
+    pending: number;
+    failed: number;
+    total: number;
+  };
+};
+
+export function useCollectionStats(
+  params?: { status?: string; search?: string },
+) {
+  return useResource<CollectionWithStats[]>(
+    () => collectionsAPI.list(params).then((r) => r.collections),
+    [params?.status ?? "", params?.search ?? ""],
+  ) as Resource<CollectionWithStats[]>;
+}
+
+export function useCollection(id?: string | null) {
+  return useResource<CollectionWithStats>(
+    (signal) =>
+      collectionsAPI.get(id as string).then((r) => r.collection),
+    [id ?? ""],
+    { enabled: Boolean(id) },
+  ) as Resource<CollectionWithStats>;
+}
+
+export function useCollectionByCode(shortCode?: string | null) {
+  return useResource<Collection>(
+    () => collectionsAPI.getByCode(shortCode as string).then((r) => r.collection),
+    [shortCode ?? ""],
+    { enabled: Boolean(shortCode) },
+  );
+}
+
+export function useCollectionFields(id?: string | null) {
+  return useResource<CollectionField[]>(
+    () => collectionsAPI.fields(id as string).then((r) => r.fields),
+    [id ?? ""],
+    { enabled: Boolean(id) },
+  );
+}
+
+export function useCollectionTransactions(
+  id?: string | null,
+  status?: string,
+  pollMs?: number,
+) {
+  return useResource<Transaction[]>(
     () =>
-      id
-        ? transactionsAPI.get(id).then((r) => r.transaction)
-        : Promise.reject("No ID provided"),
-    !!id,
+      collectionsAPI
+        .transactions(id as string, status ? { status } : undefined)
+        .then((r) => r.transactions),
+    [id ?? "", status ?? ""],
+    { enabled: Boolean(id), pollMs },
   );
 }
 
-// ============================================================================
-// PAYOUTS HOOKS
-// ============================================================================
+/* ------------------------------------------------------------- transactions */
 
-export function usePayouts() {
-  return useAsync(() => payoutsAPI.list().then((r) => r.payouts));
-}
-
-export function usePayout(id: string | null) {
-  return useAsync(
-    () =>
-      id
-        ? payoutsAPI.get(id).then((r) => r.payout)
-        : Promise.reject("No ID provided"),
-    !!id,
+export function useTransactions(
+  filters?: {
+    collection_id?: string;
+    status?: string;
+    search?: string;
+  },
+  pollMs?: number,
+) {
+  const key = JSON.stringify(filters ?? {});
+  return useResource<Transaction[]>(
+    () => transactionsAPI.list(filters).then((r) => r.transactions),
+    [key],
+    { pollMs },
   );
 }
 
-export function useInitiatePayout() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const initiate = useCallback(
-    async (bankAccountId: string, amount: number, currency: string) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await payoutsAPI.initiate(
-          bankAccountId,
-          amount,
-          currency,
-        );
-        return result.payout;
-      } catch (err) {
-        const message =
-          err instanceof APIError ? err.message : "Failed to initiate payout";
-        setError(message);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
+export function useTransaction(id?: string | null) {
+  return useResource<Transaction>(
+    () => transactionsAPI.get(id as string).then((r) => r.transaction),
+    [id ?? ""],
+    { enabled: Boolean(id) },
   );
-
-  return { initiate, loading, error };
 }
 
-// ============================================================================
-// MERCHANT HOOKS
-// ============================================================================
+/* ------------------------------------------------------------------ payouts */
+
+export function usePayouts(status?: string) {
+  return useResource<Payout[]>(
+    () => payoutsAPI.list(status ? { status } : undefined).then((r) => r.payouts),
+    [status ?? ""],
+  );
+}
+
+export function usePayout(id?: string | null) {
+  return useResource<Payout>(
+    () => payoutsAPI.get(id as string).then((r) => r.payout),
+    [id ?? ""],
+    { enabled: Boolean(id) },
+  );
+}
+
+/* ------------------------------------------------------------ merchant data */
 
 export function useMerchant() {
-  return useAsync(() => merchantsAPI.getMe().then((r) => r.merchant));
+  return useResource<Merchant | null>(
+    () => merchantsAPI.getMe().then((r) => r.merchant ?? null),
+    [],
+  );
 }
 
 export function useBankAccounts() {
-  return useAsync(() =>
-    merchantsAPI.bankAccounts.list().then((r) => r.bank_accounts),
+  return useResource<BankAccount[]>(
+    () => merchantsAPI.bankAccounts.list().then((r) => r.bank_accounts),
+    [],
   );
 }
 
-export function useAddBankAccount() {
+export function useBanks(country = "NG") {
+  return useResource<Bank[]>(
+    () => banksAPI.list(country).then((r) => r.banks),
+    [country],
+  );
+}
+
+/* ---------------------------------------------------------------- templates */
+
+export function useTemplates(scope: "all" | "mine" = "all") {
+  return useResource<Template[]>(
+    () => templatesAPI.list(scope).then((r) => r.templates),
+    [scope],
+  );
+}
+
+export function useTemplate(id?: string | null) {
+  return useResource<Template>(
+    () => templatesAPI.get(id as string).then((r) => r.template),
+    [id ?? ""],
+    { enabled: Boolean(id) },
+  );
+}
+
+/* -------------------------------------------------------------------- admin */
+
+export function useAdminStats(enabled = true) {
+  return useResource<AdminStats>(() => adminAPI.getStats(), [], { enabled });
+}
+
+export function useAdminMerchants(status?: MerchantStatus) {
+  return useResource<Merchant[]>(
+    () => adminAPI.listMerchants(status).then((r) => r.merchants),
+    [status ?? ""],
+  );
+}
+
+export function useAdminTransactions(status?: string) {
+  return useResource<Transaction[]>(
+    () => adminAPI.getTransactions({ status }).then((r) => r.transactions),
+    [status ?? ""],
+  );
+}
+
+export function useAuditLogs() {
+  return useResource<AuditLog[]>(
+    () => adminAPI.getAuditLogs().then((r) => r.logs),
+    [],
+  );
+}
+
+/* ------------------------------------------------------------------ refunds */
+
+/**
+ * The documented API exposes refunds through the admin refund endpoint, so the
+ * dashboard keeps the refunds it has issued alongside those transactions.
+ */
+export function useRefunds() {
+  return useResource<Refund[]>(
+    async () => {
+      if (!isDemoMode()) return [];
+      const response = await apiFetch<{ refunds: Refund[] }>("/api/demo/refunds");
+      return response.refunds;
+    },
+    [isDemoMode() ? "demo" : "live"],
+  );
+}
+
+/* ---------------------------------------------------------------- user roster */
+
+export function useSessionUser() {
+  return useResource<User | null>(() =>
+    apiFetch<{ user: User | null }>("/api/auth/get-session").then(
+      (r) => r.user ?? null,
+    ),
+  );
+}
+
+/* ------------------------------------------------------------------- actions */
+
+export function useAction<TArgs extends unknown[], TResult>(
+  action: (...args: TArgs) => Promise<TResult>,
+) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const add = useCallback(
-    async (data: {
-      bank_code: string;
-      account_number: string;
-      currency: string;
-      is_default: boolean;
-    }) => {
+  const run = useCallback(
+    async (...args: TArgs) => {
       setLoading(true);
       setError(null);
       try {
-        const result = await merchantsAPI.bankAccounts.add(data);
-        return result.bank_account;
+        return await action(...args);
       } catch (err) {
-        const message =
-          err instanceof APIError ? err.message : "Failed to add bank account";
-        setError(message);
+        setError(errorMessage(err));
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [],
+    [action],
   );
 
-  return { add, loading, error };
-}
-
-// ============================================================================
-// TEMPLATES HOOKS
-// ============================================================================
-
-export function useTemplates() {
-  return useAsync(() => templatesAPI.list().then((r) => r.templates));
-}
-
-export function useTemplate(id: string | null) {
-  return useAsync(
-    () =>
-      id
-        ? templatesAPI.get(id).then((r) => r.template)
-        : Promise.reject("No ID provided"),
-    !!id,
-  );
-}
-
-export function useCreateTemplate() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const create = useCallback(async (name: string, description: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await templatesAPI.create(name, description);
-      return result.template;
-    } catch (err) {
-      const message =
-        err instanceof APIError ? err.message : "Failed to create template";
-      setError(message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return { create, loading, error };
+  return { run, loading, error, setError, reset: () => setError(null) };
 }

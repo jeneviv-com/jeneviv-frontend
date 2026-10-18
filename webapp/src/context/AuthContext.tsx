@@ -1,110 +1,185 @@
-import { authAPI, User } from "@/lib/api";
 import {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
+import {
+  authAPI,
+  APIError,
+  merchantsAPI,
+  onUnauthorized,
+  tokenStore,
+  type Merchant,
+  type User,
+} from "@/lib/api";
+import {
+  connectionState,
+  initApiConnection,
+  subscribeConnection,
+  type ConnectionState,
+} from "@/lib/demo";
 
-interface AuthContextType {
+interface AuthContextValue {
   user: User | null;
+  merchant: Merchant | null;
   loading: boolean;
+  connection: ConnectionState;
   error: string | null;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
-  isAuthenticated: boolean;
+  refreshMerchant: () => Promise<void>;
+  setMerchant: (merchant: Merchant | null) => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [merchant, setMerchant] = useState<Merchant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [connection, setConnection] = useState<ConnectionState>(
+    connectionState(),
+  );
 
-  // Initialize auth state on mount
-  useEffect(() => {
-    refreshSession();
+  const loadMerchant = useCallback(async () => {
+    try {
+      const response = await merchantsAPI.getMe();
+      setMerchant(response.merchant ?? null);
+    } catch {
+      setMerchant(null);
+    }
   }, []);
 
-  const refreshSession = async () => {
+  const refreshSession = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
-      const { user } = await authAPI.getSession();
-      setUser(user);
+      const { user: sessionUser } = await authAPI.getSession();
+      setUser(sessionUser ?? null);
+      if (sessionUser) await loadMerchant();
+      else setMerchant(null);
     } catch (err) {
+      if (err instanceof APIError && err.isAuthError) setUser(null);
+      setUser((current) => current);
+    }
+  }, [loadMerchant]);
+
+  const refreshMerchant = useCallback(async () => {
+    await loadMerchant();
+  }, [loadMerchant]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const bootstrap = async () => {
+      setLoading(true);
+      const state = await initApiConnection();
+      if (cancelled) return;
+      setConnection(state);
+
+      try {
+        const { user: sessionUser } = await authAPI.getSession();
+        if (cancelled) return;
+        if (sessionUser) {
+          setUser(sessionUser);
+          await loadMerchant();
+        }
+      } catch {
+        /* not signed in — expected on first load */
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    bootstrap();
+    const unsubscribeDemo = subscribeConnection(setConnection);
+    const unsubscribeAuth = onUnauthorized(() => {
       setUser(null);
-      // Session expired or not authenticated - this is normal
-    } finally {
-      setLoading(false);
-    }
-  };
+      setMerchant(null);
+    });
 
-  const login = async (email: string, password: string) => {
-    try {
-      setLoading(true);
+    return () => {
+      cancelled = true;
+      unsubscribeDemo();
+      unsubscribeAuth();
+    };
+  }, [loadMerchant]);
+
+  const login = useCallback(
+    async (email: string, password: string) => {
       setError(null);
-      const { user } = await authAPI.signIn(email, password);
-      setUser(user);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to sign in";
-      setError(message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
+      const response = await authAPI.signIn(email, password);
+      tokenStore.set(response.token ?? null);
+      setUser(response.user);
+      await loadMerchant();
+    },
+    [loadMerchant],
+  );
 
-  const signup = async (name: string, email: string, password: string) => {
-    try {
-      setLoading(true);
+  const signup = useCallback(
+    async (name: string, email: string, password: string) => {
       setError(null);
-      const { user } = await authAPI.signUp(name, email, password);
-      setUser(user);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to sign up";
-      setError(message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
+      const response = await authAPI.signUp(name, email, password);
+      tokenStore.set(response.token ?? null);
+      setUser(response.user);
+      await loadMerchant();
+    },
+    [loadMerchant],
+  );
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
-      setLoading(true);
       await authAPI.signOut();
-      setUser(null);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to sign out";
-      setError(message);
-    } finally {
-      setLoading(false);
+    } catch {
+      /* signing out locally is enough if the server is unreachable */
     }
-  };
+    tokenStore.set(null);
+    setUser(null);
+    setMerchant(null);
+  }, []);
 
-  const value: AuthContextType = {
-    user,
-    loading,
-    error,
-    login,
-    signup,
-    logout,
-    refreshSession,
-    isAuthenticated: user !== null,
-  };
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      user,
+      merchant,
+      loading,
+      connection,
+      error,
+      isAuthenticated: Boolean(user),
+      isAdmin: user?.role === "admin",
+      login,
+      signup,
+      logout,
+      refreshSession,
+      refreshMerchant,
+      setMerchant,
+    }),
+    [
+      user,
+      merchant,
+      loading,
+      connection,
+      error,
+      login,
+      signup,
+      logout,
+      refreshSession,
+      refreshMerchant,
+    ],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used inside AuthProvider");
   return context;
 }

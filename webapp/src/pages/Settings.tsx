@@ -1,264 +1,376 @@
-import { useMerchant, useBankAccounts, useAddBankAccount } from "@/hooks/useApi";
-import { merchantsAPI, banksAPI } from "@/lib/api";
-import { useState, useEffect } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  BadgeCheck,
+  Building2,
+  Database,
+  LogOut,
+  Mail,
+  Save,
+  ServerCog,
+  ShieldCheck,
+  User as UserIcon,
+} from "lucide-react";
+import { apiConfig, merchantsAPI } from "@/lib/api";
+import { useAction, useBankAccounts } from "@/hooks/useApi";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
+import { formatDate, formatMoney } from "@/lib/format";
+import {
+  Button,
+  Card,
+  CardHeader,
+  Field,
+  InlineNote,
+  Input,
+  KeyValue,
+  PageHeader,
+  Pill,
+  Select,
+  StatCard,
+  StatusPill,
+  Toggle,
+} from "@/components/ui";
 
 export default function Settings() {
-  const { data: merchant, loading: merchantLoading, refetch: refetchMerchant } = useMerchant();
-  const { data: bankAccounts, loading: accountsLoading, refetch: refetchAccounts } = useBankAccounts();
-  const { add: addBankAccount, loading: addingAccount, error: addError } = useAddBankAccount();
+  const { user, merchant, refreshMerchant, logout, connection, isAdmin } = useAuth();
+  const { success, error: toastError } = useToast();
+  const accounts = useBankAccounts();
 
-  const [showBankForm, setShowBankForm] = useState(false);
-  const [banks, setBanks] = useState<any[]>([]);
-  const [bankFormData, setBankFormData] = useState({
-    bank_code: "",
-    account_number: "",
-    currency: "NGN",
-    is_default: false,
+  const [workspace, setWorkspace] = useState({
+    display_name: merchant?.display_name ?? "",
+    application_note: merchant?.application_note ?? "",
   });
-  const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [notify, setNotify] = useState({
+    email_notification_for_transactions:
+      merchant?.settings?.email_notification_for_transactions ?? true,
+    email_notification_period:
+      merchant?.settings?.email_notification_period ?? "immediate",
+    payout_mode: merchant?.settings?.payout_mode ?? "manual",
+  });
 
   useEffect(() => {
-    banksAPI.list("NG").then((r) => setBanks(r.banks)).catch(console.error);
-  }, []);
+    if (!merchant) return;
+    setWorkspace({
+      display_name: merchant.display_name ?? "",
+      application_note: merchant.application_note ?? "",
+    });
+    setNotify({
+      email_notification_for_transactions:
+        merchant.settings?.email_notification_for_transactions ?? true,
+      email_notification_period:
+        merchant.settings?.email_notification_period ?? "immediate",
+      payout_mode: merchant.settings?.payout_mode ?? "manual",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [merchant?.id, merchant?.updatedAt]);
 
-  const handleAddBankAccount = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccessMsg(null);
+  const updateSettings = useAction(
+    (data: Parameters<typeof merchantsAPI.updateSettings>[0]) =>
+      merchantsAPI.updateSettings(data),
+  );
+  const apply = useAction((name: string, note: string) =>
+    merchantsAPI.apply(name, note),
+  );
 
-    try {
-      await addBankAccount({
-        bank_code: bankFormData.bank_code,
-        account_number: bankFormData.account_number,
-        currency: bankFormData.currency,
-        is_default: bankFormData.is_default,
-      });
-      setBankFormData({ bank_code: "", account_number: "", currency: "NGN", is_default: false });
-      setShowBankForm(false);
-      setSuccessMsg("Bank account added successfully");
-      refetchAccounts();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add bank account");
-    }
-  };
-
-  const handleUpdateSettings = async (settings: any) => {
-    try {
-      await merchantsAPI.updateSettings(settings);
-      setSuccessMsg("Settings updated successfully");
-      refetchMerchant();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update settings");
-    }
-  };
-
-  if (merchantLoading || accountsLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-slate-600">Loading settings...</div>
-      </div>
-    );
-  }
+  const defaultAccount = (accounts.data ?? []).find((account) => account.is_default);
 
   return (
-    <div className="p-6 max-w-4xl">
-      <h1 className="text-3xl font-bold text-slate-900 mb-6">Settings</h1>
+    <>
+      <PageHeader
+        eyebrow="Workspace"
+        title="Settings"
+        description="Your profile, how your workspace appears to payers, and how money leaves the platform."
+      />
 
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
-          {error}
-        </div>
-      )}
-
-      {successMsg && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg">
-          {successMsg}
-        </div>
-      )}
-
-      {/* Merchant Status */}
-      <div className="bg-white rounded-lg border border-slate-200 p-6 mb-6">
-        <h2 className="text-xl font-bold mb-4">Merchant Account</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm text-slate-600">Display Name</label>
-            <p className="font-semibold text-slate-900">{merchant?.display_name || "Not set"}</p>
-          </div>
-          <div>
-            <label className="text-sm text-slate-600">Status</label>
-            <p className={`font-semibold ${
-              merchant?.status === "approved" ? "text-green-600" :
-              merchant?.status === "pending" ? "text-yellow-600" :
-              "text-red-600"
-            }`}>
-              {merchant?.status?.toUpperCase()}
-            </p>
-          </div>
-          <div>
-            <label className="text-sm text-slate-600">Wallet Balance</label>
-            <p className="font-semibold text-slate-900">
-              {merchant ? `₦${(merchant.wallet_balance_ngn / 100).toLocaleString()}` : "N/A"}
-            </p>
-          </div>
-          <div>
-            <label className="text-sm text-slate-600">Payouts Balance</label>
-            <p className="font-semibold text-slate-900">
-              {merchant ? `₦${(merchant.payouts_balance_ngn / 100).toLocaleString()}` : "N/A"}
-            </p>
-          </div>
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="Workspace status"
+          value={
+            merchant?.status === "approved"
+              ? "Approved"
+              : merchant?.status === "pending"
+                ? "In review"
+                : merchant?.status === "rejected"
+                  ? "Action needed"
+                  : "Not set up"
+          }
+          hint={merchant?.display_name || "No workspace name yet"}
+          tone={merchant?.status === "approved" ? "green" : "brand"}
+          icon={<BadgeCheck size={16} />}
+        />
+        <StatCard
+          label="Collected"
+          value={formatMoney(merchant?.wallet_balance_ngn ?? 0)}
+          hint="Successful payments, all time"
+        />
+        <StatCard
+          label="Available for payout"
+          value={formatMoney(merchant?.payouts_balance_ngn ?? 0)}
+          hint="Minus refunds and payouts in flight"
+        />
+        <StatCard
+          label="Default bank"
+          value={defaultAccount ? `••${defaultAccount.account_number.slice(-4)}` : "None"}
+          hint={defaultAccount?.bank_name ?? "Add one under Payouts"}
+          icon={<Building2 size={16} />}
+        />
       </div>
 
-      {/* Payout Settings */}
-      <div className="bg-white rounded-lg border border-slate-200 p-6 mb-6">
-        <h2 className="text-xl font-bold mb-4">Payout Settings</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Payout Mode</label>
-            <select
-              value={merchant?.payout_mode || "manual"}
-              onChange={(e) => handleUpdateSettings({ payout_mode: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+      <div className="mt-5 grid gap-5 xl:grid-cols-2">
+        <Card>
+          <CardHeader
+            title="Your profile"
+            subtitle="Used for sign-in and receipts"
+            icon={<UserIcon size={16} />}
+          />
+          <KeyValue label="Name" value={user?.name ?? "—"} />
+          <KeyValue label="Email" value={user?.email ?? "—"} mono />
+          <KeyValue
+            label="Email verified"
+            value={user?.emailVerified ? "Yes" : "Not yet"}
+          />
+          <KeyValue label="Member since" value={formatDate(user?.createdAt)} />
+          <KeyValue
+            label="Role"
+            value={isAdmin ? "Workspace admin" : "Coordinator"}
+          />
+          <p className="hint mt-3">
+            To change your email or password, contact{" "}
+            <a
+              className="font-semibold text-brand hover:underline"
+              href="mailto:myjeneviv@gmail.com"
             >
-              <option value="manual">Manual</option>
-              <option value="auto_daily">Automatic Daily</option>
-              <option value="auto_weekly">Automatic Weekly</option>
-            </select>
-          </div>
+              myjeneviv@gmail.com
+            </a>{" "}
+            — this keeps account recovery auditable.
+          </p>
+        </Card>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Email Notification Period
-            </label>
-            <select
-              value={merchant?.email_notification_period || "immediate"}
-              onChange={(e) => handleUpdateSettings({ email_notification_period: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-            >
-              <option value="immediate">Immediate</option>
-              <option value="hourly">Hourly</option>
-              <option value="6hourly">Every 6 Hours</option>
-              <option value="12hourly">Every 12 Hours</option>
-              <option value="daily">Daily</option>
-            </select>
-          </div>
-
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={merchant?.email_notification_for_transactions || false}
-              onChange={(e) => handleUpdateSettings({ email_notification_for_transactions: e.target.checked })}
-              className="w-4 h-4 rounded border-slate-300"
-            />
-            <span className="text-sm text-slate-700">Email notifications for transactions</span>
-          </label>
-        </div>
-      </div>
-
-      {/* Bank Accounts */}
-      <div className="bg-white rounded-lg border border-slate-200 p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Bank Accounts</h2>
-          <button
-            onClick={() => setShowBankForm(!showBankForm)}
-            className="flex items-center gap-2 bg-orange-500 text-white px-3 py-2 rounded-lg hover:bg-orange-600 text-sm"
-          >
-            <Plus size={16} />
-            Add Account
-          </button>
-        </div>
-
-        {showBankForm && (
-          <form onSubmit={handleAddBankAccount} className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
-            {addError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">
-                {addError}
-              </div>
-            )}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Bank</label>
-                <select
-                  value={bankFormData.bank_code}
-                  onChange={(e) => setBankFormData({ ...bankFormData, bank_code: e.target.value })}
-                  required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                  <option value="">Select a bank</option>
-                  {banks.map((bank) => (
-                    <option key={bank.code} value={bank.code}>
-                      {bank.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Account Number</label>
-                <input
-                  type="text"
-                  value={bankFormData.account_number}
-                  onChange={(e) => setBankFormData({ ...bankFormData, account_number: e.target.value })}
-                  required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={bankFormData.is_default}
-                  onChange={(e) => setBankFormData({ ...bankFormData, is_default: e.target.checked })}
-                  className="w-4 h-4 rounded border-slate-300"
-                />
-                <span className="text-sm text-slate-700">Set as default</span>
-              </label>
-
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  disabled={addingAccount}
-                  className="flex-1 bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 disabled:opacity-50 text-sm font-medium"
-                >
-                  {addingAccount ? "Adding..." : "Add Account"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowBankForm(false)}
-                  className="flex-1 bg-slate-200 text-slate-700 py-2 rounded-lg hover:bg-slate-300 text-sm font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
+        <Card>
+          <CardHeader
+            title="Workspace profile"
+            subtitle="What payers see on the payment page"
+            icon={<Building2 size={16} />}
+          />
+          <div className="space-y-4">
+            <Field label="Workspace name" htmlFor="settings-name">
+              <Input
+                id="settings-name"
+                value={workspace.display_name}
+                onChange={(event) =>
+                  setWorkspace({ ...workspace, display_name: event.target.value })
+                }
+              />
+            </Field>
+            <Field label="What you collect" htmlFor="settings-note">
+              <Input
+                id="settings-note"
+                value={workspace.application_note}
+                onChange={(event) =>
+                  setWorkspace({ ...workspace, application_note: event.target.value })
+                }
+              />
+            </Field>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                icon={<Save size={14} />}
+                loading={apply.loading}
+                onClick={async () => {
+                  try {
+                    await apply.run(workspace.display_name, workspace.application_note);
+                    await refreshMerchant();
+                    success("Workspace updated", "Your changes are saved.");
+                  } catch (err) {
+                    toastError(
+                      "Could not save",
+                      err instanceof Error ? err.message : "",
+                    );
+                  }
+                }}
+              >
+                Save workspace
+              </Button>
+              <span className="flex items-center gap-2">
+                <StatusPill status={merchant?.status ?? "pending"} />
+              </span>
             </div>
-          </form>
-        )}
+            {merchant?.status === "pending" ? (
+              <InlineNote tone="warning">
+                Approval is usually same-day. You can create collections while
+                you wait.
+              </InlineNote>
+            ) : null}
+          </div>
+        </Card>
 
-        <div className="space-y-2">
-          {bankAccounts && bankAccounts.length > 0 ? (
-            bankAccounts.map((account) => (
-              <div key={account.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <div>
-                  <p className="font-semibold text-slate-900">{account.account_number}</p>
-                  <p className="text-sm text-slate-600">{account.bank_code}</p>
-                  {account.is_default && (
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded mt-1 inline-block">
-                      Default
-                    </span>
-                  )}
-                </div>
-                <button className="p-2 hover:bg-red-50 rounded-lg text-red-600">
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            ))
-          ) : (
-            <p className="text-center text-slate-600 py-4">No bank accounts added yet</p>
-          )}
-        </div>
+        <Card>
+          <CardHeader
+            title="Payment notifications"
+            subtitle="How Jeneviv emails you about transactions"
+            icon={<Mail size={16} />}
+          />
+          <div className="space-y-4">
+            <div className="rounded-xl border border-line bg-cream px-4 py-3">
+              <Toggle
+                checked={notify.email_notification_for_transactions}
+                onChange={async (value) => {
+                  setNotify({ ...notify, email_notification_for_transactions: value });
+                  try {
+                    await updateSettings.run({
+                      email_notification_for_transactions: value,
+                    });
+                    await refreshMerchant();
+                  } catch (err) {
+                    toastError(
+                      "Could not update",
+                      err instanceof Error ? err.message : "",
+                    );
+                  }
+                }}
+                label="Email me about transactions"
+                description="Settlement confirmations are always sent, regardless of this setting."
+              />
+            </div>
+            <Field
+              label="Notification frequency"
+              htmlFor="notify-period"
+              hint="Batch summaries reduce inbox noise for busy collections."
+            >
+              <Select
+                id="notify-period"
+                value={notify.email_notification_period}
+                onChange={async (event) => {
+                  const value = event.target
+                    .value as typeof notify.email_notification_period;
+                  setNotify({ ...notify, email_notification_period: value });
+                  try {
+                    await updateSettings.run({
+                      email_notification_period: value,
+                    });
+                    await refreshMerchant();
+                    success("Notification preference saved");
+                  } catch (err) {
+                    toastError(
+                      "Could not update",
+                      err instanceof Error ? err.message : "",
+                    );
+                  }
+                }}
+              >
+                <option value="immediate">Immediately after each payment</option>
+                <option value="hourly">Hourly summary</option>
+                <option value="6hourly">Every 6 hours</option>
+                <option value="12hourly">Every 12 hours</option>
+                <option value="daily">Daily digest</option>
+              </Select>
+            </Field>
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader
+            title="Settlement & security"
+            subtitle="Where money lands and how your account is protected"
+            icon={<ShieldCheck size={16} />}
+          />
+          <Field label="Payout mode" htmlFor="settings-payout-mode">
+            <Select
+              id="settings-payout-mode"
+              value={notify.payout_mode}
+              onChange={async (event) => {
+                const value = event.target.value as typeof notify.payout_mode;
+                setNotify({ ...notify, payout_mode: value });
+                try {
+                  await updateSettings.run({ payout_mode: value });
+                  await refreshMerchant();
+                  success("Settlement schedule updated");
+                } catch (err) {
+                  toastError(
+                    "Could not update",
+                    err instanceof Error ? err.message : "",
+                  );
+                }
+              }}
+            >
+              <option value="manual">Manual withdrawals only</option>
+              <option value="auto_daily">Automatic — twice daily</option>
+              <option value="auto_weekly">Automatic — weekly</option>
+            </Select>
+          </Field>
+
+          <div className="mt-4 space-y-2">
+            <KeyValue
+              label="Bank accounts linked"
+              value={
+                <Link to="/payouts" className="text-brand hover:underline">
+                  {(accounts.data ?? []).length} · manage
+                </Link>
+              }
+            />
+            <KeyValue label="Two-factor authentication" value={<Pill tone="green">Email OTP</Pill>} />
+            <KeyValue label="Data protection" value={<Pill tone="blue">NDPA 2023</Pill>} />
+          </div>
+
+          <Button
+            variant="secondary"
+            className="mt-4"
+            icon={<LogOut size={14} />}
+            onClick={async () => {
+              await logout();
+            }}
+          >
+            Sign out of this device
+          </Button>
+        </Card>
       </div>
-    </div>
+
+      <Card className="mt-5">
+        <CardHeader
+          title="Connection"
+          subtitle="Where this dashboard is reading its data from"
+          icon={<ServerCog size={16} />}
+        />
+        <div className="grid gap-4 sm:grid-cols-3">
+          <StatCard
+            label="API base URL"
+            value={apiConfig.baseUrl.replace(/^https?:\/\//, "")}
+            hint={apiConfig.baseUrl}
+            icon={<Database size={16} />}
+          />
+          <StatCard
+            label="Data source"
+            value={
+              connection === "demo"
+                ? "Demo dataset"
+                : connection === "live"
+                  ? "Live API"
+                  : "Checking"
+            }
+            hint={
+              connection === "demo"
+                ? "The API host did not answer, so seeded data is in use"
+                : "Requests are served by the Jeneviv backend"
+            }
+            tone={connection === "demo" ? "brand" : "green"}
+          />
+          <StatCard
+            label="Environment"
+            value={import.meta.env.MODE === "production" ? "Production" : "Development"}
+            hint={`Demo mode: ${import.meta.env.VITE_DEMO_MODE ?? "auto"}`}
+          />
+        </div>
+        {connection === "demo" ? (
+          <div className="mt-4">
+            <InlineNote tone="warning" title="Running on demo data">
+              Set <code className="font-mono">VITE_API_URL</code> to a running
+              Jeneviv API and <code className="font-mono">VITE_DEMO_MODE=false</code>{" "}
+              in <code className="font-mono">webapp/.env.local</code>, then restart
+              the dev server to work against the real backend.
+            </InlineNote>
+          </div>
+        ) : null}
+      </Card>
+    </>
   );
 }

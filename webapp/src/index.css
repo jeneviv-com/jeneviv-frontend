@@ -2,21 +2,193 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-cream text-ink font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply tracking-tight;
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand/50 ring-offset-2 ring-offset-cream;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+  }
+
+  ::selection {
+    background: #ffd9c7;
+  }
+
+  /* Numbers should never jump around as data refreshes. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
-body {
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
-    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer components {
+  .card {
+    @apply rounded-card border border-line bg-white shadow-card;
+  }
+
+  .card-pad {
+    @apply p-5 sm:p-6;
+  }
+
+  .section-title {
+    @apply text-[15px] font-bold tracking-tight text-ink;
+  }
+
+  .eyebrow {
+    @apply font-mono text-3xs font-medium uppercase tracking-[0.16em] text-ink-muted;
+  }
+
+  .muted {
+    @apply text-[13px] leading-relaxed text-ink-muted;
+  }
+
+  /* buttons ------------------------------------------------------------- */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-[10px] border border-transparent px-4 py-2.5 text-[13.5px] font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  .btn-primary {
+    @apply bg-brand text-white hover:bg-brand-dark active:translate-y-px;
+  }
+
+  .btn-secondary {
+    @apply border-ink/15 bg-white text-ink hover:border-ink/40 hover:bg-cream;
+  }
+
+  .btn-ghost {
+    @apply text-ink-soft hover:bg-ink/5 hover:text-ink;
+  }
+
+  .btn-danger {
+    @apply border-danger/20 bg-white text-danger hover:bg-danger/5;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-[12.5px];
+  }
+
+  .btn-lg {
+    @apply w-full px-5 py-3 text-[14.5px];
+  }
+
+  /* form fields --------------------------------------------------------- */
+  .label {
+    @apply mb-1.5 block text-[12.5px] font-semibold text-ink-soft;
+  }
+
+  .input {
+    @apply w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-[14px] text-ink placeholder:text-ink-faint focus:border-ink/30 focus:outline-none focus:ring-2 focus:ring-brand/20 disabled:bg-cream;
+  }
+
+  .hint {
+    @apply mt-1.5 text-[11.5px] text-ink-muted;
+  }
+
+  .error-text {
+    @apply mt-1.5 text-[12px] font-medium text-danger;
+  }
+
+  /* pills & badges ------------------------------------------------------ */
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-pill px-2.5 py-1 text-[11.5px] font-semibold;
+  }
+
+  .pill-green {
+    @apply bg-[#e7f5ee] text-success;
+  }
+
+  .pill-amber {
+    @apply bg-[#fff3dd] text-warning;
+  }
+
+  .pill-red {
+    @apply bg-[#fdecea] text-danger;
+  }
+
+  .pill-neutral {
+    @apply bg-ink/5 text-ink-soft;
+  }
+
+  .pill-brand {
+    @apply bg-brand-soft text-brand;
+  }
+
+  .pill-blue {
+    @apply bg-[#eaf1fb] text-[#1d4f91];
+  }
+
+  /* table --------------------------------------------------------------- */
+  .table {
+    @apply w-full border-collapse text-left;
+  }
+
+  .table thead th {
+    @apply border-b border-line px-4 py-3 font-mono text-3xs font-medium uppercase tracking-[0.12em] text-ink-muted;
+  }
+
+  .table tbody td {
+    @apply border-b border-line-soft px-4 py-3.5 text-[13.5px] text-ink;
+  }
+
+  .table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .table tbody tr:hover {
+    @apply bg-cream/60;
+  }
+
+  /* shell -------------------------------------------------------------- */
+  .side-link {
+    @apply flex items-center gap-2.5 rounded-[9px] px-3 py-2 text-[13.5px] font-medium text-[#cbb6ad] transition-colors;
+  }
+
+  .side-link:hover {
+    @apply bg-white/10 text-white;
+  }
+
+  .side-link-active {
+    @apply bg-white text-maroon;
+  }
+
+  .skeleton {
+    @apply rounded-md bg-gradient-to-r from-line-soft via-white to-line-soft;
+    background-size: 440px 100%;
+    @apply animate-shimmer;
+  }
 }
 
-code {
-  font-family:
-    source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+@layer utilities {
+  .soft {
+    font-weight: 400;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
