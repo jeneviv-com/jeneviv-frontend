@@ -181,7 +181,9 @@ export default function LandingPage() {
               <h1 className="m-h1">
                 Group money,
                 <br />
-                <span className="accent">finally accounted for.</span>
+                {/* A non-breaking space keeps “accounted for.” together so the
+                    accent never strands “for.” on a line of its own. */}
+                <span className="accent">finally accounted for.</span>
               </h1>
               <p className="m-lede">
                 Jeneviv turns one payment link into a live ledger — who has
@@ -332,44 +334,58 @@ export default function LandingPage() {
                 </div>
                 <div className="m-laptop-base" />
               </div>
-
-              <div className="m-float m-float-1">
-                <span className="m-float-check">
-                  <Check />
-                </span>
-                <div>
-                  <small>Payment confirmed</small>
-                  <b>₦2,500 · Ada O.</b>
-                </div>
-              </div>
-              <div className="m-float m-float-2">
-                <span className="m-float-ring">
-                  <span>68%</span>
-                </span>
-                <div>
-                  <small>CSC 311 handout</small>
-                  <b>136 of 200 paid</b>
-                </div>
-              </div>
             </div>
           </div>
         </div>
 
         <div className="m-wrap">
-          <div className="m-logos">
-            <p className="m-logos-label">Trusted by coordinators at</p>
-            <div className="m-logo-row">
-              <span className="m-logo-mark">
-                <i /> FOCOSA
-              </span>
-              <span className="m-logo-mark serif">NACOS</span>
-              <span className="m-logo-mark wide">University of Uyo</span>
-              <span className="m-logo-mark">
-                <i /> PTA Lagos
-              </span>
-              <span className="m-logo-mark serif">Greenfield Coop</span>
-              <span className="m-logo-mark wide">Yaba Tech</span>
+          <div className="m-ledger-band">
+            <div className="m-ledger-intro">
+              <span className="m-mono">Sample ledger</span>
+              <p>
+                Every confirmed transfer lands on the coordinator&apos;s
+                dashboard with the payer, the reference and the amount —
+                nothing typed in by hand.
+              </p>
             </div>
+            <ul className="m-ledger-rows">
+              <li>
+                <b>AO</b>
+                <div className="m-ledger-who">
+                  <span>Adaeze Okonkwo</span>
+                  <em>JNV-4471 · CSC 311 handout</em>
+                </div>
+                <span className="m-ledger-amt">₦2,500</span>
+                <span className="m-ledger-state paid">Paid</span>
+              </li>
+              <li>
+                <b>EN</b>
+                <div className="m-ledger-who">
+                  <span>Emeka Nwosu</span>
+                  <em>JNV-4472 · CSC 311 handout</em>
+                </div>
+                <span className="m-ledger-amt">₦2,500</span>
+                <span className="m-ledger-state paid">Paid</span>
+              </li>
+              <li>
+                <b>IK</b>
+                <div className="m-ledger-who">
+                  <span>Ifeoma Kalu</span>
+                  <em>JNV-4473 · CSC 311 handout</em>
+                </div>
+                <span className="m-ledger-amt">₦1,500</span>
+                <span className="m-ledger-state partial">Part paid</span>
+              </li>
+              <li>
+                <b>TJ</b>
+                <div className="m-ledger-who">
+                  <span>Tunde Jaiyeola</span>
+                  <em>JNV-4474 · CSC 311 handout</em>
+                </div>
+                <span className="m-ledger-amt">₦2,500</span>
+                <span className="m-ledger-state">Awaiting</span>
+              </li>
+            </ul>
           </div>
         </div>
       </section>

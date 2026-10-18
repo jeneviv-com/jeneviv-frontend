@@ -34,12 +34,15 @@
 
   --wrap: 1240px;
   --gutter: 40px;
-  --radius: 22px;
-  --radius-lg: 30px;
-  --shadow-card: 0 1px 2px rgba(18, 16, 14, 0.05),
-    0 18px 40px -24px rgba(18, 16, 14, 0.28);
-  --shadow-float: 0 2px 6px rgba(18, 16, 14, 0.06),
-    0 24px 60px -20px rgba(18, 16, 14, 0.32);
+  --radius: 16px;
+  --radius-lg: 20px;
+  /* Hairlines carry the structure; shadows only suggest a surface sits above
+     the page. Large diffuse shadows everywhere are what make a layout read
+     as a template. */
+  --shadow-card: 0 1px 2px rgba(18, 16, 14, 0.04),
+    0 10px 24px -18px rgba(18, 16, 14, 0.22);
+  --shadow-float: 0 1px 3px rgba(18, 16, 14, 0.05),
+    0 16px 36px -22px rgba(18, 16, 14, 0.26);
 }
 
 body {
@@ -401,6 +404,7 @@ body {
   letter-spacing: -0.05em;
   font-weight: 800;
   color: var(--ink);
+  text-wrap: balance;
 }
 
 .m-h1 .accent {
@@ -413,6 +417,7 @@ body {
   font-size: 18px;
   line-height: 1.62;
   color: var(--ink-2);
+  text-wrap: pretty;
 }
 
 .m-hero-cta {
@@ -650,6 +655,7 @@ body {
   font-size: 11px;
   letter-spacing: -0.04em;
   margin-top: 2px;
+  font-variant-numeric: tabular-nums;
 }
 
 .m-lap-kpi em {
@@ -739,45 +745,9 @@ body {
   opacity: 0.9;
 }
 
-.m-float {
-  position: absolute;
-  z-index: 3;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  box-shadow: var(--shadow-float);
-  padding: 12px 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.m-float small {
-  display: block;
-  font-size: 10px;
-  color: var(--muted);
-  line-height: 1.35;
-}
-
-.m-float b {
-  display: block;
-  font-size: 13px;
-  letter-spacing: -0.02em;
-  margin-top: 1px;
-}
-
-.m-float-1 {
-  left: -26px;
-  bottom: 96px;
-  animation: floatY 7s ease-in-out infinite;
-}
-
-.m-float-2 {
-  right: -18px;
-  top: 64px;
-  animation: floatY 9s ease-in-out infinite reverse;
-}
-
+/* The hero mockup now stands on its own — the floating chips that used to sit
+   over it were the most borrowed-looking part of the page. The in-device toast
+   in the payer phone keeps this style. */
 .m-float-check {
   width: 30px;
   height: 30px;
@@ -789,102 +759,115 @@ body {
   flex: none;
 }
 
-.m-float-ring {
-  width: 34px;
-  height: 34px;
+/* ------------------------------------------------------------- ledger band */
+
+/*
+ * This band replaces the old "trusted by coordinators at" logo wall. Those
+ * marks were invented, and a row of greyscale logos nobody can verify is the
+ * clearest give-away that a page was assembled rather than designed. Real
+ * ledger rows make the same point — transfers land here matched and verified —
+ * while showing the product instead of implying endorsements.
+ */
+.m-ledger-band {
+  margin-top: 26px;
+  padding: 40px 0 10px;
+  border-top: 1px solid var(--line-soft);
+  display: grid;
+  grid-template-columns: minmax(0, 292px) minmax(0, 1fr);
+  gap: 26px 56px;
+  align-items: start;
+}
+
+.m-ledger-intro .m-mono {
+  color: var(--muted);
+}
+
+.m-ledger-intro p {
+  margin-top: 12px;
+  font-size: 14.5px;
+  line-height: 1.62;
+  color: var(--ink-2);
+}
+
+.m-ledger-rows {
+  border-top: 1px solid var(--line-soft);
+}
+
+.m-ledger-rows li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto 88px;
+  grid-template-areas: "av who amt state";
+  align-items: center;
+  gap: 14px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13.5px;
+}
+
+.m-ledger-rows li b {
+  grid-area: av;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  flex: none;
+  background: var(--sand);
+  color: var(--ink-2);
   display: grid;
   place-items: center;
-  font-size: 9px;
+  font-size: 10.5px;
   font-weight: 700;
-  color: var(--brand);
-  background: conic-gradient(var(--brand) 0 68%, #f0e9e1 68% 100%);
-  position: relative;
+  letter-spacing: 0.02em;
 }
 
-.m-float-ring::after {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  border-radius: 50%;
-  background: #fff;
+.m-ledger-who {
+  grid-area: who;
+  min-width: 0;
 }
 
-.m-float-ring span {
-  position: relative;
-  z-index: 1;
-}
-
-@keyframes floatY {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-9px);
-  }
-}
-
-/* ------------------------------------------------------------------- logos */
-
-.m-logos {
-  padding: 46px 0 54px;
-  border-top: 1px solid var(--line-soft);
-  margin-top: 26px;
-}
-
-.m-logos-label {
-  text-align: center;
-  color: var(--muted);
-  font-size: 13px;
-  letter-spacing: 0.01em;
-}
-
-.m-logo-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 28px;
-  margin-top: 26px;
-  flex-wrap: wrap;
-}
-
-.m-logo-mark {
-  font-weight: 800;
-  font-size: 20px;
-  letter-spacing: -0.055em;
-  color: #9a938a;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: color 0.2s ease;
+.m-ledger-who span {
+  display: block;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.m-logo-mark:hover {
-  color: var(--ink);
+.m-ledger-who em {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 10.5px;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.m-logo-mark i {
-  width: 20px;
-  height: 20px;
-  border-radius: 5px;
-  background: currentColor;
-  opacity: 0.28;
-  display: inline-block;
+.m-ledger-amt {
+  grid-area: amt;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-.m-logo-mark.serif {
-  font-family: Georgia, "Times New Roman", serif;
-  letter-spacing: -0.02em;
-  font-weight: 700;
-}
-
-.m-logo-mark.wide {
-  letter-spacing: 0.14em;
-  font-size: 13px;
+.m-ledger-state {
+  grid-area: state;
+  justify-self: end;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  color: var(--muted);
+}
+
+.m-ledger-state.paid {
+  color: var(--green);
+}
+
+.m-ledger-state.partial {
+  color: var(--brand);
 }
 
 /* --------------------------------------------------------------- maroon band */
@@ -1010,6 +993,7 @@ body {
   line-height: 1.06;
   letter-spacing: -0.045em;
   font-weight: 800;
+  text-wrap: balance;
 }
 
 .m-sub {
@@ -1018,6 +1002,7 @@ body {
   line-height: 1.68;
   color: var(--ink-2);
   max-width: 600px;
+  text-wrap: pretty;
 }
 
 .m-section-head.center .m-sub {
@@ -1740,6 +1725,7 @@ body {
   font-weight: 800;
   letter-spacing: -0.055em;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .m-stat b em {
@@ -2322,9 +2308,6 @@ body {
     min-width: 520px;
   }
 
-  .m-float-2 {
-    right: 0;
-  }
 
   .m-row {
     gap: 44px;
@@ -2379,14 +2362,9 @@ body {
     transform: perspective(1600px) rotateY(-5deg) rotateX(2deg);
   }
 
-  .m-float-1 {
-    left: 2px;
-    bottom: 40px;
-  }
-
-  .m-float-2 {
-    right: 2px;
-    top: 24px;
+  .m-ledger-band {
+    grid-template-columns: 1fr;
+    gap: 24px;
   }
 
   .m-bento-card.wide {
@@ -2464,8 +2442,10 @@ body {
     padding-top: 44px;
   }
 
+  /* Sized so “finally accounted for.” holds one line at every phone width —
+     three ragged lines with a stranded word reads as an accident. */
   .m-h1 {
-    font-size: clamp(40px, 10.5vw, 56px);
+    font-size: clamp(34px, 8.9vw, 54px);
   }
 
   .m-lede {
@@ -2493,34 +2473,28 @@ body {
     transform: none;
   }
 
-  .m-float {
-    padding: 9px 11px;
-    border-radius: 10px;
+  /* The base is deliberately wider than the lid; on a phone that bleed would
+     run past the viewport and get clipped, so square it off. */
+  .m-laptop-base {
+    margin: 0;
   }
 
-  .m-float small {
-    font-size: 9px;
+  .m-ledger-band {
+    padding-top: 32px;
   }
 
-  .m-float b {
-    font-size: 11px;
+  .m-ledger-rows li {
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "av who amt"
+      "av state state";
+    row-gap: 6px;
+    gap: 12px;
+    padding: 12px 0;
   }
 
-  .m-float-1 {
-    bottom: 4px;
-  }
-
-  .m-float-2 {
-    top: -8px;
-  }
-
-  .m-logo-row {
-    justify-content: center;
-    gap: 22px 30px;
-  }
-
-  .m-logo-mark {
-    font-size: 17px;
+  .m-ledger-state {
+    justify-self: start;
   }
 
   .m-maroon {
@@ -2574,6 +2548,7 @@ body {
 
   .m-stat b {
     font-size: 34px;
+    font-variant-numeric: tabular-nums;
   }
 
   .m-cta {
@@ -2608,9 +2583,6 @@ body {
 }
 
 @media (max-width: 420px) {
-  .m-float-2 {
-    display: none;
-  }
 
   .m-stats-grid {
     grid-template-columns: 1fr;
