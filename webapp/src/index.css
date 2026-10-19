@@ -21,7 +21,7 @@
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-brand/50 ring-offset-2 ring-offset-cream;
+    @apply outline-none ring-2 ring-brand/45 ring-offset-2 ring-offset-cream;
   }
 
   input,
@@ -32,7 +32,12 @@
   }
 
   ::selection {
-    background: #ffd9c7;
+    background: #ffd8c7;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: #101010;
   }
 
   /* Numbers should never jump around as data refreshes. */
@@ -43,7 +48,7 @@
 
 @layer components {
   .card {
-    @apply rounded-card border border-line bg-white shadow-card;
+    @apply min-w-0 rounded-card border border-line bg-white shadow-card;
   }
 
   .card-pad {
@@ -51,7 +56,7 @@
   }
 
   .section-title {
-    @apply text-[15px] font-bold tracking-tight text-ink;
+    @apply text-[15px] font-semibold tracking-tight text-ink;
   }
 
   .eyebrow {
@@ -64,19 +69,19 @@
 
   /* buttons ------------------------------------------------------------- */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-[10px] border border-transparent px-4 py-2.5 text-[13.5px] font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-55;
+    @apply inline-flex items-center justify-center gap-2 rounded-[8px] border border-transparent px-3.5 py-2.5 text-[13px] font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-55;
   }
 
   .btn-primary {
-    @apply bg-brand text-white hover:bg-brand-dark active:translate-y-px;
+    @apply bg-ink text-white hover:bg-black active:translate-y-px;
   }
 
   .btn-secondary {
-    @apply border-ink/15 bg-white text-ink hover:border-ink/40 hover:bg-cream;
+    @apply border-line bg-white text-ink hover:border-ink/25 hover:bg-cream/60;
   }
 
   .btn-ghost {
-    @apply text-ink-soft hover:bg-ink/5 hover:text-ink;
+    @apply text-ink-soft hover:bg-ink/[0.05] hover:text-ink;
   }
 
   .btn-danger {
@@ -88,7 +93,7 @@
   }
 
   .btn-lg {
-    @apply w-full px-5 py-3 text-[14.5px];
+    @apply w-full px-5 py-3 text-[14px];
   }
 
   /* form fields --------------------------------------------------------- */
@@ -97,7 +102,7 @@
   }
 
   .input {
-    @apply w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-[14px] text-ink placeholder:text-ink-faint focus:border-ink/30 focus:outline-none focus:ring-2 focus:ring-brand/20 disabled:bg-cream;
+    @apply w-full rounded-[8px] border border-line bg-white px-3.5 py-2.5 text-[14px] text-ink placeholder:text-ink-faint focus:border-ink/30 focus:outline-none focus:ring-2 focus:ring-brand/20 disabled:bg-cream;
   }
 
   .hint {
@@ -114,27 +119,27 @@
   }
 
   .pill-green {
-    @apply bg-[#e7f5ee] text-success;
+    @apply bg-[#eaf5ef] text-success;
   }
 
   .pill-amber {
-    @apply bg-[#fff3dd] text-warning;
+    @apply bg-[#f7f3e8] text-warning;
   }
 
   .pill-red {
-    @apply bg-[#fdecea] text-danger;
+    @apply bg-[#fbeceb] text-danger;
   }
 
   .pill-neutral {
-    @apply bg-ink/5 text-ink-soft;
+    @apply bg-ink/[0.06] text-ink-soft;
   }
 
   .pill-brand {
-    @apply bg-brand-soft text-brand;
+    @apply bg-brand-soft text-brand-dark;
   }
 
   .pill-blue {
-    @apply bg-[#eaf1fb] text-[#1d4f91];
+    @apply bg-[#eef2f7] text-[#2c4a70];
   }
 
   /* table --------------------------------------------------------------- */
@@ -147,7 +152,7 @@
   }
 
   .table tbody td {
-    @apply border-b border-line-soft px-4 py-3.5 text-[13.5px] text-ink;
+    @apply border-b border-line-soft px-4 py-3.5 text-[13px] text-ink;
   }
 
   .table tbody tr:last-child td {
@@ -159,16 +164,44 @@
   }
 
   /* shell -------------------------------------------------------------- */
+  .app-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .app-sidebar[data-open="true"] {
+    transform: translateX(0);
+  }
+
+  @media (min-width: 1024px) {
+    .app-sidebar {
+      transform: none;
+      transition: none;
+    }
+  }
+
   .side-link {
-    @apply flex items-center gap-2.5 rounded-[9px] px-3 py-2 text-[13.5px] font-medium text-[#cbb6ad] transition-colors;
+    @apply relative flex items-center gap-2.5 rounded-[7px] px-2.5 py-2 text-[13px] font-medium text-white/55 transition-colors;
   }
 
   .side-link:hover {
-    @apply bg-white/10 text-white;
+    @apply bg-white/[0.06] text-white;
   }
 
   .side-link-active {
-    @apply bg-white text-maroon;
+    @apply bg-white/[0.08] text-white;
+  }
+
+  .side-link-active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    height: 16px;
+    width: 2px;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    background: #ff4800;
   }
 
   .skeleton {

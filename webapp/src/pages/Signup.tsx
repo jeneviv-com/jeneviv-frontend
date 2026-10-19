@@ -146,7 +146,7 @@ export default function Signup() {
             type="checkbox"
             checked={accepted}
             onChange={(event) => setAccepted(event.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-line text-brand focus:ring-brand/30"
+            className="mt-0.5 h-4 w-4 rounded border-line text-ink focus:ring-brand/30"
           />
           <span>
             I agree to the{" "}

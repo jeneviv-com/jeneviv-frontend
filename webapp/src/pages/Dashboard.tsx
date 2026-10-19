@@ -106,7 +106,7 @@ export default function Dashboard() {
       const key = transaction.collection_name || "Other";
       map.set(key, (map.get(key) || 0) + transaction.amount);
     });
-    const palette = ["#ff4a00", "#35100a", "#ffb596", "#0f7a4f", "#b26a00"];
+    const palette = ["#101010", "#5c5c5c", "#a6a6a6", "#ff4800", "#d4d4d4"];
     return Array.from(map.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 4)
@@ -162,16 +162,16 @@ export default function Dashboard() {
       />
 
       {merchant?.status === "pending" ? (
-        <Card className="mb-5 border-[#f2dfb6] bg-[#fffaef]">
+        <Card className="mb-5 border-line bg-white">
           <div className="flex flex-wrap items-center gap-3">
             <Pill tone="amber">In review</Pill>
-            <p className="text-[13px] text-[#8a5d00]">
+            <p className="text-[13px] text-ink-muted">
               Your workspace is awaiting approval. You can build collections
               now — they go live for payers as soon as we approve the account.
             </p>
             <Link
               to="/onboarding"
-              className="ml-auto text-[12.5px] font-semibold text-[#8a5d00] underline underline-offset-2"
+              className="ml-auto text-[12.5px] font-semibold text-ink underline decoration-line underline-offset-2 hover:text-brand-dark"
             >
               View application
             </Link>

@@ -291,12 +291,12 @@ export default function LandingPage() {
                               >
                                 <stop
                                   offset="0"
-                                  stopColor="#ff4a00"
-                                  stopOpacity="0.22"
+                                  stopColor="#101010"
+                                  stopOpacity="0.16"
                                 />
                                 <stop
                                   offset="1"
-                                  stopColor="#ff4a00"
+                                  stopColor="#101010"
                                   stopOpacity="0"
                                 />
                               </linearGradient>
@@ -308,7 +308,7 @@ export default function LandingPage() {
                             <path
                               d="M0 88 C28 84 40 60 66 64 C96 69 112 38 142 46 C176 55 190 22 222 30 C252 38 276 18 320 14"
                               fill="none"
-                              stroke="#ff4a00"
+                              stroke="#101010"
                               strokeWidth="2"
                             />
                             <path
@@ -417,7 +417,11 @@ export default function LandingPage() {
             <a href={`${appUrl}/signup`} className="m-btn m-btn-light">
               Start collecting <Arrow />
             </a>
-            <a href="#how-it-works" className="m-btn m-btn-outline" style={{ borderColor: "#7a4232", color: "#fff" }}>
+            <a
+              href="#how-it-works"
+              className="m-btn m-btn-outline"
+              style={{ borderColor: "rgba(255,255,255,0.3)", color: "#fff" }}
+            >
               Take the product tour
             </a>
           </div>

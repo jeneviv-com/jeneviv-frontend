@@ -245,7 +245,7 @@ export function Toggle({
         aria-label={label}
         onClick={() => onChange(!checked)}
         className={`relative h-6 w-11 shrink-0 rounded-pill border transition-colors ${
-          checked ? "border-brand bg-brand" : "border-line bg-cream-deep"
+          checked ? "border-ink bg-ink" : "border-line bg-cream-deep"
         }`}
       >
         <span
@@ -463,7 +463,7 @@ export function Modal({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto sm:items-center">
       <div
-        className="fixed inset-0 bg-maroon-deep/45 backdrop-blur-[2px]"
+        className="fixed inset-0 bg-black/45 backdrop-blur-[2px]"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -528,7 +528,7 @@ export function Drawer({
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div
-        className="absolute inset-0 bg-maroon-deep/40"
+        className="absolute inset-0 bg-black/40"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -637,14 +637,16 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <header className="mb-6 flex flex-col gap-4 border-b border-line pb-5 lg:flex-row lg:items-end lg:justify-between">
       <div>
         {eyebrow ? <p className="eyebrow mb-2">{eyebrow}</p> : null}
-        <h1 className="text-[24px] font-extrabold leading-tight tracking-tight text-ink sm:text-[28px]">
+        <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.02em] text-ink sm:text-[24px]">
           {title}
         </h1>
         {description ? (
-          <p className="muted mt-2 max-w-2xl">{description}</p>
+          <p className="mt-1.5 max-w-2xl text-[13.5px] leading-relaxed text-ink-muted">
+            {description}
+          </p>
         ) : null}
       </div>
       {actions ? (
@@ -754,26 +756,24 @@ export function StatCard({
 }) {
   const styles = {
     neutral: "bg-white border-line text-ink",
-    brand: "bg-brand-soft border-[#ffd9c7] text-ink",
-    dark: "bg-maroon border-maroon text-cream",
+    brand: "bg-brand-soft border-[#ffe0d2] text-ink",
+    dark: "bg-maroon border-maroon text-white",
     green: "bg-[#f1fbf6] border-[#c9ecdb] text-ink",
   };
-  const mutedTone = tone === "dark" ? "text-[#c9b3aa]" : "text-ink-muted";
+  const mutedTone = tone === "dark" ? "text-white/55" : "text-ink-muted";
   return (
     <div className={`rounded-card border p-5 ${styles[tone]}`}>
       <div className="flex items-center justify-between gap-3">
         <p
           className={`font-mono text-3xs uppercase tracking-[0.14em] ${
-            tone === "dark" ? "text-[#c9b3aa]" : "text-ink-muted"
+            tone === "dark" ? "text-white/45" : "text-ink-muted"
           }`}
         >
           {label}
         </p>
         {icon ? (
           <span
-            className={
-              tone === "dark" ? "text-[#ffb596]" : "text-ink-muted"
-            }
+            className={tone === "dark" ? "text-brand" : "text-ink-muted"}
           >
             {icon}
           </span>

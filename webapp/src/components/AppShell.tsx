@@ -4,7 +4,6 @@ import {
   Banknote,
   Bell,
   ChevronRight,
-  CircleDollarSign,
   ExternalLink,
   HandCoins,
   LayoutDashboard,
@@ -58,51 +57,18 @@ const NAV = [
   },
 ];
 
-const TITLES: Record<string, { title: string; description: string }> = {
-  "/dashboard": {
-    title: "Dashboard",
-    description: "Everything happening across your collections today.",
-  },
-  "/collections": {
-    title: "Collections",
-    description: "Create a collection, share its link, track every payer.",
-  },
-  "/payment-links": {
-    title: "Payment links",
-    description: "Copy, share or print the link for any active collection.",
-  },
-  "/payers": {
-    title: "Payers",
-    description: "Everyone who has paid across your collections.",
-  },
-  "/templates": {
-    title: "Templates",
-    description: "Reusable payer forms for the collections you run often.",
-  },
-  "/transactions": {
-    title: "Transactions",
-    description: "Every payment, its payer, and whether it has been reconciled.",
-  },
-  "/payouts": {
-    title: "Payouts",
-    description: "Balance available, settlement schedule and payout history.",
-  },
-  "/refunds": {
-    title: "Refunds",
-    description: "Reverse a payment and keep the record against the original transaction.",
-  },
-  "/notifications": {
-    title: "Notifications",
-    description: "Payment, settlement and account activity.",
-  },
-  "/settings": {
-    title: "Settings",
-    description: "Workspace profile, payout preferences and bank accounts.",
-  },
-  "/admin": {
-    title: "Admin",
-    description: "Merchant approvals, platform volume and audit trail.",
-  },
+const TITLES: Record<string, string> = {
+  "/dashboard": "Dashboard",
+  "/collections": "Collections",
+  "/payment-links": "Payment links",
+  "/payers": "Payers",
+  "/templates": "Templates",
+  "/transactions": "Transactions",
+  "/payouts": "Payouts",
+  "/refunds": "Refunds",
+  "/notifications": "Notifications",
+  "/settings": "Settings",
+  "/admin": "Admin",
 };
 
 export default function AppShell() {
@@ -128,10 +94,7 @@ export default function AppShell() {
     ];
   }, [isAdmin]);
 
-  const meta = TITLES[location.pathname] ?? {
-    title: "Jeneviv",
-    description: "",
-  };
+  const current = TITLES[location.pathname] ?? "Jeneviv";
 
   const needsOnboarding =
     !loading &&
@@ -143,29 +106,28 @@ export default function AppShell() {
     <div className="min-h-screen bg-cream">
       {/* ------------------------------------------------------------ sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex w-[252px] flex-col bg-maroon transition-transform lg:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className="app-sidebar fixed inset-y-0 left-0 z-40 flex w-[244px] flex-col bg-maroon"
+        data-open={sidebarOpen}
       >
-        <div className="flex items-center justify-between px-5 py-5">
+        <div className="flex items-center justify-between px-4 py-4">
           <Link to="/dashboard" className="flex items-center gap-2.5">
             <img
               src="/assets/images/jeneviv.png"
               alt="Jeneviv"
-              width={30}
-              height={30}
-              className="h-[30px] w-[30px] rounded-[9px] object-cover"
+              width={28}
+              height={28}
+              className="h-7 w-7 rounded-[8px] object-cover"
             />
             <span className="flex items-baseline gap-0.5">
-              <span className="text-[21px] font-extrabold tracking-[-0.05em] text-white">
+              <span className="text-[19px] font-extrabold tracking-[-0.05em] text-white">
                 jeneviv
               </span>
-              <span className="text-[24px] leading-none text-brand">.</span>
+              <span className="text-[21px] leading-none text-brand">.</span>
             </span>
           </Link>
           <button
             type="button"
-            className="grid h-8 w-8 place-items-center rounded-lg text-[#cbb6ad] hover:bg-white/10 lg:hidden"
+            className="grid h-8 w-8 place-items-center rounded-lg text-white/50 hover:bg-white/10 hover:text-white lg:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-label="Close navigation"
           >
@@ -173,14 +135,14 @@ export default function AppShell() {
           </button>
         </div>
 
-        <div className="mx-3 mb-4 rounded-xl border border-white/10 bg-white/5 px-3.5 py-3">
-          <p className="font-mono text-3xs uppercase tracking-[0.14em] text-[#a98f86]">
+        <div className="mx-3 mb-4 border-b border-white/10 px-1 pb-4">
+          <p className="font-mono text-3xs uppercase tracking-[0.16em] text-white/35">
             Workspace
           </p>
-          <p className="mt-1 truncate text-[13.5px] font-semibold text-white">
+          <p className="mt-1.5 truncate text-[13px] font-semibold text-white">
             {merchant?.display_name || user?.name || "Your workspace"}
           </p>
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-2">
             <StatusPill status={merchant?.status ?? "pending"} />
           </div>
         </div>
@@ -188,7 +150,7 @@ export default function AppShell() {
         <nav className="flex-1 overflow-y-auto px-3 pb-4 no-scrollbar">
           {nav.map((section) => (
             <div key={section.group} className="mb-4">
-              <p className="px-3 pb-1.5 font-mono text-3xs uppercase tracking-[0.16em] text-[#8a6b61]">
+              <p className="px-2.5 pb-1.5 font-mono text-3xs uppercase tracking-[0.16em] text-white/30">
                 {section.group}
               </p>
               <ul className="space-y-0.5">
@@ -200,7 +162,7 @@ export default function AppShell() {
                         `side-link ${isActive ? "side-link-active" : ""}`
                       }
                     >
-                      <item.icon size={16} aria-hidden="true" />
+                      <item.icon size={15} strokeWidth={1.8} aria-hidden="true" />
                       <span className="flex-1">{item.label}</span>
                       {item.to === "/notifications" && unreadCount > 0 ? (
                         <span className="rounded-pill bg-brand px-1.5 py-0.5 text-3xs font-bold text-white">
@@ -215,7 +177,7 @@ export default function AppShell() {
           ))}
         </nav>
 
-        <div className="border-t border-white/10 px-3 py-4">
+        <div className="border-t border-white/10 px-3 py-3">
           {connection === "demo" ? (
             <button
               type="button"
@@ -229,7 +191,7 @@ export default function AppShell() {
               }}
               className="side-link w-full justify-start"
             >
-              <RefreshCw size={15} aria-hidden="true" />
+              <RefreshCw size={14} aria-hidden="true" />
               Reset demo data
             </button>
           ) : null}
@@ -237,14 +199,14 @@ export default function AppShell() {
             href="mailto:myjeneviv@gmail.com"
             className="side-link w-full justify-start"
           >
-            <LifeBuoy size={15} aria-hidden="true" />
+            <LifeBuoy size={14} aria-hidden="true" />
             Get support
           </a>
           <a
             href={import.meta.env.VITE_PUBLIC_APP_URL || "/"}
             className="side-link w-full justify-start"
           >
-            <ExternalLink size={15} aria-hidden="true" />
+            <ExternalLink size={14} aria-hidden="true" />
             View landing page
           </a>
         </div>
@@ -252,16 +214,16 @@ export default function AppShell() {
 
       {sidebarOpen ? (
         <div
-          className="fixed inset-0 z-30 bg-maroon-deep/50 lg:hidden"
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
           aria-hidden="true"
         />
       ) : null}
 
       {/* --------------------------------------------------------------- main */}
-      <div className="lg:pl-[252px]">
-        <header className="sticky top-0 z-20 border-b border-line bg-cream/85 backdrop-blur">
-          <div className="flex items-center gap-3 px-4 py-3.5 sm:px-6">
+      <div className="lg:pl-[244px]">
+        <header className="sticky top-0 z-20 border-b border-line bg-white/90 backdrop-blur">
+          <div className="flex h-[60px] items-center gap-3 px-4 sm:px-6">
             <button
               type="button"
               className="grid h-9 w-9 place-items-center rounded-lg border border-line bg-white text-ink-soft lg:hidden"
@@ -271,18 +233,28 @@ export default function AppShell() {
               <Menu size={17} />
             </button>
 
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-[15px] font-bold tracking-tight text-ink">
-                {meta.title}
-              </h1>
-              {meta.description ? (
-                <p className="hidden truncate text-[12px] text-ink-muted sm:block">
-                  {meta.description}
-                </p>
-              ) : null}
-            </div>
+            <img
+              src="/assets/images/jeneviv.png"
+              alt=""
+              width={24}
+              height={24}
+              className="h-6 w-6 rounded-[6px] object-cover lg:hidden"
+            />
 
-            <div className="flex items-center gap-2">
+            <nav
+              aria-label="Breadcrumb"
+              className="flex min-w-0 items-center gap-1.5 text-[12.5px]"
+            >
+              <span className="hidden text-ink-muted sm:inline">Workspace</span>
+              <ChevronRight
+                size={12}
+                className="hidden text-ink-faint sm:inline"
+                aria-hidden="true"
+              />
+              <span className="truncate font-semibold text-ink">{current}</span>
+            </nav>
+
+            <div className="ml-auto flex items-center gap-2">
               {connection === "demo" ? (
                 <Pill tone="amber" className="hidden sm:inline-flex">
                   Demo data
@@ -295,7 +267,7 @@ export default function AppShell() {
 
               <Link
                 to="/notifications"
-                className="relative grid h-9 w-9 place-items-center rounded-lg border border-line bg-white text-ink-soft transition-colors hover:text-ink"
+                className="relative grid h-9 w-9 place-items-center rounded-lg border border-line bg-white text-ink-soft transition-colors hover:border-ink/20 hover:text-ink"
                 aria-label="Notifications"
               >
                 <Bell size={16} />
@@ -310,9 +282,9 @@ export default function AppShell() {
                 <button
                   type="button"
                   onClick={() => setMenuOpen((open) => !open)}
-                  className="flex items-center gap-2 rounded-lg border border-line bg-white py-1.5 pl-1.5 pr-2.5 text-left transition-colors hover:border-ink/20"
+                  className="flex items-center gap-2 rounded-lg border border-line bg-white py-1 pl-1 pr-2 text-left transition-colors hover:border-ink/20"
                 >
-                  <span className="grid h-6 w-6 place-items-center rounded-md bg-maroon text-3xs font-bold text-cream">
+                  <span className="grid h-7 w-7 place-items-center rounded-md bg-ink text-3xs font-bold text-white">
                     {(user?.name || "?").slice(0, 1).toUpperCase()}
                   </span>
                   <span className="hidden max-w-[130px] truncate text-[12.5px] font-semibold sm:block">
@@ -320,7 +292,7 @@ export default function AppShell() {
                   </span>
                   <ChevronRight
                     size={13}
-                    className="text-ink-muted"
+                    className="rotate-90 text-ink-muted"
                     aria-hidden="true"
                   />
                 </button>
@@ -345,7 +317,7 @@ export default function AppShell() {
                       onClick={async () => {
                         await logout();
                       }}
-                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-medium text-danger hover:bg-[#fdecea]"
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-medium text-danger hover:bg-[#fbeceb]"
                     >
                       <LogOut size={15} /> Sign out
                     </button>
@@ -356,21 +328,25 @@ export default function AppShell() {
           </div>
 
           {connection === "demo" ? (
-            <div className="flex flex-wrap items-center gap-2 border-t border-[#f2dfb6] bg-[#fffaef] px-4 py-2 text-[12px] text-[#8a5d00] sm:px-6">
-              <CircleDollarSign size={14} aria-hidden="true" />
+            <div className="flex flex-wrap items-center gap-2 border-t border-line bg-cream/60 px-4 py-2 text-[12px] text-ink-muted sm:px-6">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
               <span>
                 The Jeneviv backend host is not responding, so the dashboard is
                 running on seeded demo data. Point{" "}
-                <code className="font-mono text-[11.5px]">VITE_API_URL</code> at
-                a running API and set{" "}
-                <code className="font-mono text-[11.5px]">VITE_DEMO_MODE=false</code>{" "}
+                <code className="font-mono text-[11.5px] text-ink">
+                  VITE_API_URL
+                </code>{" "}
+                at a running API and set{" "}
+                <code className="font-mono text-[11.5px] text-ink">
+                  VITE_DEMO_MODE=false
+                </code>{" "}
                 to switch to live data.
               </span>
             </div>
           ) : null}
         </header>
 
-        <main className="px-4 pb-16 pt-6 sm:px-6">
+        <main className="px-4 pb-16 pt-7 sm:px-6 lg:px-8">
           {needsOnboarding ? (
             <Onboarding />
           ) : (
@@ -397,7 +373,7 @@ export default function AppShell() {
                       ? "bg-danger"
                       : toast.tone === "warning"
                         ? "bg-warning"
-                        : "bg-brand"
+                        : "bg-ink"
                 }`}
               />
               <div className="flex-1">

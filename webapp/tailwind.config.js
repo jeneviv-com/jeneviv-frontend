@@ -4,46 +4,49 @@ export default {
   theme: {
     extend: {
       colors: {
+        /* The logo orange (#ff4800) is an accent only — focus rings, active
+           markers and small highlights. Black carries the brand. */
         brand: {
-          DEFAULT: "#ff4a00",
-          dark: "#e33f00",
-          soft: "#fff1ea",
-          peach: "#ffb596",
+          DEFAULT: "#ff4800",
+          dark: "#dc3e00",
+          soft: "#fff2ec",
+          peach: "#ff9971",
         },
         ink: {
-          DEFAULT: "#14110f",
-          soft: "#4c463f",
-          muted: "#7c756c",
-          faint: "#a39b91",
+          DEFAULT: "#101010",
+          soft: "#3f3f3f",
+          muted: "#6d6d6d",
+          faint: "#9b9b9b",
         },
         line: {
-          DEFAULT: "#e7e1d8",
-          soft: "#f1ece4",
+          DEFAULT: "#e4e4e4",
+          soft: "#efefef",
         },
         cream: {
-          DEFAULT: "#faf6ef",
-          deep: "#f3eee4",
+          DEFAULT: "#f7f7f5",
+          deep: "#eeeeeb",
         },
+        /* Kept as aliases so existing surfaces become the black shell. */
         maroon: {
-          DEFAULT: "#35100a",
-          soft: "#45170d",
-          deep: "#260b06",
+          DEFAULT: "#0b0b0b",
+          soft: "#161616",
+          deep: "#000000",
         },
         success: "#0f7a4f",
-        warning: "#b26a00",
-        danger: "#c8362b",
+        warning: "#9a6700",
+        danger: "#c0362c",
       },
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', "system-ui", "-apple-system", "sans-serif"],
         mono: ['"DM Mono"', "ui-monospace", "SFMono-Regular", "monospace"],
       },
       borderRadius: {
-        card: "14px",
+        card: "10px",
         pill: "999px",
       },
       boxShadow: {
-        card: "0 1px 2px rgba(20,17,15,0.04), 0 10px 26px -20px rgba(20,17,15,0.28)",
-        pop: "0 2px 6px rgba(20,17,15,0.06), 0 24px 48px -20px rgba(20,17,15,0.34)",
+        card: "0 1px 2px rgba(16,16,16,0.03)",
+        pop: "0 2px 4px rgba(16,16,16,0.05), 0 18px 40px -24px rgba(16,16,16,0.28)",
       },
       fontSize: {
         "2xs": ["11px", "15px"],

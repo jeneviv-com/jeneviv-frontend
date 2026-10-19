@@ -228,7 +228,7 @@ export default function PublicPay() {
                     complete
                       ? "bg-success text-white"
                       : active
-                        ? "bg-brand text-white"
+                        ? "bg-ink text-white"
                         : "bg-cream-deep text-ink-muted"
                   }`}
                 >

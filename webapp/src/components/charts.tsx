@@ -56,8 +56,8 @@ export function AreaChart({
       >
         <defs>
           <linearGradient id={`fill-${gradientId}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#ff4a00" stopOpacity="0.24" />
-            <stop offset="100%" stopColor="#ff4a00" stopOpacity="0" />
+            <stop offset="0%" stopColor="#101010" stopOpacity="0.14" />
+            <stop offset="100%" stopColor="#101010" stopOpacity="0" />
           </linearGradient>
         </defs>
 
@@ -69,7 +69,7 @@ export function AreaChart({
                 x2={width}
                 y1={height * ratio}
                 y2={height * ratio}
-                stroke="#f1ece4"
+                stroke="#efefef"
                 strokeWidth="1"
               />
             ))
@@ -81,7 +81,7 @@ export function AreaChart({
             <path
               d={line}
               fill="none"
-              stroke="#ff4a00"
+              stroke="#101010"
               strokeWidth="2.4"
               strokeLinecap="round"
             />
@@ -127,7 +127,7 @@ export function BarChart({
               {point.value > 0 ? formatCompact(point.value, currency) : ""}
             </span>
             <div
-              className="w-full rounded-t-[6px] bg-gradient-to-t from-[#ffd0bb] to-brand transition-all"
+              className="w-full rounded-t-[6px] bg-gradient-to-t from-[#e6e6e6] to-ink transition-all"
               style={{
                 height: `${Math.max(3, (point.value / max) * (height - 34))}px`,
               }}
@@ -176,7 +176,7 @@ export function Donut({
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="#f1ece4"
+            stroke="#efefef"
             strokeWidth={thickness}
           />
           {segments.map((segment) => {
@@ -237,7 +237,7 @@ export function Sparkline({
   values,
   width = 96,
   height = 30,
-  tone = "#ff4a00",
+  tone = "#101010",
 }: {
   values: number[];
   width?: number;
@@ -271,8 +271,8 @@ export function HeatStrip({
             style={{
               background:
                 value === 0
-                  ? "#f1ece4"
-                  : `rgba(255, 74, 0, ${0.16 + (value / max) * 0.84})`,
+                  ? "#efefef"
+                  : `rgba(16, 16, 16, ${0.14 + (value / max) * 0.8})`,
             }}
           />
         ))}

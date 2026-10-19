@@ -14,6 +14,13 @@ export default function PrivacyPage() {
       <div className="m-wrap">
         <div className="m-legal-nav">
           <Link href="/" className="m-logo">
+            <img
+              src="/assets/images/jeneviv.png"
+              alt=""
+              width={28}
+              height={28}
+              className="m-logo-mark"
+            />
             jeneviv<em>.</em>
           </Link>
           <Link href="/" className="m-link">
