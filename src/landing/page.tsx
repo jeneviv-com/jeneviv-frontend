@@ -174,10 +174,6 @@ export default function LandingPage() {
         <div className="m-wrap">
           <div className="m-hero-grid">
             <div className="m-hero-copy">
-              <span className="m-pill">
-                <span className="m-pill-dot" />
-                Built for Nigerian groups
-              </span>
               <h1 className="m-h1">
                 Group money,
                 <br />
