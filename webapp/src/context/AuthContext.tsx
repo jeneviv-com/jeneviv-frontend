@@ -55,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await merchantsAPI.getMe();
       setMerchant(response.merchant ?? null);
     } catch {
+      // 404 merchant_not_found (not applied yet) or any other error
       setMerchant(null);
     }
   }, []);
@@ -66,8 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (sessionUser) await loadMerchant();
       else setMerchant(null);
     } catch (err) {
+      // Only drop the user on a real auth failure; keep state on network errors.
       if (err instanceof APIError && err.isAuthError) setUser(null);
-      setUser((current) => current);
     }
   }, [loadMerchant]);
 
@@ -85,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setConnection(state);
 
       try {
+        // Sends the stored signed Bearer token (saved by apiFetch).
         const { user: sessionUser } = await authAPI.getSession();
         if (cancelled) return;
         if (sessionUser) {
@@ -115,8 +117,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (email: string, password: string) => {
       setError(null);
+      // FIX: do NOT save response.token here. It is the unsigned body token.
+      // apiFetch already stored the signed token from the set-auth-token header.
       const response = await authAPI.signIn(email, password);
-      tokenStore.set(response.token ?? null);
       setUser(response.user);
       await loadMerchant();
     },
@@ -126,8 +129,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = useCallback(
     async (name: string, email: string, password: string) => {
       setError(null);
+      // FIX: same as login; the signed token is saved inside apiFetch.
       const response = await authAPI.signUp(name, email, password);
-      tokenStore.set(response.token ?? null);
       setUser(response.user);
       await loadMerchant();
     },
