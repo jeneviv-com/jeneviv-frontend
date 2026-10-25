@@ -156,6 +156,13 @@ export async function apiFetch<T>(
   }
   clearTimeout(timeout);
 
+  // FIX: the bearer plugin returns the SIGNED session token in this header on
+  // sign-in / sign-up. This is the token the API accepts as `Authorization:
+  // Bearer`. (The `token` in the JSON body is unsigned and gets rejected.)
+  // Requires `Access-Control-Expose-Headers: set-auth-token` on the backend.
+  const signedToken = response.headers.get("set-auth-token");
+  if (signedToken && !anonymous && response.ok) tokenStore.set(signedToken);
+
   const text = await response.text();
   let data: unknown = {};
   if (text) {
@@ -430,6 +437,7 @@ export const authAPI = {
       "/api/auth/get-session",
     ),
 
+  // The signed token is saved automatically by apiFetch (set-auth-token header).
   signIn: (email: string, password: string) =>
     apiFetch<AuthResponse>("/api/auth/sign-in/email", {
       method: "POST",
@@ -442,8 +450,16 @@ export const authAPI = {
       body: { name, email, password },
     }),
 
-  signOut: () =>
-    apiFetch<{ success: boolean }>("/api/auth/sign-out", { method: "POST" }),
+  // FIX: always clear the stored token on sign-out, even if the request fails.
+  signOut: async () => {
+    try {
+      return await apiFetch<{ success: boolean }>("/api/auth/sign-out", {
+        method: "POST",
+      });
+    } finally {
+      tokenStore.set(null);
+    }
+  },
 
   /** Returns the provider URL to redirect the browser to (better-auth social). */
   googleSignIn: (callbackURL: string) =>
