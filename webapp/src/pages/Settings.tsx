@@ -12,6 +12,7 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { apiConfig, merchantsAPI } from "@/lib/api";
+import KycCard from "@/components/KycCard";
 import { useAction, useBankAccounts } from "@/hooks/useApi";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
@@ -115,6 +116,10 @@ export default function Settings() {
           hint={defaultAccount?.bank_name ?? "Add one under Payouts"}
           icon={<Building2 size={16} />}
         />
+      </div>
+
+      <div className="mt-5">
+        <KycCard />
       </div>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-2">

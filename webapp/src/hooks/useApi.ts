@@ -9,6 +9,7 @@ import {
   payoutsAPI,
   templatesAPI,
   transactionsAPI,
+  withdrawalsAPI,
   type AdminStats,
   type AuditLog,
   type Bank,
@@ -19,9 +20,11 @@ import {
   type MerchantStatus,
   type Payout,
   type Refund,
+  type KycView,
   type Template,
   type Transaction,
   type User,
+  type Withdrawal,
 } from "@/lib/api";
 import { isDemoMode, onDemoDataChanged } from "@/lib/demo";
 
@@ -241,6 +244,20 @@ export function usePayout(id?: string | null) {
 export function useMerchant() {
   return useResource<Merchant | null>(
     () => merchantsAPI.getMe().then((r) => r.merchant ?? null),
+    [],
+  );
+}
+
+export function useKyc() {
+  return useResource<KycView>(
+    () => merchantsAPI.getKyc().then((r) => r.kyc),
+    [],
+  );
+}
+
+export function useWithdrawals() {
+  return useResource<Withdrawal[]>(
+    () => withdrawalsAPI.list().then((r) => r.withdrawals),
     [],
   );
 }

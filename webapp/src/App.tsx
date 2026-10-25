@@ -3,6 +3,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/context/ToastContext";
 import AppShell from "@/components/AppShell";
 import Admin from "@/pages/Admin";
+import ApproveWithdrawal from "@/pages/ApproveWithdrawal";
 import CollectionDetail from "@/pages/CollectionDetail";
 import Collections from "@/pages/Collections";
 import Dashboard from "@/pages/Dashboard";
@@ -17,6 +18,7 @@ import Settings from "@/pages/Settings";
 import Signup from "@/pages/Signup";
 import Templates from "@/pages/Templates";
 import Transactions from "@/pages/Transactions";
+import VerifyReceipt from "@/pages/VerifyReceipt";
 import RequireAuth from "@/components/RequireAuth";
 
 export default function App() {
@@ -24,8 +26,10 @@ export default function App() {
     <AuthProvider>
       <ToastProvider>
         <Routes>
-          {/* Public payer page — no account needed */}
+          {/* Public pages — no account needed */}
           <Route path="/pay/:code" element={<PublicPay />} />
+          <Route path="/verify/:reference" element={<VerifyReceipt />} />
+          <Route path="/approve/:token" element={<ApproveWithdrawal />} />
 
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />

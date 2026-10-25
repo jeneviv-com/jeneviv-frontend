@@ -224,4 +224,36 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  .stacked-cards {
+    @apply relative space-y-0;
+  }
+
+  .stacked-card {
+    @apply relative -mt-2 first:mt-0 rounded-[18px] border border-black px-4 py-3 shadow-sm;
+  }
+
+  .stacked-card-black {
+    @apply bg-black text-white;
+  }
+
+  .stacked-card-purple {
+    @apply bg-[#CBBEEF] text-ink;
+  }
+
+  .stacked-card-orange {
+    @apply bg-[#FDB882] text-ink;
+  }
+
+  .stacked-card-cyan {
+    @apply bg-[#76EAE8] text-ink;
+  }
+
+  .stacked-card-pink {
+    @apply bg-[#F68C8B] text-ink;
+  }
+
+  .stacked-card-green {
+    @apply bg-[#B1F373] text-ink;
+  }
 }

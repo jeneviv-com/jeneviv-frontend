@@ -820,6 +820,47 @@ export function Tabs<T extends string>({
   );
 }
 
+export function StackedCard({
+  children,
+  className = "",
+  tone = "default",
+}: {
+  children: ReactNode;
+  className?: string;
+  tone?: "black" | "purple" | "orange" | "cyan" | "pink" | "green" | "default";
+}) {
+  const tones = {
+    black: "bg-[#000000] text-white border-black",
+    purple: "bg-[#CBBEEF] text-ink border-black",
+    orange: "bg-[#FDB882] text-ink border-black",
+    cyan: "bg-[#76EAE8] text-ink border-black",
+    pink: "bg-[#F68C8B] text-ink border-black",
+    green: "bg-[#B1F373] text-ink border-black",
+    default: "bg-white text-ink border-line",
+  };
+  return (
+    <div
+      className={`relative -mt-2 first:mt-0 rounded-[18px] border ${tones[tone]} px-4 py-3 shadow-[0_1px_0_rgba(0,0,0,0.02)] ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function StackedCards({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`relative space-y-0 [filter:drop-shadow(0_1px_0_rgba(0,0,0,0.01))] ${className}`}>
+      {children}
+    </div>
+  );
+}
+
 export function useDebounced<T>(value: T, delay = 300) {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {

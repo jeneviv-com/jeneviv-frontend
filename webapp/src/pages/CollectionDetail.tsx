@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   BadgeCheck,
   Copy,
+  Download,
   ExternalLink,
   Eye,
   HandCoins,
@@ -96,6 +97,9 @@ export default function CollectionDetail() {
     collectionsAPI.delete(collectionId),
   );
   const reconcile = useAction((ids: string[]) => transactionsAPI.reconcile(ids, true));
+  const exportRows = useAction((kind: "paid" | "unpaid") =>
+    collectionsAPI.exportFile(id as string, kind),
+  );
 
   const data = collection.data;
   const rows = transactions.data ?? [];
@@ -434,7 +438,43 @@ export default function CollectionDetail() {
                   { value: "failed", label: "Failed" },
                 ]}
               />
-              <span className="ml-auto flex items-center gap-2">
+              <span className="ml-auto flex flex-wrap items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={<Download size={13} />}
+                  loading={exportRows.loading}
+                  onClick={async () => {
+                    try {
+                      await exportRows.run("paid");
+                    } catch (err) {
+                      toastError(
+                        "Export failed",
+                        err instanceof Error ? err.message : "",
+                      );
+                    }
+                  }}
+                >
+                  Paid Excel
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  icon={<Download size={13} />}
+                  loading={exportRows.loading}
+                  onClick={async () => {
+                    try {
+                      await exportRows.run("unpaid");
+                    } catch (err) {
+                      toastError(
+                        "Export failed",
+                        err instanceof Error ? err.message : "",
+                      );
+                    }
+                  }}
+                >
+                  Unpaid Excel
+                </Button>
                 <Button
                   variant="secondary"
                   size="sm"

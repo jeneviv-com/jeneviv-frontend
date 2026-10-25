@@ -189,6 +189,46 @@ export const apiConfig = {
   },
 };
 
+/**
+ * Authenticated file download. A plain <a href> cannot carry the bearer token,
+ * so fetch the blob first and hand the browser a temporary object URL.
+ */
+export async function downloadFile(endpoint: string, fallbackName: string) {
+  const token = tokenStore.get();
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    credentials: "include",
+  });
+  if (!response.ok) {
+    const text = await response.text();
+    let data: unknown = {};
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { message: text };
+    }
+    throw new APIError(
+      response.status,
+      errorMessage(response.status, data),
+      data,
+      endpoint,
+    );
+  }
+  const blob = await response.blob();
+  const disposition = response.headers.get("content-disposition") ?? "";
+  const match = /filename="?([^";]+)"?/i.exec(disposition);
+  const filename = match?.[1] ?? fallbackName;
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+  return filename;
+}
+
 /* --------------------------------------------------------------------- types */
 
 export interface Session {
@@ -355,6 +395,88 @@ export interface Merchant {
   bank_accounts?: BankAccount[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface KycView {
+  kyc_status: "unverified" | "nin_verified" | "verified" | "rejected";
+  can_collect: boolean;
+  can_withdraw: boolean;
+  nin_last4: string | null;
+  verified_legal_name: string | null;
+  nin_verified_at: string | null;
+  bank_verified_at: string | null;
+  logo_url: string | null;
+  treasurer_name: string | null;
+  treasurer_phone: string | null;
+  escrow_enabled: boolean;
+  wallet_balance_minor: number;
+  payouts_balance_minor: number;
+  withdrawable_minor: number;
+  maturity: "unverified" | "nin_verified" | "ready";
+}
+
+export interface WithdrawalApproval {
+  role: "rep" | "treasurer" | "system";
+  label: string;
+  at: string;
+  detail?: string;
+}
+
+export type WithdrawalStatus =
+  | "pending_treasurer"
+  | "rejected"
+  | "processing"
+  | "success"
+  | "failed"
+  | "expired";
+
+export interface Withdrawal {
+  id: string;
+  merchant_id: string;
+  amount: number;
+  currency: string;
+  status: WithdrawalStatus;
+  source: "escrow" | "payouts";
+  treasurer_name: string;
+  treasurer_phone: string;
+  requested_at: string;
+  treasurer_approved_at: string | null;
+  rejected_at: string | null;
+  gateway: string | null;
+  gateway_ref: string | null;
+  gateway_tx_id: string | null;
+  failure_reason: string | null;
+  otp_expires_at: string;
+  approvals: WithdrawalApproval[];
+}
+
+export interface ApprovalSummary {
+  amount: number;
+  currency: string;
+  status: WithdrawalStatus;
+  school_name: string;
+  treasurer_name: string;
+  requested_by: string;
+  requested_at: string;
+  expires_at: string;
+  expired: boolean;
+}
+
+export interface PublicReceipt {
+  reference: string;
+  school_name: string;
+  logo_url: string | null;
+  student_name: string;
+  collection_name: string;
+  payer_name: string;
+  amount: number;
+  currency: string;
+  paid_at: string;
+  nin_verified: boolean;
+  bank_verified: boolean;
+  verify_url: string;
+  receipt_url: string;
+  details: Array<{ label: string; value: string }>;
 }
 
 export interface Payout {
@@ -528,6 +650,12 @@ export const collectionsAPI = {
       `/api/collections/${id}/transactions`,
       { query },
     ),
+
+  exportFile: (id: string, status: "paid" | "unpaid") =>
+    downloadFile(
+      `/api/collections/${id}/export?status=${status}`,
+      `collection-${status}.xlsx`,
+    ),
 };
 
 /* -------------------------------------------------------------- transactions */
@@ -616,11 +744,88 @@ export const merchantsAPI = {
       }),
   },
 
-  updateSettings: (settings: MerchantSettings) =>
+  updateSettings: (settings: MerchantSettings & { logo_url?: string | null }) =>
     apiFetch<{ merchant: Merchant }>("/api/merchants/me/settings", {
       method: "PATCH",
       body: settings,
     }),
+
+  getKyc: () => apiFetch<{ kyc: KycView }>("/api/merchants/me/kyc"),
+
+  verifyNin: (nin: string) =>
+    apiFetch<{ kyc: KycView }>("/api/merchants/me/kyc/nin", {
+      method: "POST",
+      body: { nin },
+    }),
+
+  verifyBank: (bankCode: string, accountNumber: string) =>
+    apiFetch<{ kyc: KycView }>("/api/merchants/me/kyc/bank", {
+      method: "POST",
+      body: { bank_code: bankCode, account_number: accountNumber },
+    }),
+
+  setTreasurer: (name: string, phone: string) =>
+    apiFetch<{ kyc: KycView }>("/api/merchants/me/treasurer", {
+      method: "PATCH",
+      body: { treasurer_name: name, treasurer_phone: phone },
+    }),
+};
+
+/* -------------------------------------------------------------- withdrawals */
+
+export const withdrawalsAPI = {
+  list: () =>
+    apiFetch<{ withdrawals: Withdrawal[] }>("/api/withdrawals"),
+
+  get: (id: string) =>
+    apiFetch<{ withdrawal: Withdrawal }>(`/api/withdrawals/${id}`),
+
+  create: (amount: number) =>
+    apiFetch<{
+      withdrawal: Withdrawal;
+      approval_link?: string;
+      dev_otp?: string;
+    }>("/api/withdrawals", {
+      method: "POST",
+      body: { amount, currency: "NGN" },
+    }),
+};
+
+/* ----------------------------------------------------------- approvals (public) */
+
+export const approvalsAPI = {
+  get: (token: string) =>
+    apiFetch<{ approval: ApprovalSummary }>(
+      `/api/approvals/${encodeURIComponent(token)}`,
+      { anonymous: true },
+    ),
+
+  approve: (token: string, otp: string) =>
+    apiFetch<{ withdrawal: Withdrawal }>(
+      `/api/approvals/${encodeURIComponent(token)}/approve`,
+      { method: "POST", body: { otp }, anonymous: true },
+    ),
+
+  reject: (token: string, reason?: string) =>
+    apiFetch<{ withdrawal: Withdrawal }>(
+      `/api/approvals/${encodeURIComponent(token)}/reject`,
+      { method: "POST", body: { reason }, anonymous: true },
+    ),
+};
+
+/* --------------------------------------------------------------- verification */
+
+export const verifyAPI = {
+  get: (reference: string) =>
+    apiFetch<{ valid: boolean; receipt: PublicReceipt }>(
+      `/api/verify/${encodeURIComponent(reference)}`,
+      { anonymous: true },
+    ),
+
+  receiptUrl: (reference: string) =>
+    apiConfig.withBase(
+      `/api/verify/${encodeURIComponent(reference)}/receipt.pdf`,
+    ),
 };
 
 /* ------------------------------------------------------------------ payments */

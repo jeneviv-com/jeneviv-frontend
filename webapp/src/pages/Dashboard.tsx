@@ -179,7 +179,60 @@ export default function Dashboard() {
         </Card>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="md:hidden">
+        <div className="stacked-cards">
+          <div className="stacked-card stacked-card-black">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[16px] font-bold">Collected</p>
+                <p className="text-[12px] text-white/70">{range === "7d" ? "Last 7 days" : range === "30d" ? "Last 30 days" : "Last 90 days"}</p>
+              </div>
+              <div className="text-right">
+                <p className="tabular text-[20px] font-extrabold leading-tight">{formatMoney(collected)}</p>
+                <p className="text-[11.5px] text-white/70">{successful.length} successful</p>
+              </div>
+            </div>
+          </div>
+          <div className="stacked-card stacked-card-purple">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[16px] font-bold">Credit</p>
+              <div className="text-right">
+                <p className="tabular text-[20px] font-extrabold leading-tight">{formatMoney(balances?.available ?? merchant?.payouts_balance_ngn ?? 0)}</p>
+                <p className="text-[11.5px] text-ink/70">Available limit</p>
+              </div>
+            </div>
+          </div>
+          <div className="stacked-card stacked-card-orange">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[16px] font-bold">Savings</p>
+              <div className="text-right">
+                <p className="tabular text-[20px] font-extrabold leading-tight">{formatMoney(uniquePayers > 0 ? Math.round(collected * 0.01) : 0)}</p>
+                <p className="text-[11.5px] text-ink/70">Payers balance</p>
+              </div>
+            </div>
+          </div>
+          <div className="stacked-card stacked-card-cyan">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[16px] font-bold">eSIM</p>
+              <div className="text-right">
+                <p className="tabular text-[20px] font-extrabold leading-tight">{formatNumber(pendingCount)}</p>
+                <p className="text-[11.5px] text-ink/70">Pending</p>
+              </div>
+            </div>
+          </div>
+          <div className="stacked-card stacked-card-pink">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[16px] font-bold">Accounts</p>
+              <div className="text-right">
+                <p className="tabular text-[20px] font-extrabold leading-tight">{formatMoney((balances?.available ?? 0) + (balances?.collected ?? collected))}</p>
+                <p className="text-[11.5px] text-ink/70">Total balance</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="hidden gap-4 sm:grid-cols-2 xl:grid-cols-4 md:grid">
         <StatCard
           label={`Collected · ${range}`}
           value={formatMoney(collected)}

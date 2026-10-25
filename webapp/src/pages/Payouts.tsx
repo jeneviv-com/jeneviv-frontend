@@ -4,7 +4,9 @@ import {
   Building2,
   CalendarClock,
   CheckCircle2,
+  Clock3,
   Plus,
+  ShieldCheck,
   Star,
   Trash2,
   Wallet,
@@ -12,14 +14,17 @@ import {
 import {
   merchantsAPI,
   payoutsAPI,
+  withdrawalsAPI,
   type BankAccount,
 } from "@/lib/api";
 import {
   useAction,
   useBankAccounts,
   useBanks,
+  useKyc,
   usePayouts,
   useTransactions,
+  useWithdrawals,
 } from "@/hooks/useApi";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
@@ -28,6 +33,7 @@ import {
   formatDate,
   formatDateTime,
   formatMoney,
+  pick,
   statusTone,
   timeAgo,
 } from "@/lib/format";
@@ -59,6 +65,12 @@ export default function Payouts() {
   const accounts = useBankAccounts();
   const banks = useBanks("NG");
   const transactions = useTransactions();
+  const kyc = useKyc();
+  const withdrawals = useWithdrawals();
+
+  const escrow = kyc.data?.escrow_enabled ?? false;
+  const canWithdraw = kyc.data?.can_withdraw ?? false;
+  const available = (kyc.data?.withdrawable_minor ?? 0) / 100;
 
   const [showAddAccount, setShowAddAccount] = useState(false);
   const [showPayout, setShowPayout] = useState(false);
@@ -69,6 +81,8 @@ export default function Payouts() {
     is_default: false,
   });
   const [payoutForm, setPayoutForm] = useState({ accountId: "", amount: "" });
+  const [approvalLink, setApprovalLink] = useState<string | null>(null);
+  const [devOtp, setDevOtp] = useState<string | null>(null);
 
   const addAccount = useAction((data: {
     bank_code: string;
@@ -84,9 +98,23 @@ export default function Payouts() {
   const initiatePayout = useAction((accountId: string, amount: number) =>
     payoutsAPI.initiate(accountId, amount),
   );
+  const createWithdrawal = useAction((amount: number) =>
+    withdrawalsAPI.create(amount),
+  );
   const updateSettings = useAction((settings: Parameters<typeof merchantsAPI.updateSettings>[0]) =>
     merchantsAPI.updateSettings(settings),
   );
+
+  const accountDetails = (account: BankAccount | undefined) => {
+    const source = account as unknown as Record<string, unknown> | undefined;
+    return {
+      bankCode: pick<string>(source, "bank_code", "bankCode") ?? "",
+      bankName: pick<string>(source, "bank_name", "bankName") ?? "",
+      accountNumber: pick<string>(source, "account_number", "accountNumber") ?? "",
+      accountName: pick<string>(source, "account_name", "accountName") ?? "",
+      isDefault: Boolean(pick<boolean>(source, "is_default", "isDefault")),
+    };
+  };
 
   const balances = useMemo(() => {
     const computed = computeBalances({
@@ -106,7 +134,11 @@ export default function Payouts() {
     return (payouts.data ?? [])
       .filter((payout) => {
         if (payout.status !== "success") return false;
-        const created = new Date(payout.created_at);
+        const created = new Date(
+          pick<string>(payout as unknown as Record<string, unknown>, "created_at", "createdAt") ??
+            "",
+        );
+        if (Number.isNaN(created.getTime())) return false;
         return (
           created.getMonth() === now.getMonth() &&
           created.getFullYear() === now.getFullYear()
@@ -116,10 +148,19 @@ export default function Payouts() {
   }, [payouts.data]);
 
   const defaultAccount =
-    (accounts.data ?? []).find((account) => account.is_default) ??
-    (accounts.data ?? [])[0];
+    (accounts.data ?? []).find(
+      (account) => accountDetails(account).isDefault,
+    ) ?? (accounts.data ?? [])[0];
+  const defaultAccountDetails = accountDetails(defaultAccount);
 
-  const mode = merchant?.settings?.payout_mode ?? "manual";
+  const mode =
+    pick<string>(
+      merchant as unknown as Record<string, unknown>,
+      "payoutMode",
+      "payout_mode",
+    ) ??
+    merchant?.settings?.payout_mode ??
+    "manual";
 
   const submitAccount = async () => {
     try {
@@ -142,7 +183,24 @@ export default function Payouts() {
 
   const submitPayout = async () => {
     const amount = Number(payoutForm.amount.replace(/[,\s]/g, ""));
-    if (!payoutForm.accountId || !amount) return;
+    if (!amount) return;
+    if (escrow) {
+      try {
+        const result = await createWithdrawal.run(Math.round(amount * 100));
+        setApprovalLink(result.approval_link ?? null);
+        setDevOtp(result.dev_otp ?? null);
+        await withdrawals.refetch();
+        await refreshMerchant();
+        success(
+          "Sweep sent to the treasurer",
+          "Money leaves only after their OTP approval.",
+        );
+      } catch (err) {
+        toastError("Sweep failed", err instanceof Error ? err.message : "");
+      }
+      return;
+    }
+    if (!payoutForm.accountId) return;
     try {
       await initiatePayout.run(payoutForm.accountId, amount);
       await payouts.refetch();
@@ -168,15 +226,17 @@ export default function Payouts() {
           <Button
             icon={<Wallet size={15} />}
             onClick={() => {
+              setApprovalLink(null);
+              setDevOtp(null);
               setPayoutForm({
                 accountId: defaultAccount?.id ?? "",
-                amount: String(balances.available || ""),
+                amount: String(available || ""),
               });
               setShowPayout(true);
             }}
-            disabled={!accounts.data?.length}
+            disabled={escrow ? !canWithdraw : !accounts.data?.length}
           >
-            Withdraw funds
+            {escrow ? "Sweep funds" : "Withdraw funds"}
           </Button>
         }
       />
@@ -184,8 +244,12 @@ export default function Payouts() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Available now"
-          value={formatMoney(balances.available)}
-          hint="Confirmed payments minus payouts and refunds"
+          value={formatMoney(escrow ? available : balances.available)}
+          hint={
+            escrow
+              ? "Held in escrow until two approvals"
+              : "Confirmed payments minus payouts and refunds"
+          }
           tone="brand"
           icon={<Banknote size={16} />}
         />
@@ -203,12 +267,90 @@ export default function Payouts() {
         <StatCard
           label="Settlement account"
           value={
-            defaultAccount ? `••${defaultAccount.account_number.slice(-4)}` : "None"
+            defaultAccount
+              ? `••${defaultAccountDetails.accountNumber.slice(-4)}`
+              : "None"
           }
-          hint={defaultAccount?.bank_name ?? "Add a bank account to withdraw"}
+          hint={defaultAccountDetails.bankName || "Add a bank account to withdraw"}
           icon={<Building2 size={16} />}
         />
       </div>
+
+      {escrow ? (
+        <Card className="mt-5" padded={false}>
+          <div className="flex flex-wrap items-center justify-between gap-3 px-5 pb-3 pt-5">
+            <div>
+              <h2 className="section-title">Sweep approvals</h2>
+              <p className="muted mt-0.5">
+                The rep requests, the treasurer approves with an OTP, then the
+                bank transfer is sent.
+              </p>
+            </div>
+            <Pill tone={kyc.data?.treasurer_phone ? "green" : "amber"}>
+              {kyc.data?.treasurer_phone
+                ? `Treasurer · ${kyc.data.treasurer_name}`
+                : "Treasurer not set"}
+            </Pill>
+          </div>
+          {withdrawals.loading ? (
+            <TableSkeleton rows={3} cols={4} />
+          ) : (withdrawals.data ?? []).length === 0 ? (
+            <EmptyState
+              icon={<ShieldCheck size={20} />}
+              title="No sweeps yet"
+              description="When the rep requests a sweep, both approval timestamps appear here."
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Rep approved</th>
+                    <th>Treasurer approved</th>
+                    <th>Reference</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(withdrawals.data ?? []).slice(0, 8).map((withdrawal) => (
+                    <tr key={withdrawal.id}>
+                      <td className="tabular font-semibold">
+                        {formatMoney(withdrawal.amount / 100, withdrawal.currency)}
+                      </td>
+                      <td>
+                        <StatusPill status={withdrawal.status} />
+                        {withdrawal.failure_reason ? (
+                          <p className="mt-1 max-w-[220px] text-[11px] text-danger">
+                            {withdrawal.failure_reason}
+                          </p>
+                        ) : null}
+                      </td>
+                      <td className="text-ink-muted">
+                        {formatDateTime(withdrawal.requested_at)}
+                      </td>
+                      <td className="text-ink-muted">
+                        {withdrawal.treasurer_approved_at ? (
+                          formatDateTime(withdrawal.treasurer_approved_at)
+                        ) : withdrawal.status === "pending_treasurer" ? (
+                          <span className="inline-flex items-center gap-1 text-warning">
+                            <Clock3 size={12} /> waiting
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td className="font-mono text-3xs text-ink-muted">
+                        {withdrawal.gateway_ref ?? "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      ) : null}
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[1.5fr_1fr]">
         <Card padded={false}>
@@ -249,12 +391,26 @@ export default function Payouts() {
                     <tr key={payout.id}>
                       <td>
                         <p className="font-semibold">
-                          {payout.bank_code
-                            ? `Bank ••${payout.account_number.slice(-4)}`
+                          {pick<string>(
+                            payout as unknown as Record<string, unknown>,
+                            "bank_code",
+                            "bankCode",
+                          )
+                            ? `Bank ••${(
+                                pick<string>(
+                                  payout as unknown as Record<string, unknown>,
+                                  "account_number",
+                                  "accountNumber",
+                                ) ?? ""
+                              ).slice(-4)}`
                             : "Bank account"}
                         </p>
                         <p className="font-mono text-3xs text-ink-muted">
-                          {payout.gateway_ref}
+                          {pick<string>(
+                            payout as unknown as Record<string, unknown>,
+                            "gateway_ref",
+                            "gatewayRef",
+                          ) ?? "—"}
                         </p>
                       </td>
                       <td className="tabular font-semibold">
@@ -262,23 +418,59 @@ export default function Payouts() {
                       </td>
                       <td>
                         <StatusPill status={payout.status} />
-                        {payout.failure_reason ? (
+                        {pick<string>(
+                          payout as unknown as Record<string, unknown>,
+                          "failure_reason",
+                          "failureReason",
+                        ) ? (
                           <p className="mt-1 max-w-[220px] text-[11px] text-danger">
-                            {payout.failure_reason}
+                            {pick<string>(
+                              payout as unknown as Record<string, unknown>,
+                              "failure_reason",
+                              "failureReason",
+                            )}
                           </p>
                         ) : null}
                       </td>
                       <td className="text-ink-muted">
-                        <span title={formatDateTime(payout.created_at)}>
-                          {timeAgo(payout.created_at)}
+                        <span
+                          title={formatDateTime(
+                            pick<string>(
+                              payout as unknown as Record<string, unknown>,
+                              "created_at",
+                              "createdAt",
+                            ),
+                          )}
+                        >
+                          {timeAgo(
+                            pick<string>(
+                              payout as unknown as Record<string, unknown>,
+                              "created_at",
+                              "createdAt",
+                            ),
+                          )}
                         </span>
                         <span className="block font-mono text-3xs">
-                          {payout.initiated_by === "cron" ? "auto" : "manual"}
+                          {pick<string>(
+                            payout as unknown as Record<string, unknown>,
+                            "initiated_by",
+                            "initiatedBy",
+                          ) === "cron"
+                            ? "auto"
+                            : "manual"}
                         </span>
                       </td>
                       <td className="text-ink-muted">
                         {payout.status === "success"
-                          ? formatDateTime(payout.updated_at ?? payout.created_at)
+                          ? formatDateTime(
+                              pick<string>(
+                                payout as unknown as Record<string, unknown>,
+                                "updated_at",
+                                "updatedAt",
+                                "created_at",
+                                "createdAt",
+                              ),
+                            )
                           : "—"}
                       </td>
                     </tr>
@@ -365,26 +557,28 @@ export default function Payouts() {
               </p>
             ) : (
               <ul className="space-y-3">
-                {(accounts.data ?? []).map((account) => (
+                {(accounts.data ?? []).map((account) => {
+                  const details = accountDetails(account);
+                  return (
                   <li
                     key={account.id}
                     className="flex items-center justify-between gap-3 rounded-xl border border-line px-3.5 py-3"
                   >
                     <div>
                       <p className="flex items-center gap-2 text-[13.5px] font-semibold">
-                        {account.bank_name || account.bank_code}
-                        {account.is_default ? (
+                        {details.bankName || details.bankCode}
+                        {details.isDefault ? (
                           <span className="pill pill-green">
                             <Star size={11} /> Default
                           </span>
                         ) : null}
                       </p>
                       <p className="font-mono text-3xs text-ink-muted">
-                        {account.account_number} · {account.account_name || "—"}
+                        {details.accountNumber} · {details.accountName || "—"}
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
-                      {!account.is_default ? (
+                      {!details.isDefault ? (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -410,11 +604,12 @@ export default function Payouts() {
                         className="text-danger hover:bg-[#fdecea]"
                         icon={<Trash2 size={13} />}
                         onClick={() => setPendingDelete(account)}
-                        aria-label={`Remove ${account.bank_name}`}
+                        aria-label={`Remove ${details.bankName}`}
                       />
                     </div>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             )}
           </Card>
@@ -499,20 +694,32 @@ export default function Payouts() {
 
       <Modal
         open={showPayout}
-        onClose={() => setShowPayout(false)}
-        title="Withdraw funds"
-        description="Manual payouts leave the platform on the next gateway run."
+        onClose={() => {
+          setShowPayout(false);
+          setApprovalLink(null);
+          setDevOtp(null);
+        }}
+        title={escrow ? "Sweep funds" : "Withdraw funds"}
+        description={
+          escrow
+            ? "A sweep needs the rep and the treasurer. The transfer is sent only after both approve."
+            : "Manual payouts leave the platform on the next gateway run."
+        }
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowPayout(false)}>
-              Cancel
+              Close
             </Button>
             <Button
-              loading={initiatePayout.loading}
-              disabled={!payoutForm.accountId || !Number(payoutForm.amount)}
+              loading={escrow ? createWithdrawal.loading : initiatePayout.loading}
+              disabled={
+                escrow
+                  ? !canWithdraw || !Number(payoutForm.amount) || Boolean(approvalLink)
+                  : !payoutForm.accountId || !Number(payoutForm.amount)
+              }
               onClick={submitPayout}
             >
-              Request payout
+              {escrow ? "Send to treasurer" : "Request payout"}
             </Button>
           </>
         }
@@ -521,27 +728,40 @@ export default function Payouts() {
           <div className="rounded-xl border border-line bg-cream px-4 py-3">
             <p className="eyebrow">Available</p>
             <p className="tabular mt-1 text-[20px] font-extrabold">
-              {formatMoney(balances.available)}
+              {formatMoney(escrow ? available : balances.available)}
             </p>
           </div>
-          <Field label="Destination account" htmlFor="payout-account">
-            <Select
-              id="payout-account"
-              value={payoutForm.accountId}
-              onChange={(event) =>
-                setPayoutForm({ ...payoutForm, accountId: event.target.value })
-              }
-            >
-              <option value="">Select an account</option>
-              {(accounts.data ?? []).map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.bank_name || account.bank_code} ·{" "}
-                  {account.account_number}
-                  {account.is_default ? " (default)" : ""}
-                </option>
-              ))}
-            </Select>
-          </Field>
+
+          {escrow ? (
+            <InlineNote tone={canWithdraw ? "info" : "warning"}>
+              {canWithdraw
+                ? `Treasurer: ${kyc.data?.treasurer_name} · ${kyc.data?.treasurer_phone}. They will get an SMS with a link and a one-time code.`
+                : "Finish identity and bank verification in Settings before sweeping."}
+            </InlineNote>
+          ) : (
+            <Field label="Destination account" htmlFor="payout-account">
+              <Select
+                id="payout-account"
+                value={payoutForm.accountId}
+                onChange={(event) =>
+                  setPayoutForm({ ...payoutForm, accountId: event.target.value })
+                }
+              >
+                <option value="">Select an account</option>
+              {(accounts.data ?? []).map((account) => {
+                const details = accountDetails(account);
+                return (
+                  <option key={account.id} value={account.id}>
+                    {details.bankName || details.bankCode} ·{" "}
+                    {details.accountNumber}
+                    {details.isDefault ? " (default)" : ""}
+                  </option>
+                );
+              })}
+              </Select>
+            </Field>
+          )}
+
           <Field label="Amount" htmlFor="payout-amount">
             <Input
               id="payout-amount"
@@ -553,10 +773,23 @@ export default function Payouts() {
               className="tabular"
             />
           </Field>
-          <InlineNote tone="warning">
-            Payouts cannot be reversed once the gateway has processed them.
-            Double-check the account number.
-          </InlineNote>
+
+          {approvalLink ? (
+            <InlineNote tone="success" title="Waiting for the treasurer">
+              <p className="break-all font-mono text-[11px]">{approvalLink}</p>
+              {devOtp ? (
+                <p className="mt-2 font-semibold">
+                  Local test OTP: <span className="font-mono">{devOtp}</span>
+                </p>
+              ) : null}
+            </InlineNote>
+          ) : (
+            <InlineNote tone="warning">
+              {escrow
+                ? "Funds stay in escrow until the treasurer approves. The rep alone can never move money."
+                : "Payouts cannot be reversed once the gateway has processed them. Double-check the account number."}
+            </InlineNote>
+          )}
         </div>
       </Modal>
 
