@@ -16,6 +16,8 @@ function strength(password: string) {
   return score;
 }
 
+const STRENGTH_LABEL = ["weak", "weak", "fair", "good", "strong"];
+
 export default function Signup() {
   const { signup } = useAuth();
   const { success, error: toastError } = useToast();
@@ -29,11 +31,7 @@ export default function Signup() {
   const [formError, setFormError] = useState<string | null>(null);
 
   const score = useMemo(() => strength(password), [password]);
-  const canSubmit =
-    name.trim().length > 1 &&
-    email.includes("@") &&
-    password.length >= 8 &&
-    accepted;
+  const canSubmit = name.trim().length > 1 && email.includes("@") && password.length >= 8 && accepted;
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -47,10 +45,7 @@ export default function Signup() {
     setSubmitting(true);
     try {
       await signup(name.trim(), email.trim(), password);
-      success(
-        "Account created",
-        "Tell us what you collect so we can approve your workspace.",
-      );
+      success("Account created", "Tell us what you collect so we can approve your workspace.");
       navigate("/dashboard", { replace: true });
     } catch (err) {
       setFormError(errorMessage(err));
@@ -61,6 +56,7 @@ export default function Signup() {
   };
 
   const bars = [0, 1, 2, 3].map((index) => index < score);
+  const barTone = score <= 2 ? "bg-warning" : score === 3 ? "bg-brand" : "bg-success";
 
   return (
     <AuthLayout
@@ -69,21 +65,19 @@ export default function Signup() {
       footer={
         <>
           Already have an account?{" "}
-          <Link
-            to="/login"
-            className="font-semibold text-brand underline underline-offset-2"
-          >
+          <Link to="/login" className="font-semibold text-ink underline decoration-ink/25 underline-offset-2 hover:text-brand">
             Sign in
           </Link>
         </>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <Field label="Full name" htmlFor="name">
           <Input
             id="name"
             autoComplete="name"
             required
+            className="h-[50px] rounded-[12px]"
             placeholder="Ifeanyi Adebayo"
             value={name}
             onChange={(event) => setName(event.target.value)}
@@ -96,6 +90,7 @@ export default function Signup() {
             type="email"
             autoComplete="email"
             required
+            className="h-[50px] rounded-[12px]"
             placeholder="you@example.com"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -112,36 +107,26 @@ export default function Signup() {
             type="password"
             autoComplete="new-password"
             required
+            className="h-[50px] rounded-[12px]"
             placeholder="••••••••"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
           {password ? (
-            <div className="mt-2 flex items-center gap-2">
-              <div className="flex flex-1 gap-1">
+            <div className="mt-3 flex items-center gap-3">
+              <div className="flex flex-1 gap-1.5">
                 {bars.map((filled, index) => (
-                  <span
-                    key={index}
-                    className={`h-1 flex-1 rounded-pill ${
-                      filled
-                        ? score <= 2
-                          ? "bg-warning"
-                          : score === 3
-                            ? "bg-brand"
-                            : "bg-success"
-                        : "bg-line"
-                    }`}
-                  />
+                  <span key={index} className={`h-1.5 flex-1 rounded-full ${filled ? barTone : "bg-line"}`} />
                 ))}
               </div>
-              <span className="font-mono text-3xs text-ink-muted">
-                {["weak", "weak", "fair", "good", "strong"][score]}
+              <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-ink-muted">
+                {STRENGTH_LABEL[score]}
               </span>
             </div>
           ) : null}
         </Field>
 
-        <label className="flex items-start gap-2.5 text-[12.5px] leading-relaxed text-ink-soft">
+        <label className="flex items-start gap-3 rounded-[12px] bg-white px-4 py-3.5 text-[12.5px] leading-relaxed text-ink-soft">
           <input
             type="checkbox"
             checked={accepted}
@@ -152,14 +137,14 @@ export default function Signup() {
             I agree to the{" "}
             <a
               href={`${import.meta.env.VITE_PUBLIC_APP_URL || ""}/terms`}
-              className="font-semibold text-brand underline underline-offset-2"
+              className="font-semibold text-ink underline decoration-ink/25 underline-offset-2 hover:text-brand"
             >
               terms of service
             </a>{" "}
             and{" "}
             <a
               href={`${import.meta.env.VITE_PUBLIC_APP_URL || ""}/privacy`}
-              className="font-semibold text-brand underline underline-offset-2"
+              className="font-semibold text-ink underline decoration-ink/25 underline-offset-2 hover:text-brand"
             >
               privacy policy
             </a>
@@ -169,21 +154,28 @@ export default function Signup() {
 
         {formError ? <InlineNote tone="error">{formError}</InlineNote> : null}
 
-        <Button type="submit" size="lg" loading={submitting} disabled={!canSubmit}>
+        <Button
+          type="submit"
+          size="lg"
+          className="h-[50px] w-full rounded-[12px] text-[15px]"
+          loading={submitting}
+          disabled={!canSubmit}
+        >
           Create account
         </Button>
       </form>
 
-      <ul className="mt-6 space-y-2">
-        {[
-          "No card required to start",
-          "Create collections before approval",
-          "Settle to your own bank account",
-        ].map((item) => (
-          <li key={item} className="flex items-center gap-2 text-[12.5px] text-ink-muted">
-            <Check size={14} className="text-success" /> {item}
-          </li>
-        ))}
+      <ul className="mt-7 space-y-3">
+        {["No card required to start", "Create collections before approval", "Settle to your own bank account"].map(
+          (item) => (
+            <li key={item} className="flex items-center gap-2.5 text-[13px] text-ink-muted">
+              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#c8f58e]">
+                <Check size={11} className="text-ink" />
+              </span>
+              {item}
+            </li>
+          ),
+        )}
       </ul>
     </AuthLayout>
   );
