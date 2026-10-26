@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -57,15 +57,55 @@ import {
   ProgressBar,
   SegmentedControl,
   Select,
-  StatCard,
   StatusPill,
   TableSkeleton,
   Tabs,
   Textarea,
   Toggle,
+  TONE_CARD,
+  type ToneCardTone,
 } from "@/components/ui";
 
 type Tab = "overview" | "fields" | "payments" | "settings";
+
+/** One stacked pastel summary tile, the same look as the dashboard. */
+function SummaryTile({
+  index,
+  tone,
+  label,
+  value,
+  hint,
+  icon,
+}: {
+  index: number;
+  tone: ToneCardTone;
+  label: string;
+  value: string;
+  hint: string;
+  icon: ReactNode;
+}) {
+  return (
+    <div
+      className="dash-rise relative -mt-6 first:mt-0"
+      style={{ zIndex: index + 1, animationDelay: `${index * 80}ms` }}
+    >
+      <div
+        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 ${TONE_CARD[tone]}`}
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/70">
+            {icon}
+          </span>
+          <div className="min-w-0">
+            <p className="text-[15px] font-semibold tracking-tight">{label}</p>
+            <p className="mt-0.5 truncate text-[12px] opacity-70">{hint}</p>
+          </div>
+        </div>
+        <p className="shrink-0 text-right text-[19px] font-bold tabular">{value}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function CollectionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -140,9 +180,7 @@ export default function CollectionDetail() {
             new Date(transaction.created_at).toDateString() === key,
         ).length,
       );
-      labels.push(
-        day.toLocaleDateString("en-NG", { day: "numeric" }),
-      );
+      labels.push(day.toLocaleDateString("en-NG", { day: "numeric" }));
     }
     return { values, labels };
   }, [transactions.data]);
@@ -157,7 +195,7 @@ export default function CollectionDetail() {
 
   if (collection.loading || !data) {
     return (
-      <Card padded={false}>
+      <Card>
         <TableSkeleton rows={6} cols={4} />
       </Card>
     );
@@ -213,6 +251,15 @@ export default function CollectionDetail() {
     }
   };
 
+  const toggleRow = (transactionId: string, checked: boolean) =>
+    setSelected((current) =>
+      checked
+        ? [...current, transactionId]
+        : current.filter((value) => value !== transactionId),
+    );
+
+  const averagePayment = (stats?.collected ?? 0) / Math.max(1, paid);
+
   return (
     <>
       <Link
@@ -222,8 +269,9 @@ export default function CollectionDetail() {
         <ArrowLeft size={14} /> All collections
       </Link>
 
-      <header className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
+      {/* title block */}
+      <header className="dash-rise mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2.5">
             <h1 className="text-[24px] font-extrabold tracking-tight sm:text-[28px]">
               {data.name}
@@ -242,7 +290,7 @@ export default function CollectionDetail() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
           <Button
             variant="secondary"
             icon={<Copy size={14} />}
@@ -281,33 +329,38 @@ export default function CollectionDetail() {
       <div className="mt-5">
         {tab === "overview" ? (
           <div className="space-y-5">
-            <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <StatCard
+            {/* summary: stacked pastel tiles */}
+            <div className="pt-1">
+              <SummaryTile
+                index={0}
+                tone="mint"
                 label="Collected"
                 value={formatMoney(stats?.collected ?? 0, data.currency)}
-                hint={`${paid} successful payments`}
-                tone="brand"
+                hint={`${formatNumber(paid)} successful payments`}
                 icon={<HandCoins size={16} />}
               />
-              <StatCard
+              <SummaryTile
+                index={1}
+                tone="lavender"
                 label="Per payer"
                 value={formatMoney(data.amount, data.currency)}
                 hint={target ? `Target ${formatNumber(target)} payers` : "No target set"}
                 icon={<Wallet size={16} />}
               />
-              <StatCard
+              <SummaryTile
+                index={2}
+                tone="peach"
                 label="Awaiting payment"
-                value={formatNumber(
-                  target ? Math.max(0, target - paid) : stats?.pending ?? 0,
-                )}
+                value={formatNumber(target ? Math.max(0, target - paid) : stats?.pending ?? 0)}
                 hint={target ? "Against your stated target" : `${stats?.pending ?? 0} transfers pending`}
                 icon={<Users size={16} />}
               />
-              <StatCard
+              <SummaryTile
+                index={3}
+                tone="aqua"
                 label="Completion"
                 value={`${target ? percent(paid, target) : Math.min(100, paid)}%`}
-                hint={`${formatMoney((stats?.collected ?? 0) / Math.max(1, paid), data.currency)} average payment`}
-                tone="green"
+                hint={`${formatMoney(averagePayment, data.currency)} average payment`}
                 icon={<BadgeCheck size={16} />}
               />
             </div>
@@ -338,10 +391,10 @@ export default function CollectionDetail() {
                   subtitle="One link works for every payer"
                   icon={<Link2 size={16} />}
                 />
-                <div className="rounded-xl border border-dashed border-line bg-cream px-3.5 py-3 font-mono text-[12px] text-ink-soft">
+                <div className="rounded-[14px] border border-dashed border-ink/25 bg-cream px-3.5 py-3 font-mono text-[12px] text-ink-soft">
                   <span className="break-all">{link}</span>
                 </div>
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                   <Button
                     variant="secondary"
                     size="sm"
@@ -366,22 +419,19 @@ export default function CollectionDetail() {
                         );
                     }}
                   >
-                    Copy WhatsApp message
+                    WhatsApp message
                   </Button>
-                  <a
-                    href={link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn btn-ghost btn-sm"
-                  >
+                  <a href={link} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
                     <ExternalLink size={13} /> Open
                   </a>
                 </div>
-                <InlineNote tone="info" title="What payers see">
-                  A form built from your payer fields, your amount, and a
-                  dedicated account number to transfer to. Payments are confirmed
-                  by webhook — not by narration.
-                </InlineNote>
+                <div className="mt-4">
+                  <InlineNote tone="info" title="What payers see">
+                    A form built from your payer fields, your amount, and a
+                    dedicated account number to transfer to. Payments are confirmed
+                    by webhook — not by narration.
+                  </InlineNote>
+                </div>
               </Card>
             </div>
           </div>
@@ -407,10 +457,7 @@ export default function CollectionDetail() {
                     await collection.refetch();
                     success("Fields saved", "The payment page now asks for these details.");
                   } catch (err) {
-                    toastError(
-                      "Could not save fields",
-                      err instanceof Error ? err.message : "",
-                    );
+                    toastError("Could not save fields", err instanceof Error ? err.message : "");
                   }
                 }}
                 saveLabel="Save payer fields"
@@ -427,7 +474,8 @@ export default function CollectionDetail() {
 
         {tab === "payments" ? (
           <Card padded={false}>
-            <div className="flex flex-wrap items-center gap-3 border-b border-line-soft px-4 py-3">
+            {/* toolbar */}
+            <div className="flex flex-col gap-3 border-b border-line-soft px-4 py-3 lg:flex-row lg:flex-wrap lg:items-center">
               <SegmentedControl
                 value={paymentFilter}
                 onChange={setPaymentFilter}
@@ -438,7 +486,10 @@ export default function CollectionDetail() {
                   { value: "failed", label: "Failed" },
                 ]}
               />
-              <span className="ml-auto flex flex-wrap items-center gap-2">
+              <span className="font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted lg:ml-auto">
+                {rows.length} rows
+              </span>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:flex lg:flex-wrap">
                 <Button
                   variant="secondary"
                   size="sm"
@@ -448,10 +499,7 @@ export default function CollectionDetail() {
                     try {
                       await exportRows.run("paid");
                     } catch (err) {
-                      toastError(
-                        "Export failed",
-                        err instanceof Error ? err.message : "",
-                      );
+                      toastError("Export failed", err instanceof Error ? err.message : "");
                     }
                   }}
                 >
@@ -466,10 +514,7 @@ export default function CollectionDetail() {
                     try {
                       await exportRows.run("unpaid");
                     } catch (err) {
-                      toastError(
-                        "Export failed",
-                        err instanceof Error ? err.message : "",
-                      );
+                      toastError("Export failed", err instanceof Error ? err.message : "");
                     }
                   }}
                 >
@@ -484,14 +529,13 @@ export default function CollectionDetail() {
                 >
                   Mark reconciled {selected.length ? `(${selected.length})` : ""}
                 </Button>
-                <span className="font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted">
-                  {rows.length} rows
-                </span>
-              </span>
+              </div>
             </div>
 
             {transactions.loading ? (
-              <TableSkeleton rows={6} cols={5} />
+              <div className="p-4">
+                <TableSkeleton rows={6} cols={3} />
+              </div>
             ) : transactions.error ? (
               <ErrorState message={transactions.error} onRetry={transactions.refetch} />
             ) : rows.length === 0 ? (
@@ -501,73 +545,107 @@ export default function CollectionDetail() {
                 description="Payments appear here within seconds of the gateway confirming a transfer."
               />
             ) : (
-              <div className="overflow-x-auto">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th className="w-10">
-                        <input
-                          type="checkbox"
-                          aria-label="Select all"
-                          checked={selected.length === rows.length && rows.length > 0}
-                          onChange={(event) =>
-                            setSelected(event.target.checked ? rows.map((r) => r.id) : [])
-                          }
-                          className="h-4 w-4 rounded border-line"
-                        />
-                      </th>
-                      <th>Payer</th>
-                      <th>Amount</th>
-                      <th>Status</th>
-                      <th>Reconciled</th>
-                      <th>Received</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.slice(0, 60).map((transaction) => (
-                      <tr key={transaction.id}>
-                        <td>
+              <>
+                {/* phones: one card per payment */}
+                <ul className="divide-y divide-line-soft md:hidden">
+                  {rows.slice(0, 60).map((transaction) => (
+                    <li key={transaction.id} className="flex items-start gap-3 px-4 py-3.5">
+                      <input
+                        type="checkbox"
+                        aria-label={`Select ${transaction.reference}`}
+                        checked={selected.includes(transaction.id)}
+                        onChange={(event) => toggleRow(transaction.id, event.target.checked)}
+                        className="mt-1 h-4 w-4 shrink-0 rounded border-line"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-[13.5px] font-semibold">
+                              {transactionPayer(transaction)}
+                            </p>
+                            <p className="mt-0.5 truncate font-mono text-[11px] text-ink-muted">
+                              {transactionIdentifier(transaction)}
+                            </p>
+                          </div>
+                          <p className="tabular shrink-0 text-[13.5px] font-bold">
+                            {formatMoney(transaction.amount, transaction.currency)}
+                          </p>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-[11.5px] text-ink-muted">
+                          <StatusPill status={transaction.status} />
+                          {transaction.reconciled ? (
+                            <Pill tone="green">Reconciled</Pill>
+                          ) : (
+                            <Pill tone="neutral">Not reconciled</Pill>
+                          )}
+                          <span>· {timeAgo(transaction.created_at)}</span>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* tablets and up: the full table */}
+                <div className="hidden overflow-x-auto md:block">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th className="w-10">
                           <input
                             type="checkbox"
-                            aria-label={`Select ${transaction.reference}`}
-                            checked={selected.includes(transaction.id)}
+                            aria-label="Select all"
+                            checked={selected.length === rows.length && rows.length > 0}
                             onChange={(event) =>
-                              setSelected((current) =>
-                                event.target.checked
-                                  ? [...current, transaction.id]
-                                  : current.filter((value) => value !== transaction.id),
-                              )
+                              setSelected(event.target.checked ? rows.map((r) => r.id) : [])
                             }
                             className="h-4 w-4 rounded border-line"
                           />
-                        </td>
-                        <td>
-                          <p className="font-semibold">{transactionPayer(transaction)}</p>
-                          <p className="font-mono text-3xs text-ink-muted">
-                            {transactionIdentifier(transaction)}
-                          </p>
-                        </td>
-                        <td className="tabular font-semibold">
-                          {formatMoney(transaction.amount, transaction.currency)}
-                        </td>
-                        <td>
-                          <StatusPill status={transaction.status} />
-                        </td>
-                        <td>
-                          {transaction.reconciled ? (
-                            <Pill tone="green">Yes</Pill>
-                          ) : (
-                            <Pill tone="neutral">No</Pill>
-                          )}
-                        </td>
-                        <td className="text-ink-muted">
-                          {timeAgo(transaction.created_at)}
-                        </td>
+                        </th>
+                        <th>Payer</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Reconciled</th>
+                        <th>Received</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {rows.slice(0, 60).map((transaction) => (
+                        <tr key={transaction.id}>
+                          <td>
+                            <input
+                              type="checkbox"
+                              aria-label={`Select ${transaction.reference}`}
+                              checked={selected.includes(transaction.id)}
+                              onChange={(event) => toggleRow(transaction.id, event.target.checked)}
+                              className="h-4 w-4 rounded border-line"
+                            />
+                          </td>
+                          <td>
+                            <p className="font-semibold">{transactionPayer(transaction)}</p>
+                            <p className="font-mono text-3xs text-ink-muted">
+                              {transactionIdentifier(transaction)}
+                            </p>
+                          </td>
+                          <td className="tabular font-semibold">
+                            {formatMoney(transaction.amount, transaction.currency)}
+                          </td>
+                          <td>
+                            <StatusPill status={transaction.status} />
+                          </td>
+                          <td>
+                            {transaction.reconciled ? (
+                              <Pill tone="green">Yes</Pill>
+                            ) : (
+                              <Pill tone="neutral">No</Pill>
+                            )}
+                          </td>
+                          <td className="text-ink-muted">{timeAgo(transaction.created_at)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </Card>
         ) : null}
@@ -581,9 +659,7 @@ export default function CollectionDetail() {
                   <Input
                     id="edit-name"
                     value={settings.name}
-                    onChange={(event) =>
-                      setSettings({ ...settings, name: event.target.value })
-                    }
+                    onChange={(event) => setSettings({ ...settings, name: event.target.value })}
                   />
                 </Field>
                 <Field label="Description" htmlFor="edit-description">
@@ -600,9 +676,7 @@ export default function CollectionDetail() {
                     <Input
                       id="edit-amount"
                       value={settings.amount}
-                      onChange={(event) =>
-                        setSettings({ ...settings, amount: event.target.value })
-                      }
+                      onChange={(event) => setSettings({ ...settings, amount: event.target.value })}
                     />
                   </Field>
                   <Field label="Currency" htmlFor="edit-currency">
@@ -627,7 +701,7 @@ export default function CollectionDetail() {
                     />
                   </Field>
                 </div>
-                <div className="rounded-xl border border-line bg-cream px-4 py-3">
+                <div className="rounded-[14px] border border-line bg-cream px-4 py-3">
                   <Toggle
                     checked={data.is_active}
                     onChange={toggleActive}
@@ -645,7 +719,7 @@ export default function CollectionDetail() {
               </div>
             </Card>
 
-            <Card className="border-[#f4cecb]">
+            <div className="relative rounded-[20px] border border-ink bg-[#ffd6cf] p-5">
               <CardHeader
                 title="Delete this collection"
                 subtitle="Payments already recorded are removed with it"
@@ -663,7 +737,7 @@ export default function CollectionDetail() {
               >
                 Delete collection
               </Button>
-            </Card>
+            </div>
           </div>
         ) : null}
       </div>
