@@ -43,13 +43,46 @@ import {
   SearchInput,
   SegmentedControl,
   Select,
-  StatCard,
   StatusPill,
   TableSkeleton,
   Textarea,
+  TONE_MEANING,
+  type ToneKind,
 } from "@/components/ui";
 
 type StatusFilter = "all" | "success" | "pending" | "failed";
+
+/** One stacked summary tile, coloured by meaning. Matches the dashboard. */
+function SummaryTile({
+  index,
+  tone,
+  label,
+  value,
+  hint,
+}: {
+  index: number;
+  tone: ToneKind;
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <div
+      className="dash-rise relative -mt-6 first:mt-0"
+      style={{ zIndex: index + 1, animationDelay: `${index * 80}ms` }}
+    >
+      <div
+        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 ${TONE_MEANING[tone]}`}
+      >
+        <div className="min-w-0">
+          <p className="text-[16px] font-semibold tracking-tight">{label}</p>
+          <p className="mt-0.5 truncate text-[12.5px] opacity-70">{hint}</p>
+        </div>
+        <p className="shrink-0 text-right text-[20px] font-bold tabular">{value}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function Transactions() {
   const { isAdmin } = useAuth();
@@ -102,8 +135,7 @@ export default function Transactions() {
     const net = successful.reduce((sum, transaction) => sum + transaction.amount, 0);
     const fees = successful.reduce(
       (sum, transaction) =>
-        sum +
-        ((transaction.platform_fee ?? 0) + (transaction.gateway_fee ?? 0)),
+        sum + ((transaction.platform_fee ?? 0) + (transaction.gateway_fee ?? 0)),
       0,
     );
     return {
@@ -145,6 +177,15 @@ export default function Transactions() {
     }
   };
 
+  const toggleRow = (transactionId: string, checked: boolean) =>
+    setSelected((current) =>
+      checked
+        ? [...current, transactionId]
+        : current.filter((value) => value !== transactionId),
+    );
+
+  const visibleRows = rows.slice(0, visible);
+
   return (
     <>
       <PageHeader
@@ -169,25 +210,43 @@ export default function Transactions() {
         }
       />
 
-      <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Gross charged" value={formatMoney(totals.gross)} hint="Amount + fees" tone="brand" />
-        <StatCard label="Net to you" value={formatMoney(totals.net)} hint="What settles to your bank" />
-        <StatCard label="Fees" value={formatMoney(totals.fees)} hint="Platform + gateway fees" />
-        <StatCard
+      {/* summary: one tile per meaning, at most three on the screen */}
+      <div className="mb-6">
+        <SummaryTile
+          index={0}
+          tone="money"
+          label="Net to you"
+          value={formatMoney(totals.net)}
+          hint="What settles to your bank"
+        />
+        <SummaryTile
+          index={1}
+          tone="neutral"
+          label="Gross charged"
+          value={formatMoney(totals.gross)}
+          hint={`${formatMoney(totals.fees)} in platform and gateway fees`}
+        />
+        <SummaryTile
+          index={2}
+          tone={totals.unreconciled ? "attention" : "neutral"}
           label="Awaiting reconciliation"
           value={String(totals.unreconciled)}
-          hint={totals.unreconciled ? "Match these against your bank statement" : "Everything is matched"}
-          tone={totals.unreconciled ? "neutral" : "green"}
+          hint={
+            totals.unreconciled
+              ? "Match these against your bank statement"
+              : "Everything is matched"
+          }
         />
       </div>
 
-      <Card className="mt-5" padded={false}>
-        <div className="flex flex-wrap items-center gap-3 border-b border-line-soft px-4 py-3">
+      <Card padded={false}>
+        {/* filters */}
+        <div className="flex flex-col gap-3 border-b border-line-soft px-4 py-3 lg:flex-row lg:flex-wrap lg:items-center">
           <SearchInput
             value={search}
             onChange={setSearch}
             placeholder="Search reference, payer or ID"
-            className="w-full sm:w-[300px]"
+            className="w-full lg:w-[300px]"
           />
           <SegmentedControl
             value={status}
@@ -199,7 +258,7 @@ export default function Transactions() {
               { value: "failed", label: "Failed" },
             ]}
           />
-          <div className="w-full sm:w-[220px]">
+          <div className="w-full lg:w-[220px]">
             <Select
               value={collectionId}
               onChange={(event) => setCollectionId(event.target.value)}
@@ -213,13 +272,15 @@ export default function Transactions() {
               ))}
             </Select>
           </div>
-          <span className="ml-auto font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted">
+          <span className="font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted lg:ml-auto">
             {rows.length} rows
           </span>
         </div>
 
         {transactions.loading ? (
-          <TableSkeleton rows={8} cols={6} />
+          <div className="p-4">
+            <TableSkeleton rows={8} cols={3} />
+          </div>
         ) : transactions.error ? (
           <ErrorState message={transactions.error} onRetry={transactions.refetch} />
         ) : rows.length === 0 ? (
@@ -234,97 +295,127 @@ export default function Transactions() {
             }
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th className="w-10">
-                    <input
-                      type="checkbox"
-                      aria-label="Select all"
-                      checked={selected.length === rows.length && rows.length > 0}
-                      onChange={(event) =>
-                        setSelected(event.target.checked ? rows.map((r) => r.id) : [])
-                      }
-                      className="h-4 w-4 rounded border-line"
-                    />
-                  </th>
-                  <th>Payer</th>
-                  <th>Collection</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Received</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {rows.slice(0, visible).map((transaction) => (
-                  <tr key={transaction.id}>
-                    <td>
+          <>
+            {/* phones: one card per payment, the whole card opens the details */}
+            <ul className="divide-y divide-line-soft md:hidden">
+              {visibleRows.map((transaction) => (
+                <li key={transaction.id} className="flex items-start gap-3 px-4 py-3.5">
+                  <input
+                    type="checkbox"
+                    aria-label={`Select ${transaction.reference}`}
+                    checked={selected.includes(transaction.id)}
+                    onChange={(event) => toggleRow(transaction.id, event.target.checked)}
+                    className="mt-1.5 h-4 w-4 shrink-0 rounded border-line"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setOpen(transaction)}
+                    className="min-w-0 flex-1 rounded-[12px] text-left transition-colors hover:bg-cream/60 active:bg-cream"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-[13.5px] font-semibold">
+                          {transactionPayer(transaction)}
+                        </p>
+                        <p className="mt-0.5 truncate font-mono text-[11px] text-ink-muted">
+                          {transaction.reference}
+                        </p>
+                      </div>
+                      <p className="tabular shrink-0 text-[13.5px] font-bold">
+                        {formatMoney(transaction.amount, transaction.currency)}
+                      </p>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[11.5px] text-ink-muted">
+                      <StatusPill status={transaction.status} />
+                      {transaction.reconciled ? (
+                        <Pill tone="green">Reconciled</Pill>
+                      ) : (
+                        <Pill tone="neutral">Not reconciled</Pill>
+                      )}
+                      <span className="min-w-0 truncate">
+                        {transaction.collection_name || "—"} · {formatDate(transaction.created_at)}
+                      </span>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            {/* tablets and up: the full table */}
+            <div className="hidden overflow-x-auto md:block">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th className="w-10">
                       <input
                         type="checkbox"
-                        aria-label={`Select ${transaction.reference}`}
-                        checked={selected.includes(transaction.id)}
+                        aria-label="Select all"
+                        checked={selected.length === rows.length && rows.length > 0}
                         onChange={(event) =>
-                          setSelected((current) =>
-                            event.target.checked
-                              ? [...current, transaction.id]
-                              : current.filter((value) => value !== transaction.id),
-                          )
+                          setSelected(event.target.checked ? rows.map((r) => r.id) : [])
                         }
                         className="h-4 w-4 rounded border-line"
                       />
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="text-left"
-                        onClick={() => setOpen(transaction)}
-                      >
-                        <span className="block font-semibold">
-                          {transactionPayer(transaction)}
-                        </span>
-                        <span className="block font-mono text-3xs text-ink-muted">
-                          {transaction.reference}
-                        </span>
-                      </button>
-                    </td>
-                    <td className="text-ink-soft">
-                      {transaction.collection_id ? (
-                        <Link
-                          to={`/collections/${transaction.collection_id}`}
-                          className="hover:text-brand"
-                        >
-                          {transaction.collection_name || "Collection"}
-                        </Link>
-                      ) : (
-                        transaction.collection_name || "—"
-                      )}
-                    </td>
-                    <td className="tabular font-semibold">
-                      {formatMoney(transaction.amount, transaction.currency)}
-                    </td>
-                    <td>
-                      <StatusPill status={transaction.status} />
-                    </td>
-                    <td className="text-ink-muted">
-                      <span title={formatDateTime(transaction.created_at)}>
-                        {formatDate(transaction.created_at)}
-                      </span>
-                    </td>
-                    <td className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setOpen(transaction)}
-                      >
-                        Details
-                      </Button>
-                    </td>
+                    </th>
+                    <th>Payer</th>
+                    <th>Collection</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Received</th>
+                    <th />
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {visibleRows.map((transaction) => (
+                    <tr key={transaction.id}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          aria-label={`Select ${transaction.reference}`}
+                          checked={selected.includes(transaction.id)}
+                          onChange={(event) => toggleRow(transaction.id, event.target.checked)}
+                          className="h-4 w-4 rounded border-line"
+                        />
+                      </td>
+                      <td>
+                        <button type="button" className="text-left" onClick={() => setOpen(transaction)}>
+                          <span className="block font-semibold">{transactionPayer(transaction)}</span>
+                          <span className="block font-mono text-3xs text-ink-muted">
+                            {transaction.reference}
+                          </span>
+                        </button>
+                      </td>
+                      <td className="text-ink-soft">
+                        {transaction.collection_id ? (
+                          <Link to={`/collections/${transaction.collection_id}`} className="hover:text-brand">
+                            {transaction.collection_name || "Collection"}
+                          </Link>
+                        ) : (
+                          transaction.collection_name || "—"
+                        )}
+                      </td>
+                      <td className="tabular font-semibold">
+                        {formatMoney(transaction.amount, transaction.currency)}
+                      </td>
+                      <td>
+                        <StatusPill status={transaction.status} />
+                      </td>
+                      <td className="text-ink-muted">
+                        <span title={formatDateTime(transaction.created_at)}>
+                          {formatDate(transaction.created_at)}
+                        </span>
+                      </td>
+                      <td className="text-right">
+                        <Button variant="ghost" size="sm" onClick={() => setOpen(transaction)}>
+                          Details
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
             {rows.length > visible ? (
               <div className="flex justify-center px-4 py-4">
                 <Button
@@ -336,7 +427,7 @@ export default function Transactions() {
                 </Button>
               </div>
             ) : null}
-          </div>
+          </>
         )}
       </Card>
 
@@ -347,7 +438,7 @@ export default function Transactions() {
         subtitle={open?.reference}
         footer={
           open ? (
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
               <Button
                 variant="secondary"
                 size="sm"
@@ -388,9 +479,9 @@ export default function Transactions() {
       >
         {open ? (
           <div className="space-y-5">
-            <div className="flex items-center justify-between gap-4 rounded-xl border border-line bg-cream px-4 py-3">
+            <div className="flex items-center justify-between gap-4 rounded-[18px] border border-ink bg-[#c8f58e] px-4 py-3.5">
               <div>
-                <p className="eyebrow">Amount</p>
+                <p className="font-mono text-[10.5px] uppercase tracking-[0.12em]">Amount</p>
                 <p className="tabular mt-1 text-[22px] font-extrabold">
                   {formatMoney(open.amount, open.currency)}
                 </p>
@@ -401,11 +492,7 @@ export default function Transactions() {
             <div>
               <h3 className="eyebrow mb-2">Payment</h3>
               <KeyValue label="Reference" value={open.reference} mono />
-              <KeyValue
-                label="Gateway reference"
-                value={open.gateway_ref || "—"}
-                mono
-              />
+              <KeyValue label="Gateway reference" value={open.gateway_ref || "—"} mono />
               <KeyValue label="Collection" value={open.collection_name || "—"} />
               <KeyValue label="Created" value={formatDateTime(open.created_at)} />
               <KeyValue
@@ -416,10 +503,7 @@ export default function Transactions() {
                 label="Settled at"
                 value={open.settled_at ? formatDateTime(open.settled_at) : "Pending"}
               />
-              <KeyValue
-                label="Reconciled"
-                value={open.reconciled ? "Yes" : "No"}
-              />
+              <KeyValue label="Reconciled" value={open.reconciled ? "Yes" : "No"} />
             </div>
 
             <div>
@@ -442,19 +526,13 @@ export default function Transactions() {
             <div>
               <h3 className="eyebrow mb-2">What the payer submitted</h3>
               {open.field_values && Object.keys(open.field_values).length ? (
-                <dl className="rounded-xl border border-line bg-white px-4">
+                <dl className="rounded-[18px] border border-line bg-white px-4">
                   {Object.entries(open.field_values).map(([key, value]) => (
-                    <KeyValue
-                      key={key}
-                      label={key.replace(/_/g, " ")}
-                      value={String(value)}
-                    />
+                    <KeyValue key={key} label={key.replace(/_/g, " ")} value={String(value)} />
                   ))}
                 </dl>
               ) : (
-                <p className="muted">
-                  No payer fields were collected for this payment.
-                </p>
+                <p className="muted">No payer fields were collected for this payment.</p>
               )}
             </div>
 
@@ -499,8 +577,7 @@ export default function Transactions() {
           />
         </Field>
         <p className="hint mt-2 flex items-center gap-1.5">
-          <RotateCcw size={12} /> Jeneviv fees on refunded payments are not
-          returned.
+          <RotateCcw size={12} /> Jeneviv fees on refunded payments are not returned.
         </p>
         <div className="mt-3">
           <Pill tone="amber">Admin action</Pill>
