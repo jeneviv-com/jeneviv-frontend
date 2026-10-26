@@ -22,13 +22,7 @@ import {
   type CollectionWithStats,
 } from "@/hooks/useApi";
 import { useToast } from "@/context/ToastContext";
-import {
-  copyText,
-  formatMoney,
-  paymentLink,
-  percent,
-  statusTone,
-} from "@/lib/format";
+import { copyText, formatMoney, paymentLink, percent } from "@/lib/format";
 import {
   Button,
   Card,
@@ -40,7 +34,6 @@ import {
   Input,
   Modal,
   PageHeader,
-  Pill,
   ProgressBar,
   SearchInput,
   SegmentedControl,
@@ -48,7 +41,14 @@ import {
   TableSkeleton,
   Textarea,
   Toggle,
+  TONE_CARD,
+  type ToneCardTone,
 } from "@/components/ui";
+
+/** Accepting collections are mint, paused ones peach, so state reads at a glance. */
+function toneFor(isActive: boolean): ToneCardTone {
+  return isActive ? "mint" : "peach";
+}
 
 export default function Collections() {
   const [params, setParams] = useSearchParams();
@@ -159,6 +159,8 @@ export default function Collections() {
   const toggleActive = async (collection: Collection) => {
     try {
       await updateCollection.run(collection.id, { is_active: !collection.is_active });
+      // Reload the list so the card's state and button update straight away.
+      await collections.refetch();
       success(
         collection.is_active ? "Collection paused" : "Collection resumed",
         `${collection.name} is now ${collection.is_active ? "closed to new payments" : "accepting payments"}.`,
@@ -192,51 +194,64 @@ export default function Collections() {
         }
       />
 
-      <Card padded={false} className="mb-5">
-        <div className="grid divide-y divide-line-soft sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-          {[
-            ["Collections", String(totals.count), "Active and paused"],
-            ["Collected", formatMoney(totals.collected), "Across all collections"],
-            ["Payers", String(totals.payers), "Successful payments recorded"],
-          ].map(([label, value, hint]) => (
-            <div key={label} className="px-5 py-4">
-              <p className="eyebrow">{label}</p>
-              <p className="tabular mt-1.5 text-[22px] font-semibold tracking-tight">
-                {value}
-              </p>
-              <p className="mt-0.5 text-[12px] text-ink-muted">{hint}</p>
+      {/* summary: the same stacked pastel cards as the dashboard */}
+      <div className="mb-6">
+        {[
+          { tone: "lavender" as const, label: "Collections", value: String(totals.count), hint: "Active and paused" },
+          { tone: "mint" as const, label: "Collected", value: formatMoney(totals.collected), hint: "Across all collections" },
+          { tone: "peach" as const, label: "Payers", value: String(totals.payers), hint: "Successful payments" },
+        ].map((item, index) => (
+          <div
+            key={item.label}
+            className="dash-rise relative -mt-6 first:mt-0"
+            style={{ zIndex: index + 1, animationDelay: `${index * 90}ms` }}
+          >
+            <div
+              className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 ${TONE_CARD[item.tone]}`}
+            >
+              <div className="min-w-0">
+                <p className="text-[16px] font-semibold tracking-tight">{item.label}</p>
+                <p className="mt-0.5 truncate text-[12.5px] opacity-70">{item.hint}</p>
+              </div>
+              <p className="shrink-0 text-right text-[20px] font-bold tabular">{item.value}</p>
             </div>
-          ))}
-        </div>
-      </Card>
+          </div>
+        ))}
+      </div>
 
-      <Card padded={false}>
-        <div className="flex flex-wrap items-center gap-3 border-b border-line-soft px-4 py-3">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search by name or code"
-            className="w-full sm:w-[280px]"
-          />
-          <SegmentedControl
-            value={status}
-            onChange={setStatus}
-            options={[
-              { value: "all", label: "All" },
-              { value: "active", label: "Accepting" },
-              { value: "paused", label: "Paused" },
-            ]}
-          />
-          <span className="ml-auto font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted">
-            {rows.length} shown
-          </span>
-        </div>
+      {/* filters */}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Search by name or code"
+          className="w-full sm:w-[280px]"
+        />
+        <SegmentedControl
+          value={status}
+          onChange={setStatus}
+          options={[
+            { value: "all", label: "All" },
+            { value: "active", label: "Accepting" },
+            { value: "paused", label: "Paused" },
+          ]}
+        />
+        <span className="ml-auto font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted">
+          {rows.length} shown
+        </span>
+      </div>
 
-        {collections.loading ? (
+      {/* collection list */}
+      {collections.loading ? (
+        <Card>
           <TableSkeleton rows={5} cols={3} />
-        ) : collections.error ? (
+        </Card>
+      ) : collections.error ? (
+        <Card>
           <ErrorState message={collections.error} onRetry={collections.refetch} />
-        ) : rows.length === 0 ? (
+        </Card>
+      ) : rows.length === 0 ? (
+        <Card>
           <EmptyState
             icon={<HandCoins size={20} />}
             title={search ? "No collections match that search" : "No collections yet"}
@@ -251,79 +266,98 @@ export default function Collections() {
               </Button>
             }
           />
-        ) : (
-          <ul className="divide-y divide-line-soft">
-            {rows.map((collection) => {
-              const paid = collection.stats?.paid ?? 0;
-              const collected = collection.stats?.collected ?? 0;
-              const target = (collection as { target_payers?: number }).target_payers ?? 0;
-              const progress = target ? percent(paid, target) : Math.min(100, paid);
-              return (
-                <li
-                  key={collection.id}
-                  className="flex flex-col gap-4 px-4 py-4 transition-colors hover:bg-cream/50 sm:flex-row sm:items-center sm:px-5"
+        </Card>
+      ) : (
+        <ul className="space-y-3">
+          {rows.map((collection, index) => {
+            const paid = collection.stats?.paid ?? 0;
+            const collected = collection.stats?.collected ?? 0;
+            const target = (collection as { target_payers?: number }).target_payers ?? 0;
+            const progress = target ? percent(paid, target) : Math.min(100, paid);
+            const tone = toneFor(collection.is_active);
+
+            return (
+              <li
+                key={collection.id}
+                className="dash-rise"
+                style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
+              >
+                <article
+                  className={`rounded-[20px] border border-ink p-4 sm:p-5 ${TONE_CARD[tone]}`}
                 >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
+                  {/* title row */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
                       <Link
                         to={`/collections/${collection.id}`}
-                        className="truncate text-[14px] font-semibold tracking-tight hover:text-brand-dark"
+                        className="block truncate text-[16px] font-semibold tracking-tight hover:underline underline-offset-2"
                       >
                         {collection.name}
                       </Link>
-                      <Pill tone={statusTone(collection.is_active ? "active" : "paused")}>
-                        {collection.is_active ? "Accepting" : "Paused"}
-                      </Pill>
+                      <p className="mt-0.5 truncate text-[12.5px] opacity-70">
+                        {collection.description || "No description added."}
+                      </p>
                     </div>
-                    <p className="mt-0.5 truncate text-[12.5px] text-ink-muted">
-                      {collection.description || "No description added."}
-                    </p>
-                    <div className="mt-2 flex items-center gap-2.5">
-                      <span className="font-mono text-3xs text-ink-muted">
-                        {collection.short_code}
-                      </span>
-                      <span className="h-1 w-1 rounded-full bg-line" />
-                      <span className="text-[11.5px] text-ink-muted">
-                        {paid}
-                        {target ? ` / ${target}` : ""} payers
-                        {collection.stats?.pending
-                          ? ` · ${collection.stats.pending} pending`
-                          : ""}
-                      </span>
-                      <div className="hidden w-20 sm:block">
-                        <ProgressBar
-                          value={progress}
-                          tone={collection.is_active ? "brand" : "ink"}
-                        />
-                      </div>
-                    </div>
+                    <span className="shrink-0 rounded-full bg-white/75 px-2.5 py-1 font-mono text-[10.5px] font-semibold uppercase tracking-[0.1em]">
+                      {collection.is_active ? "Accepting" : "Paused"}
+                    </span>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-x-5 gap-y-3 sm:justify-end">
-                    <div className="min-w-[92px]">
-                      <p className="eyebrow">Per payer</p>
-                      <p className="tabular mt-0.5 text-[13px] font-semibold">
+                  {/* figures */}
+                  <div className="mt-4 grid grid-cols-3 gap-2 rounded-[14px] bg-white/60 p-3">
+                    <div className="min-w-0">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.12em] opacity-65">
+                        Per payer
+                      </p>
+                      <p className="tabular mt-0.5 truncate text-[13.5px] font-bold">
                         {formatMoney(collection.amount, collection.currency)}
                       </p>
                     </div>
-                    <div className="min-w-[104px]">
-                      <p className="eyebrow">Collected</p>
-                      <p className="tabular mt-0.5 text-[13px] font-semibold text-success">
+                    <div className="min-w-0">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.12em] opacity-65">
+                        Collected
+                      </p>
+                      <p className="tabular mt-0.5 truncate text-[13.5px] font-bold">
                         {formatMoney(collected, collection.currency)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Link
-                        to={`/collections/${collection.id}`}
-                        className="btn btn-secondary btn-sm"
-                      >
-                        Open <ArrowUpRight size={13} />
-                      </Link>
+                    <div className="min-w-0">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.12em] opacity-65">
+                        Payers
+                      </p>
+                      <p className="tabular mt-0.5 truncate text-[13.5px] font-bold">
+                        {paid}
+                        {target ? ` / ${target}` : ""}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <ProgressBar
+                      value={progress}
+                      tone={collection.is_active ? "brand" : "ink"}
+                    />
+                    <p className="mt-1.5 font-mono text-[11px] opacity-65">
+                      {collection.short_code}
+                      {collection.stats?.pending ? ` · ${collection.stats.pending} pending` : ""}
+                    </p>
+                  </div>
+
+                  {/* actions */}
+                  <div className="mt-4 flex items-center justify-between gap-2">
+                    <Link
+                      to={`/collections/${collection.id}`}
+                      className="inline-flex items-center gap-1.5 rounded-[10px] bg-ink px-3.5 py-2 text-[12.5px] font-semibold text-white transition-transform duration-150 active:scale-[0.97]"
+                    >
+                      Open <ArrowUpRight size={13} />
+                    </Link>
+
+                    <div className="flex items-center gap-1.5">
                       <button
                         type="button"
                         title="Copy payment link"
                         aria-label={`Copy link for ${collection.name}`}
-                        className="grid h-8 w-8 place-items-center rounded-lg text-ink-muted transition-colors hover:bg-cream hover:text-ink"
+                        className="grid h-9 w-9 place-items-center rounded-[10px] bg-white/75 transition-colors hover:bg-white"
                         onClick={async () => {
                           const ok = await copyText(paymentLink(collection.short_code));
                           if (ok) success("Payment link copied", paymentLink(collection.short_code));
@@ -333,30 +367,35 @@ export default function Collections() {
                       </button>
                       <button
                         type="button"
-                        title={collection.is_active ? "Pause collection" : "Resume collection"}
                         aria-label={collection.is_active ? "Pause collection" : "Resume collection"}
-                        className="grid h-8 w-8 place-items-center rounded-lg text-ink-muted transition-colors hover:bg-cream hover:text-ink"
+                        disabled={updateCollection.loading}
                         onClick={() => toggleActive(collection)}
+                        className={`inline-flex h-9 items-center gap-1.5 rounded-[10px] px-3 text-[12.5px] font-semibold transition-all duration-150 active:scale-[0.97] disabled:opacity-50 ${
+                          collection.is_active
+                            ? "bg-white/75 text-ink hover:bg-white"
+                            : "bg-ink text-white hover:bg-black"
+                        }`}
                       >
-                        {collection.is_active ? <Pause size={14} /> : <Play size={14} />}
+                        {collection.is_active ? <Pause size={13} /> : <Play size={13} />}
+                        {collection.is_active ? "Pause" : "Resume"}
                       </button>
                       <button
                         type="button"
                         title="Delete collection"
                         aria-label={`Delete ${collection.name}`}
-                        className="grid h-8 w-8 place-items-center rounded-lg text-danger/70 transition-colors hover:bg-[#fbeceb] hover:text-danger"
+                        className="grid h-9 w-9 place-items-center rounded-[10px] bg-white/75 text-danger transition-colors hover:bg-white"
                         onClick={() => setPendingDelete(collection)}
                       >
                         <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </Card>
+                </article>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       <Modal
         open={showCreate}
@@ -394,9 +433,7 @@ export default function Collections() {
               id="collection-description"
               value={form.description}
               placeholder="Course handout and past questions for 300 level."
-              onChange={(event) =>
-                setForm({ ...form, description: event.target.value })
-              }
+              onChange={(event) => setForm({ ...form, description: event.target.value })}
             />
           </Field>
 
@@ -430,9 +467,7 @@ export default function Collections() {
                 inputMode="numeric"
                 value={form.target_payers}
                 placeholder="200"
-                onChange={(event) =>
-                  setForm({ ...form, target_payers: event.target.value })
-                }
+                onChange={(event) => setForm({ ...form, target_payers: event.target.value })}
               />
             </Field>
           </div>
@@ -456,7 +491,7 @@ export default function Collections() {
             </Select>
           </Field>
 
-          <div className="rounded-xl border border-line bg-cream px-4 py-3">
+          <div className="rounded-[14px] border border-line bg-cream px-4 py-3">
             <Toggle
               checked={form.is_active}
               onChange={(value) => setForm({ ...form, is_active: value })}
