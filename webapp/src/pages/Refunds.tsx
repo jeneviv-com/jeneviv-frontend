@@ -58,11 +58,11 @@ function SummaryTile({
       <div
         className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_MEANING[tone]}`}
       >
-        <div className="min-w-0">
-          <p className="text-[15px] font-semibold tracking-tight lg:text-[16px]">{label}</p>
-          <p className="mt-0.5 truncate text-[12px] opacity-70">{hint}</p>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-semibold tracking-tight lg:text-[16px]">{label}</p>
+          <p className="mt-0.5 truncate text-[12px] opacity-70 lg:text-[13px]">{hint}</p>
         </div>
-        <p className="shrink-0 text-right text-[19px] font-bold tabular lg:mt-2 lg:text-left lg:text-[24px]">{value}</p>
+        <p className="shrink-0 text-right text-[19px] font-bold tabular lg:mt-2 lg:w-full lg:text-left lg:text-[24px]">{value}</p>
       </div>
     </div>
   );
