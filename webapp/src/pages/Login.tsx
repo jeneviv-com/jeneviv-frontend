@@ -20,8 +20,7 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const redirectTo =
-    (location.state as { from?: string } | null)?.from || "/dashboard";
+  const redirectTo = (location.state as { from?: string } | null)?.from || "/dashboard";
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -48,47 +47,40 @@ export default function Login() {
 
   return (
     <AuthLayout
-      title="Sign in to Jeneviv"
+      title="Sign in"
       subtitle="Pick up where your collections left off."
       footer={
         <>
           New to Jeneviv?{" "}
-          <Link
-            to="/signup"
-            className="font-semibold text-brand underline underline-offset-2"
-          >
+          <Link to="/signup" className="font-semibold text-ink underline decoration-ink/25 underline-offset-2 hover:text-brand">
             Create an account
           </Link>
         </>
       }
     >
       {demo ? (
-        <InlineNote tone="warning" title="Demo workspace">
-          The backend host is offline, so sign in with any credentials — or{" "}
-          <button
-            type="button"
-            onClick={fillDemo}
-            className="font-semibold underline underline-offset-2"
-          >
-            use the seeded coordinator
-          </button>
-          .
-        </InlineNote>
+        <div className="mb-6 rounded-[14px] bg-[#fff3dd] px-4 py-3.5 text-[13px] text-ink">
+          <p className="font-semibold">Demo workspace</p>
+          <p className="mt-1 text-ink-soft">
+            The backend host is offline, so sign in with any credentials, or{" "}
+            <button type="button" onClick={fillDemo} className="font-semibold underline underline-offset-2">
+              use the seeded coordinator
+            </button>
+            .
+          </p>
+        </div>
       ) : null}
 
-      <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <Field label="Email address" htmlFor="email">
           <div className="relative">
-            <Mail
-              size={15}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint"
-            />
+            <Mail size={15} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-faint" />
             <Input
               id="email"
               type="email"
               autoComplete="email"
               required
-              className="pl-9"
+              className="h-[50px] rounded-[12px] pl-10"
               placeholder="you@example.com"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
@@ -98,16 +90,13 @@ export default function Login() {
 
         <Field label="Password" htmlFor="password">
           <div className="relative">
-            <Lock
-              size={15}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint"
-            />
+            <Lock size={15} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-faint" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               required
-              className="pl-9 pr-10"
+              className="h-[50px] rounded-[12px] pl-10 pr-11"
               placeholder="••••••••"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -115,7 +104,7 @@ export default function Login() {
             <button
               type="button"
               onClick={() => setShowPassword((value) => !value)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-faint transition-colors hover:text-ink"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-faint transition-colors hover:text-ink"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -128,6 +117,7 @@ export default function Login() {
         <Button
           type="submit"
           size="lg"
+          className="h-[50px] w-full rounded-[12px] text-[15px]"
           loading={submitting || bootstrapping}
           disabled={!email || !password}
         >
@@ -135,12 +125,9 @@ export default function Login() {
         </Button>
       </form>
 
-      <p className="hint mt-4 text-center">
+      <p className="hint mt-6">
         Forgot your password? Email{" "}
-        <a
-          className="font-semibold text-brand underline underline-offset-2"
-          href="mailto:myjeneviv@gmail.com"
-        >
+        <a className="font-semibold text-ink underline decoration-ink/25 underline-offset-2 hover:text-brand" href="mailto:myjeneviv@gmail.com">
           myjeneviv@gmail.com
         </a>{" "}
         and we will reset it for you.
