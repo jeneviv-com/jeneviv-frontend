@@ -156,7 +156,7 @@ export async function apiFetch<T>(
   }
   clearTimeout(timeout);
 
-  // FIX: the bearer plugin returns the SIGNED session token in this header on
+  // The bearer plugin returns the SIGNED session token in this header on
   // sign-in / sign-up. This is the token the API accepts as `Authorization:
   // Bearer`. (The `token` in the JSON body is unsigned and gets rejected.)
   // Requires `Access-Control-Expose-Headers: set-auth-token` on the backend.
@@ -553,6 +553,35 @@ export interface AuditLog {
   created_at: string;
 }
 
+/* ------------------------------------------------------- field list helpers */
+
+/**
+ * The backend has no per-field PATCH or DELETE routes. Field edits are done by
+ * loading the whole list, changing it, and saving it back with POST.
+ * Fields are matched by field_id, which is stable, rather than by client-side
+ * draft ids.
+ */
+function replaceFieldById(
+  fields: CollectionField[],
+  fieldId: string,
+  change: Partial<CollectionField> | null,
+): CollectionField[] {
+  const next: CollectionField[] = [];
+  for (const field of fields) {
+    if (field.field_id !== fieldId) {
+      next.push(field);
+    } else if (change !== null) {
+      next.push({ ...field, ...change });
+    }
+  }
+  return next;
+}
+
+/** Strip client-only draft ids before saving. The server assigns real ids. */
+function cleanFields(fields: CollectionField[]): CollectionField[] {
+  return fields.map(({ id: _id, ...rest }) => rest as CollectionField);
+}
+
 /* ---------------------------------------------------------------------- auth */
 
 export const authAPI = {
@@ -574,7 +603,7 @@ export const authAPI = {
       body: { name, email, password },
     }),
 
-  // FIX: always clear the stored token on sign-out, even if the request fails.
+  // Always clear the stored token on sign-out, even if the request fails.
   signOut: async () => {
     try {
       return await apiFetch<{ success: boolean }>("/api/auth/sign-out", {
@@ -633,13 +662,22 @@ export const collectionsAPI = {
       method: "DELETE",
     }),
 
-  fields: (id: string) =>
-    apiFetch<{ fields: CollectionField[] }>(`/api/collections/${id}/fields`),
+  /**
+   * No GET /:id/fields route on the backend. Read the fields from the
+   * collection itself. Assumes GET /api/collections/:id returns `fields`.
+   */
+  fields: async (id: string) => {
+    const { collection } = await apiFetch<{ collection: Collection }>(
+      `/api/collections/${id}`,
+    );
+    return { fields: collection.fields ?? [] };
+  },
 
+  /** Replace the whole field list. POST is the method the backend accepts. */
   setFields: (id: string, fields: CollectionField[]) =>
     apiFetch<{ collection: Collection }>(`/api/collections/${id}/fields`, {
-      method: "PUT",
-      body: { fields },
+      method: "POST",
+      body: { fields: cleanFields(fields) },
     }),
 
   addField: (id: string, field: Omit<CollectionField, "id">) =>
@@ -648,20 +686,25 @@ export const collectionsAPI = {
       body: field,
     }),
 
-  updateField: (
+  /** No per-field PATCH route. Loads the list, edits one field, saves it back. */
+  updateField: async (
     id: string,
     fieldId: string,
     field: Partial<CollectionField>,
-  ) =>
-    apiFetch<{ field: CollectionField }>(
-      `/api/collections/${id}/fields/${fieldId}`,
-      { method: "PATCH", body: field },
-    ),
+  ) => {
+    const { fields } = await collectionsAPI.fields(id);
+    const next = replaceFieldById(fields, fieldId, field);
+    await collectionsAPI.setFields(id, next);
+    const updated = next.find((f) => f.field_id === fieldId);
+    return { field: updated as CollectionField };
+  },
 
-  deleteField: (id: string, fieldId: string) =>
-    apiFetch<{ success: boolean }>(`/api/collections/${id}/fields/${fieldId}`, {
-      method: "DELETE",
-    }),
+  /** No per-field DELETE route. Loads the list, removes the field, saves it back. */
+  deleteField: async (id: string, fieldId: string) => {
+    const { fields } = await collectionsAPI.fields(id);
+    await collectionsAPI.setFields(id, replaceFieldById(fields, fieldId, null));
+    return { success: true };
+  },
 
   transactions: (id: string, query?: { status?: string }) =>
     apiFetch<{ transactions: Transaction[] }>(
@@ -679,6 +722,10 @@ export const collectionsAPI = {
 /* -------------------------------------------------------------- transactions */
 
 export const transactionsAPI = {
+  /**
+   * Not confirmed on the backend: I found GET /:id and PATCH /reconcile, but no
+   * list route. If the list returns 404, the backend needs GET / added.
+   */
   list: (query?: {
     collection_id?: string;
     status?: string;
@@ -724,6 +771,11 @@ export const payoutsAPI = {
 
 /* -------------------------------------------------------------------- refunds */
 
+/**
+ * No /api/refunds routes exist on the backend yet. Refunds are only created
+ * through the admin endpoint (adminAPI.refundTransaction). These calls will
+ * return 404 until the routes are added.
+ */
 export const refundsAPI = {
   list: (limit?: number) =>
     apiFetch<{ refunds: Refund[] }>("/api/refunds", { query: { limit } }),
@@ -764,11 +816,15 @@ export const merchantsAPI = {
         { method: "POST", body: data },
       ),
 
+    /**
+     * No set-default route on the backend. The default is stored as
+     * settings.default_bank_account_id, so this saves that setting instead.
+     */
     setDefault: (id: string) =>
-      apiFetch<{ bank_account: BankAccount }>(
-        `/api/merchants/me/bank-accounts/${id}/set-default`,
-        { method: "POST" },
-      ),
+      apiFetch<{ merchant: Merchant }>("/api/merchants/me/settings", {
+        method: "PATCH",
+        body: { default_bank_account_id: id },
+      }),
 
     delete: (id: string) =>
       apiFetch<{ success: boolean }>(`/api/merchants/me/bank-accounts/${id}`, {
@@ -806,8 +862,7 @@ export const merchantsAPI = {
 /* -------------------------------------------------------------- withdrawals */
 
 export const withdrawalsAPI = {
-  list: () =>
-    apiFetch<{ withdrawals: Withdrawal[] }>("/api/withdrawals"),
+  list: () => apiFetch<{ withdrawals: Withdrawal[] }>("/api/withdrawals"),
 
   get: (id: string) =>
     apiFetch<{ withdrawal: Withdrawal }>(`/api/withdrawals/${id}`),
@@ -899,10 +954,11 @@ export const templatesAPI = {
   getFields: (id: string) =>
     apiFetch<{ fields: CollectionField[] }>(`/api/templates/${id}/fields`),
 
+  /** Replace the whole field list. POST is the method the backend accepts. */
   setFields: (id: string, fields: CollectionField[]) =>
     apiFetch<{ template: Template }>(`/api/templates/${id}/fields`, {
-      method: "PUT",
-      body: { fields },
+      method: "POST",
+      body: { fields: cleanFields(fields) },
     }),
 
   addField: (id: string, field: Omit<CollectionField, "id">) =>
@@ -911,20 +967,25 @@ export const templatesAPI = {
       body: field,
     }),
 
-  updateField: (
+  /** No per-field PATCH route. Loads the list, edits one field, saves it back. */
+  updateField: async (
     id: string,
     fieldId: string,
     field: Partial<CollectionField>,
-  ) =>
-    apiFetch<{ field: CollectionField }>(`/api/templates/${id}/fields/${fieldId}`, {
-      method: "PATCH",
-      body: field,
-    }),
+  ) => {
+    const { fields } = await templatesAPI.getFields(id);
+    const next = replaceFieldById(fields, fieldId, field);
+    await templatesAPI.setFields(id, next);
+    const updated = next.find((f) => f.field_id === fieldId);
+    return { field: updated as CollectionField };
+  },
 
-  deleteField: (id: string, fieldId: string) =>
-    apiFetch<{ success: boolean }>(`/api/templates/${id}/fields/${fieldId}`, {
-      method: "DELETE",
-    }),
+  /** No per-field DELETE route. Loads the list, removes the field, saves it back. */
+  deleteField: async (id: string, fieldId: string) => {
+    const { fields } = await templatesAPI.getFields(id);
+    await templatesAPI.setFields(id, replaceFieldById(fields, fieldId, null));
+    return { success: true };
+  },
 };
 
 /* --------------------------------------------------------------------- banks */
@@ -951,8 +1012,13 @@ export const uploadsAPI = {
 /* --------------------------------------------------------------------- admin */
 
 export const adminAPI = {
+  /**
+   * The backend has no /api/admin/stats, /api/admin/transactions or
+   * /api/admin/audit-logs routes yet. Those calls return 404 until added.
+   */
   getStats: () => apiFetch<AdminStats>("/api/admin/stats"),
 
+  /** Exists on the backend: GET /api/admin/merchants. */
   listMerchants: (status?: MerchantStatus) =>
     apiFetch<{ merchants: Merchant[] }>("/api/admin/merchants", {
       query: { status },
@@ -976,6 +1042,7 @@ export const adminAPI = {
       { method: "POST", body: { note } },
     ),
 
+  /** Exists on the backend: POST /api/admin/transactions/:id/refund. */
   refundTransaction: (transactionId: string, reason: string) =>
     apiFetch<{ refund: Refund }>(
       `/api/admin/transactions/${transactionId}/refund`,
