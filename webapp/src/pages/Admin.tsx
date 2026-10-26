@@ -1,13 +1,5 @@
-import { useMemo, useState } from "react";
-import {
-  Activity,
-  BadgeCheck,
-  Ban,
-  Building2,
-  ShieldCheck,
-  Undo2,
-  XCircle,
-} from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
+import { BadgeCheck, Ban, ShieldCheck, Undo2, XCircle } from "lucide-react";
 import { adminAPI, type Merchant, type MerchantStatus } from "@/lib/api";
 import {
   useAction,
@@ -28,8 +20,6 @@ import {
 } from "@/lib/format";
 import {
   Button,
-  Card,
-  CardHeader,
   ConfirmDialog,
   EmptyState,
   ErrorState,
@@ -37,16 +27,58 @@ import {
   InlineNote,
   Modal,
   PageHeader,
-  Pill,
   SegmentedControl,
-  StatCard,
   StatusPill,
   TableSkeleton,
   Tabs,
   Textarea,
+  TONE_MEANING,
+  type ToneKind,
 } from "@/components/ui";
 
 type Tab = "merchants" | "transactions" | "audit";
+
+/** One stacked summary tile, coloured by meaning. Matches the dashboard. */
+function SummaryTile({
+  index,
+  tone,
+  label,
+  value,
+  hint,
+}: {
+  index: number;
+  tone: ToneKind;
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <div className="dash-rise relative -mt-6 first:mt-0" style={{ zIndex: index + 1, animationDelay: `${index * 80}ms` }}>
+      <div
+        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 ${TONE_MEANING[tone]}`}
+      >
+        <div className="min-w-0">
+          <p className="text-[16px] font-semibold tracking-tight">{label}</p>
+          <p className="mt-0.5 truncate text-[12.5px] opacity-70">{hint}</p>
+        </div>
+        <p className="shrink-0 text-right text-[20px] font-bold tabular">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+/** Small section header used inside the console: title, subtitle, optional aside. */
+function Head({ title, subtitle, aside }: { title: string; subtitle: string; aside?: ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-3 pb-4">
+      <div>
+        <h2 className="section-title">{title}</h2>
+        <p className="muted mt-0.5">{subtitle}</p>
+      </div>
+      {aside}
+    </div>
+  );
+}
 
 export default function Admin() {
   const { isAdmin, user } = useAuth();
@@ -67,18 +99,10 @@ export default function Admin() {
   const transactions = useAdminTransactions();
   const logs = useAuditLogs();
 
-  const approve = useAction((id: string, why: string) =>
-    adminAPI.approveMerchant(id, why),
-  );
-  const reject = useAction((id: string, why: string) =>
-    adminAPI.rejectMerchant(id, why),
-  );
-  const suspend = useAction((id: string, why: string) =>
-    adminAPI.suspendMerchant(id, why),
-  );
-  const refund = useAction((id: string, why: string) =>
-    adminAPI.refundTransaction(id, why),
-  );
+  const approve = useAction((id: string, why: string) => adminAPI.approveMerchant(id, why));
+  const reject = useAction((id: string, why: string) => adminAPI.rejectMerchant(id, why));
+  const suspend = useAction((id: string, why: string) => adminAPI.suspendMerchant(id, why));
+  const refund = useAction((id: string, why: string) => adminAPI.refundTransaction(id, why));
 
   const runAction = useMemo(
     () => ({
@@ -91,15 +115,18 @@ export default function Admin() {
 
   if (!isAdmin) {
     return (
-      <Card>
+      <div className="py-10">
         <EmptyState
           icon={<ShieldCheck size={20} />}
           title="Admin access required"
           description="This console is limited to platform administrators. Your account does not have that role."
         />
-      </Card>
+      </div>
     );
   }
+
+  const merchantRows = merchants.data ?? [];
+  const txnRows = transactions.data ?? [];
 
   return (
     <>
@@ -108,40 +135,38 @@ export default function Admin() {
         title="Admin"
         description="Merchant approvals, platform volume, refunds and the audit trail behind every action."
         actions={
-          <Pill tone="blue">
-            <ShieldCheck size={12} /> {user?.email}
-          </Pill>
+          <span className="inline-flex items-center gap-2 rounded-full bg-cream px-3 py-1.5 text-[12px] font-semibold text-ink-soft">
+            <ShieldCheck size={13} /> {user?.email}
+          </span>
         }
       />
 
-      <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
+      {/* summary: one tile per meaning */}
+      <div className="mb-8">
+        <SummaryTile
+          index={0}
+          tone="people"
           label="Merchants"
           value={formatNumber(stats.data?.total_merchants ?? 0)}
           hint={`${stats.data?.pending_merchants ?? 0} awaiting review`}
-          icon={<Building2 size={16} />}
-          tone="brand"
         />
-        <StatCard
-          label="Transactions"
-          value={formatNumber(stats.data?.total_transactions ?? 0)}
-          hint="Across all workspaces"
-        />
-        <StatCard
+        <SummaryTile
+          index={1}
+          tone="money"
           label="Volume"
           value={formatMoney(stats.data?.total_volume ?? 0)}
-          hint="Successful payments processed"
-          tone="green"
+          hint={`${formatNumber(stats.data?.total_transactions ?? 0)} transactions across all workspaces`}
         />
-        <StatCard
+        <SummaryTile
+          index={2}
+          tone={(stats.data?.pending_payouts ?? 0) > 0 ? "attention" : "neutral"}
           label="Pending payouts"
           value={formatNumber(stats.data?.pending_payouts ?? 0)}
           hint="Awaiting gateway completion"
-          icon={<Activity size={16} />}
         />
       </div>
 
-      <div className="mt-5">
+      <div className="mb-8">
         <Tabs
           value={tab}
           onChange={setTab}
@@ -153,37 +178,105 @@ export default function Admin() {
         />
       </div>
 
-      <div className="mt-5">
-        {tab === "merchants" ? (
-          <Card padded={false}>
-            <div className="flex flex-wrap items-center gap-3 border-b border-line-soft px-4 py-3">
-              <SegmentedControl
-                value={merchantStatus}
-                onChange={(value) => setMerchantStatus(value as MerchantStatus)}
-                options={[
-                  { value: "pending", label: "Pending" },
-                  { value: "approved", label: "Approved" },
-                  { value: "rejected", label: "Rejected" },
-                  { value: "suspended", label: "Suspended" },
-                ]}
-              />
-              <span className="ml-auto font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted">
-                {merchants.data?.length ?? 0} workspaces
-              </span>
-            </div>
+      {/* merchants */}
+      {tab === "merchants" ? (
+        <section>
+          <Head
+            title="Workspaces"
+            subtitle="Approve, reject or suspend the workspaces that collect money"
+            aside={
+              <div className="flex flex-wrap items-center gap-3">
+                <SegmentedControl
+                  value={merchantStatus}
+                  onChange={(value) => setMerchantStatus(value as MerchantStatus)}
+                  options={[
+                    { value: "pending", label: "Pending" },
+                    { value: "approved", label: "Approved" },
+                    { value: "rejected", label: "Rejected" },
+                    { value: "suspended", label: "Suspended" },
+                  ]}
+                />
+                <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-muted">
+                  {merchantRows.length} workspaces
+                </span>
+              </div>
+            }
+          />
 
-            {merchants.loading ? (
-              <TableSkeleton rows={4} cols={4} />
-            ) : merchants.error ? (
-              <ErrorState message={merchants.error} onRetry={merchants.refetch} />
-            ) : (merchants.data ?? []).length === 0 ? (
-              <EmptyState
-                icon={<BadgeCheck size={20} />}
-                title={`No ${merchantStatus} workspaces`}
-                description="Nothing to review in this state right now."
-              />
-            ) : (
-              <div className="overflow-x-auto">
+          {merchants.loading ? (
+            <TableSkeleton rows={4} cols={3} />
+          ) : merchants.error ? (
+            <ErrorState message={merchants.error} onRetry={merchants.refetch} />
+          ) : merchantRows.length === 0 ? (
+            <EmptyState
+              icon={<BadgeCheck size={20} />}
+              title={`No ${merchantStatus} workspaces`}
+              description="Nothing to review in this state right now."
+            />
+          ) : (
+            <>
+              {/* phones: one card per workspace */}
+              <ul className="divide-y divide-line md:hidden">
+                {merchantRows.map((merchant) => (
+                  <li key={merchant.id} className="py-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[15px] font-bold tracking-tight">
+                          {merchant.display_name || merchant.displayName}
+                        </p>
+                        <p className="mt-1 text-[13px] text-ink-soft">{merchant.application_note || "—"}</p>
+                      </div>
+                      <StatusPill status={merchant.status} />
+                    </div>
+                    <p className="mt-2 font-mono text-[11px] text-ink-muted">
+                      applied {timeAgo(merchant.createdAt)}
+                    </p>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {merchant.status !== "approved" ? (
+                        <Button
+                          size="sm"
+                          icon={<BadgeCheck size={13} />}
+                          onClick={() => {
+                            setAction({ merchant, type: "approve" });
+                            setNote("");
+                          }}
+                        >
+                          Approve
+                        </Button>
+                      ) : null}
+                      {merchant.status !== "rejected" ? (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          icon={<XCircle size={13} />}
+                          onClick={() => {
+                            setAction({ merchant, type: "reject" });
+                            setNote("");
+                          }}
+                        >
+                          Reject
+                        </Button>
+                      ) : null}
+                      {merchant.status === "approved" ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={<Ban size={13} />}
+                          onClick={() => {
+                            setAction({ merchant, type: "suspend" });
+                            setNote("");
+                          }}
+                        >
+                          Suspend
+                        </Button>
+                      ) : null}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              {/* tablets and up: the full table */}
+              <div className="hidden overflow-x-auto md:block">
                 <table className="table">
                   <thead>
                     <tr>
@@ -195,19 +288,13 @@ export default function Admin() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(merchants.data ?? []).map((merchant) => (
+                    {merchantRows.map((merchant) => (
                       <tr key={merchant.id}>
                         <td>
-                          <p className="font-semibold">
-                            {merchant.display_name || merchant.displayName}
-                          </p>
-                          <p className="font-mono text-3xs text-ink-muted">
-                            {merchant.id}
-                          </p>
+                          <p className="font-semibold">{merchant.display_name || merchant.displayName}</p>
+                          <p className="font-mono text-3xs text-ink-muted">{merchant.id}</p>
                         </td>
-                        <td className="max-w-[320px] text-ink-soft">
-                          {merchant.application_note || "—"}
-                        </td>
+                        <td className="max-w-[320px] text-ink-soft">{merchant.application_note || "—"}</td>
                         <td>
                           <StatusPill status={merchant.status} />
                         </td>
@@ -261,27 +348,68 @@ export default function Admin() {
                   </tbody>
                 </table>
               </div>
-            )}
-          </Card>
-        ) : null}
+            </>
+          )}
+        </section>
+      ) : null}
 
-        {tab === "transactions" ? (
-          <Card padded={false}>
-            <div className="flex items-center justify-between gap-3 px-5 py-4">
-              <div>
-                <h2 className="section-title">Platform transactions</h2>
-                <p className="muted mt-0.5">
-                  Successful payments can be refunded from here
-                </p>
-              </div>
-              <Pill tone="neutral">{formatNumber(transactions.data?.length ?? 0)} rows</Pill>
-            </div>
-            {transactions.loading ? (
-              <TableSkeleton rows={6} cols={4} />
-            ) : transactions.error ? (
-              <ErrorState message={transactions.error} onRetry={transactions.refetch} />
-            ) : (
-              <div className="overflow-x-auto">
+      {/* transactions */}
+      {tab === "transactions" ? (
+        <section>
+          <Head
+            title="Platform transactions"
+            subtitle="Successful payments can be refunded from here"
+            aside={
+              <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-muted">
+                {formatNumber(txnRows.length)} rows
+              </span>
+            }
+          />
+
+          {transactions.loading ? (
+            <TableSkeleton rows={6} cols={3} />
+          ) : transactions.error ? (
+            <ErrorState message={transactions.error} onRetry={transactions.refetch} />
+          ) : (
+            <>
+              {/* phones: one card per transaction */}
+              <ul className="divide-y divide-line md:hidden">
+                {txnRows.slice(0, 60).map((transaction) => (
+                  <li key={transaction.id} className="py-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-[14px] font-semibold">{transactionPayer(transaction)}</p>
+                        <p className="mt-0.5 truncate font-mono text-[11px] text-ink-muted">{transaction.reference}</p>
+                      </div>
+                      <p className="tabular shrink-0 text-[14px] font-bold">
+                        {formatMoney(transaction.amount, transaction.currency)}
+                      </p>
+                    </div>
+                    <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-[11.5px] text-ink-muted">
+                        <StatusPill status={transaction.status} />
+                        <span>{transaction.collection_name || "—"} · {formatDate(transaction.created_at)}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-danger hover:bg-[#fdecea]"
+                        icon={<Undo2 size={13} />}
+                        disabled={transaction.status !== "success"}
+                        onClick={() => {
+                          setRefundTarget(transaction.id);
+                          setRefundReason("");
+                        }}
+                      >
+                        Refund
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              {/* tablets and up: the full table */}
+              <div className="hidden overflow-x-auto md:block">
                 <table className="table">
                   <thead>
                     <tr>
@@ -294,26 +422,20 @@ export default function Admin() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(transactions.data ?? []).slice(0, 60).map((transaction) => (
+                    {txnRows.slice(0, 60).map((transaction) => (
                       <tr key={transaction.id}>
                         <td>
                           <p className="font-semibold">{transactionPayer(transaction)}</p>
-                          <p className="font-mono text-3xs text-ink-muted">
-                            {transaction.reference}
-                          </p>
+                          <p className="font-mono text-3xs text-ink-muted">{transaction.reference}</p>
                         </td>
-                        <td className="text-ink-soft">
-                          {transaction.collection_name || "—"}
-                        </td>
+                        <td className="text-ink-soft">{transaction.collection_name || "—"}</td>
                         <td className="tabular font-semibold">
                           {formatMoney(transaction.amount, transaction.currency)}
                         </td>
                         <td>
                           <StatusPill status={transaction.status} />
                         </td>
-                        <td className="text-ink-muted">
-                          {formatDate(transaction.created_at)}
-                        </td>
+                        <td className="text-ink-muted">{formatDate(transaction.created_at)}</td>
                         <td className="text-right">
                           <Button
                             variant="ghost"
@@ -334,44 +456,43 @@ export default function Admin() {
                   </tbody>
                 </table>
               </div>
-            )}
-          </Card>
-        ) : null}
+            </>
+          )}
+        </section>
+      ) : null}
 
-        {tab === "audit" ? (
-          <Card>
-            <CardHeader
-              title="Audit trail"
-              subtitle="Every administrative and merchant action, with its actor"
-            />
-            {logs.loading ? (
-              <TableSkeleton rows={5} cols={3} />
-            ) : logs.error ? (
-              <ErrorState message={logs.error} onRetry={logs.refetch} />
-            ) : (
-              <ol className="relative pl-5">
-                <span className="absolute left-1.5 top-2 bottom-2 w-px bg-line" />
-                {(logs.data ?? []).map((log) => (
-                  <li key={log.id} className="relative pb-5 last:pb-0">
-                    <span className="absolute -left-[15px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-brand" />
-                    <p className="text-[13px] font-semibold">
-                      {log.action.replace(/[._]/g, " ")}
-                    </p>
-                    <p className="muted mt-0.5">
-                      {log.entity_type} · {log.entity_id}
-                    </p>
-                    <p className="mt-1 font-mono text-3xs text-ink-muted">
-                      {formatDateTime(log.created_at)} · actor{" "}
-                      {log.actor_uid || "system"}
-                    </p>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </Card>
-        ) : null}
-      </div>
+      {/* audit trail: a timeline, no card */}
+      {tab === "audit" ? (
+        <section>
+          <Head title="Audit trail" subtitle="Every administrative and merchant action, with its actor" />
+          {logs.loading ? (
+            <TableSkeleton rows={5} cols={3} />
+          ) : logs.error ? (
+            <ErrorState message={logs.error} onRetry={logs.refetch} />
+          ) : (
+            <ol className="relative ml-2 border-l border-line pl-7">
+              {(logs.data ?? []).map((log) => (
+                <li key={log.id} className="relative pb-7 last:pb-0">
+                  <span className="absolute -left-[33px] top-1.5 grid h-[15px] w-[15px] place-items-center rounded-full border border-ink bg-white">
+                    <span className="h-1.5 w-1.5 rounded-full bg-ink" />
+                  </span>
+                  <p className="text-[14px] font-bold capitalize tracking-tight">
+                    {log.action.replace(/[._]/g, " ")}
+                  </p>
+                  <p className="muted mt-1">
+                    {log.entity_type} · <span className="font-mono text-[12px]">{log.entity_id}</span>
+                  </p>
+                  <p className="mt-1.5 font-mono text-[11px] text-ink-muted">
+                    {formatDateTime(log.created_at)} · actor {log.actor_uid || "system"}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+      ) : null}
 
+      {/* approve / reject / suspend */}
       <Modal
         open={Boolean(action)}
         onClose={() => setAction(null)}
@@ -435,9 +556,7 @@ export default function Admin() {
           />
         </Field>
         <div className="mt-3">
-          <InlineNote tone="info">
-            Actions are recorded with your user id and timestamp.
-          </InlineNote>
+          <InlineNote tone="info">Actions are recorded with your user id and timestamp.</InlineNote>
         </div>
       </Modal>
 
