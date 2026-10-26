@@ -199,14 +199,14 @@ export default function Settings() {
             Settlement
           </p>
           <p className="mt-1.5 text-[15px] font-bold tracking-tight">Direct to bank</p>
-          <p className="mt-1 text-[12px] text-ink-muted">Paystack splits each payment as it lands</p>
+          <p className="mt-1 text-[12px] text-ink-muted">Paystack splits each payment</p>
         </div>
         <div className="border-l border-line-soft pl-4 pr-4 lg:pl-6">
           <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">
             Platform fee
           </p>
           <p className="tabular mt-1.5 text-[15px] font-bold tracking-tight">₦75</p>
-          <p className="mt-1 text-[12px] text-ink-muted">Per successful payment, nothing else held</p>
+          <p className="mt-1 text-[12px] text-ink-muted">Per successful payment</p>
         </div>
         <div className="pr-4 lg:border-l lg:border-line-soft lg:pl-6">
           <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">
