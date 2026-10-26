@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Download, Search, Users } from "lucide-react";
+import { Download, Search } from "lucide-react";
 import { useTransactions } from "@/hooks/useApi";
 import { useToast } from "@/context/ToastContext";
 import {
@@ -22,8 +22,9 @@ import {
   Pill,
   SearchInput,
   SegmentedControl,
-  StatCard,
   TableSkeleton,
+  TONE_MEANING,
+  type ToneKind,
 } from "@/components/ui";
 
 interface PayerRow {
@@ -37,6 +38,38 @@ interface PayerRow {
   lastPayment: string;
   pending: boolean;
   email?: string;
+}
+
+/** One stacked summary tile, coloured by meaning. Matches the dashboard. */
+function SummaryTile({
+  index,
+  tone,
+  label,
+  value,
+  hint,
+}: {
+  index: number;
+  tone: ToneKind;
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <div
+      className="dash-rise relative -mt-6 first:mt-0"
+      style={{ zIndex: index + 1, animationDelay: `${index * 80}ms` }}
+    >
+      <div
+        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 ${TONE_MEANING[tone]}`}
+      >
+        <div className="min-w-0">
+          <p className="text-[16px] font-semibold tracking-tight">{label}</p>
+          <p className="mt-0.5 truncate text-[12.5px] opacity-70">{hint}</p>
+        </div>
+        <p className="shrink-0 text-right text-[20px] font-bold tabular">{value}</p>
+      </div>
+    </div>
+  );
 }
 
 export default function Payers() {
@@ -139,44 +172,47 @@ export default function Payers() {
         }
       />
 
-      <InlineNote tone="info" title="How this list is built">
-        Payers are assembled from the fields you collect on each payment, so no
-        separate customer record is needed. Export it any time for an auditable
-        class list.
-      </InlineNote>
+      <div className="mb-5">
+        <InlineNote tone="info" title="How this list is built">
+          Payers are assembled from the fields you collect on each payment, so no
+          separate customer record is needed. Export it any time for an auditable
+          class list.
+        </InlineNote>
+      </div>
 
-      <div className="mt-5 stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
+      {/* summary: one tile per meaning */}
+      <div className="mb-6">
+        <SummaryTile
+          index={0}
+          tone="people"
           label="Unique payers"
           value={formatNumber(totals.unique)}
-          hint="Distinct name + identifier pairs"
-          icon={<Users size={16} />}
-          tone="brand"
+          hint={`${formatNumber(totals.repeat)} paid into more than one collection`}
         />
-        <StatCard
+        <SummaryTile
+          index={1}
+          tone="money"
           label="Value received"
           value={formatMoney(totals.collected)}
           hint="Confirmed payments only"
         />
-        <StatCard
+        <SummaryTile
+          index={2}
+          tone={totals.outstanding ? "attention" : "neutral"}
           label="Outstanding transfers"
           value={formatNumber(totals.outstanding)}
           hint="Payments still pending confirmation"
         />
-        <StatCard
-          label="Repeat payers"
-          value={formatNumber(totals.repeat)}
-          hint="Paid into more than one collection"
-        />
       </div>
 
-      <Card className="mt-5" padded={false}>
-        <div className="flex flex-wrap items-center gap-3 border-b border-line-soft px-4 py-3">
+      <Card padded={false}>
+        {/* filters */}
+        <div className="flex flex-col gap-3 border-b border-line-soft px-4 py-3 lg:flex-row lg:flex-wrap lg:items-center">
           <SearchInput
             value={search}
             onChange={setSearch}
             placeholder="Search name, ID or collection"
-            className="w-full sm:w-[300px]"
+            className="w-full lg:w-[300px]"
           />
           <SegmentedControl
             value={filter}
@@ -187,13 +223,15 @@ export default function Payers() {
               { value: "outstanding", label: "Outstanding" },
             ]}
           />
-          <span className="ml-auto font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted">
+          <span className="font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted lg:ml-auto">
             {rows.length} rows
           </span>
         </div>
 
         {transactions.loading ? (
-          <TableSkeleton rows={6} cols={5} />
+          <div className="p-4">
+            <TableSkeleton rows={6} cols={3} />
+          </div>
         ) : transactions.error ? (
           <ErrorState message={transactions.error} onRetry={transactions.refetch} />
         ) : rows.length === 0 ? (
@@ -207,64 +245,101 @@ export default function Payers() {
             }
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Payer</th>
-                  <th>Collection</th>
-                  <th>Payments</th>
-                  <th>Total</th>
-                  <th>Last payment</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.slice(0, 120).map((payer) => (
-                  <tr key={payer.key}>
-                    <td>
-                      <p className="font-semibold">{payer.name}</p>
-                      <p className="font-mono text-3xs text-ink-muted">
+          <>
+            {/* phones: one card per payer */}
+            <ul className="divide-y divide-line-soft md:hidden">
+              {rows.slice(0, 120).map((payer) => (
+                <li key={payer.key} className="px-4 py-3.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-[13.5px] font-semibold">{payer.name}</p>
+                      <p className="mt-0.5 truncate font-mono text-[11px] text-ink-muted">
                         {payer.identifier}
                       </p>
-                    </td>
-                    <td>
+                    </div>
+                    <p className="tabular shrink-0 text-[13.5px] font-bold">
+                      {formatMoney(payer.total)}
+                    </p>
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-[11.5px] text-ink-muted">
+                    {payer.payments > 0 ? (
+                      <Pill tone={payer.payments > 1 ? "green" : "neutral"}>
+                        {payer.payments} paid
+                      </Pill>
+                    ) : (
+                      <Pill tone="amber">Pending</Pill>
+                    )}
+                    <span className="min-w-0 truncate">
                       {payer.collectionId ? (
-                        <Link
-                          to={`/collections/${payer.collectionId}`}
-                          className="text-ink-soft hover:text-brand"
-                        >
+                        <Link to={`/collections/${payer.collectionId}`} className="hover:text-brand">
                           {payer.collection}
                         </Link>
                       ) : (
-                        <span className="text-ink-soft">{payer.collection}</span>
-                      )}
-                    </td>
-                    <td>
-                      {payer.payments > 0 ? (
-                        <Pill tone={payer.payments > 1 ? "green" : "neutral"}>
-                          {payer.payments} paid
-                        </Pill>
-                      ) : (
-                        <Pill tone="amber">Pending</Pill>
-                      )}
-                    </td>
-                    <td className="tabular font-semibold">{formatMoney(payer.total)}</td>
-                    <td className="text-ink-muted">
-                      <span title={formatDate(payer.lastPayment)}>
-                        {timeAgo(payer.lastPayment)}
-                      </span>
-                    </td>
+                        payer.collection
+                      )}{" "}
+                      · {timeAgo(payer.lastPayment)}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            {/* tablets and up: the full table */}
+            <div className="hidden overflow-x-auto md:block">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Payer</th>
+                    <th>Collection</th>
+                    <th>Payments</th>
+                    <th>Total</th>
+                    <th>Last payment</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {rows.slice(0, 120).map((payer) => (
+                    <tr key={payer.key}>
+                      <td>
+                        <p className="font-semibold">{payer.name}</p>
+                        <p className="font-mono text-3xs text-ink-muted">{payer.identifier}</p>
+                      </td>
+                      <td>
+                        {payer.collectionId ? (
+                          <Link
+                            to={`/collections/${payer.collectionId}`}
+                            className="text-ink-soft hover:text-brand"
+                          >
+                            {payer.collection}
+                          </Link>
+                        ) : (
+                          <span className="text-ink-soft">{payer.collection}</span>
+                        )}
+                      </td>
+                      <td>
+                        {payer.payments > 0 ? (
+                          <Pill tone={payer.payments > 1 ? "green" : "neutral"}>
+                            {payer.payments} paid
+                          </Pill>
+                        ) : (
+                          <Pill tone="amber">Pending</Pill>
+                        )}
+                      </td>
+                      <td className="tabular font-semibold">{formatMoney(payer.total)}</td>
+                      <td className="text-ink-muted">
+                        <span title={formatDate(payer.lastPayment)}>{timeAgo(payer.lastPayment)}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
             {payers.length > 120 ? (
               <p className="muted px-4 py-3">
-                Showing the 120 most recent payers. Export the CSV for the full
-                list.
+                Showing the 120 most recent payers. Export the CSV for the full list.
               </p>
             ) : null}
-          </div>
+          </>
         )}
       </Card>
     </>
