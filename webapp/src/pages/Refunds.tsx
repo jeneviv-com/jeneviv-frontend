@@ -1,8 +1,13 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Undo2 } from "lucide-react";
-import { adminAPI, type Transaction } from "@/lib/api";
-import { useAction, useRefunds, useTransactions } from "@/hooks/useApi";
+import { adminAPI, refundsAPI, type Refund, type Transaction } from "@/lib/api";
+import {
+  useAction,
+  useBanks,
+  useRefunds,
+  useTransactions,
+} from "@/hooks/useApi";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import {
@@ -20,7 +25,10 @@ import {
   ErrorState,
   Field,
   InlineNote,
+  Input,
+  Modal,
   PageHeader,
+  Select,
   StatCard,
   StatusPill,
   TableSkeleton,
@@ -32,20 +40,55 @@ export default function Refunds() {
   const { success, error: toastError } = useToast();
   const [target, setTarget] = useState<Transaction | null>(null);
   const [reason, setReason] = useState("");
+  const [bankTarget, setBankTarget] = useState<Refund | null>(null);
+  const [bankForm, setBankForm] = useState({
+    account_number: "",
+    bank_code: "",
+  });
 
   const refunds = useRefunds();
   const transactions = useTransactions({ status: "success" });
+  const banks = useBanks("NG");
 
   const refund = useAction((id: string, why: string) =>
     adminAPI.refundTransaction(id, why),
   );
+
+  const retryRefund = useAction(
+    (refundId: string, accountNumber: string, bankCode: string) =>
+      refundsAPI.retry(refundId, accountNumber, bankCode),
+  );
+
+  const submitBankDetails = async () => {
+    if (!bankTarget) return;
+    try {
+      await retryRefund.run(
+        bankTarget.id,
+        bankForm.account_number,
+        bankForm.bank_code,
+      );
+      await refunds.refetch();
+      success(
+        "Refund sent back to Paystack",
+        "We will mark it complete as soon as the gateway confirms it.",
+      );
+      setBankTarget(null);
+    } catch (err) {
+      toastError(
+        "Could not retry the refund",
+        err instanceof Error ? err.message : "",
+      );
+    }
+  };
 
   const totals = useMemo(() => {
     const issued = refunds.data ?? [];
     return {
       count: issued.length,
       value: issued.reduce((sum, item) => sum + item.amount, 0),
-      processing: issued.filter((item) => item.status !== "success").length,
+      processing: issued.filter((item) => item.status === "pending").length,
+      needsAttention: issued.filter((item) => item.status === "needs_attention")
+        .length,
       refundable: (transactions.data ?? []).length,
     };
   }, [refunds.data, transactions.data]);
@@ -66,7 +109,7 @@ export default function Refunds() {
         </InlineNote>
       ) : null}
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-5 stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Refunds issued"
           value={String(totals.count)}
@@ -76,9 +119,14 @@ export default function Refunds() {
         />
         <StatCard label="Value refunded" value={formatMoney(totals.value)} hint="Original payment amounts" />
         <StatCard
-          label="Still processing"
-          value={String(totals.processing)}
-          hint="Gateway has not confirmed the reversal"
+          label="Needs attention"
+          value={String(totals.needsAttention)}
+          hint={
+            totals.needsAttention
+              ? "Add the payer's bank details to finish"
+              : `${totals.processing} still processing`
+          }
+          tone={totals.needsAttention ? "brand" : "neutral"}
         />
         <StatCard
           label="Refundable payments"
@@ -115,6 +163,7 @@ export default function Refunds() {
                     <th>Reason</th>
                     <th>Status</th>
                     <th>Requested</th>
+                    <th />
                   </tr>
                 </thead>
                 <tbody>
@@ -129,6 +178,27 @@ export default function Refunds() {
                         <StatusPill status={item.status} />
                       </td>
                       <td className="text-ink-muted">{timeAgo(item.created_at)}</td>
+                      <td className="text-right">
+                        {item.status === "needs_attention" ? (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              setBankTarget(item);
+                              setBankForm({ account_number: "", bank_code: "" });
+                            }}
+                          >
+                            Add bank details
+                          </Button>
+                        ) : item.failure_reason ? (
+                          <span
+                            className="text-[11px] text-ink-muted"
+                            title={item.failure_reason}
+                          >
+                            {item.failure_reason.slice(0, 32)}
+                          </span>
+                        ) : null}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -205,12 +275,12 @@ export default function Refunds() {
               "You confirm the payment and give a reason. The reversal is recorded against the transaction.",
             ],
             [
-              "Returned by the gateway",
-              "Flutterwave sends the money back to the original bank account or card, usually within 3–5 business days.",
+              "Returned by Paystack",
+              "The reversal leaves your settlement and returns to the original bank account or card, usually within 3–5 business days.",
             ],
             [
-              "Visible to the payer",
-              "The payer sees the credit on their statement. Jeneviv fees on the original payment are not returned.",
+              "Payer details needed",
+              "If Paystack cannot route the refund, the payment is marked “Needs attention”. Add the payer's account number and the refund is retried.",
             ],
           ].map(([title, body]) => (
             <li key={title} className="rounded-xl border border-line bg-cream px-4 py-3">
@@ -220,6 +290,79 @@ export default function Refunds() {
           ))}
         </ul>
       </Card>
+
+      <Modal
+        open={Boolean(bankTarget)}
+        onClose={() => setBankTarget(null)}
+        title="Where should this refund go?"
+        description="Paystack needs the payer's bank account to complete the reversal."
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setBankTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              loading={retryRefund.loading}
+              disabled={
+                !bankForm.bank_code || bankForm.account_number.length !== 10
+              }
+              onClick={submitBankDetails}
+            >
+              Send to Paystack
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <Field label="Payer's bank" htmlFor="refund-bank">
+            <Select
+              id="refund-bank"
+              value={bankForm.bank_code}
+              onChange={(event) =>
+                setBankForm({ ...bankForm, bank_code: event.target.value })
+              }
+            >
+              <option value="">Select a bank</option>
+              {(banks.data ?? []).map((bank) => (
+                <option key={bank.code} value={bank.code}>
+                  {bank.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field
+            label="Payer's account number"
+            htmlFor="refund-account"
+            hint="Any valid account belonging to the payer — it can differ from the one used to pay."
+          >
+            <Input
+              id="refund-account"
+              inputMode="numeric"
+              maxLength={10}
+              className="font-mono"
+              value={bankForm.account_number}
+              onChange={(event) =>
+                setBankForm({
+                  ...bankForm,
+                  account_number: event.target.value.replace(/\D/g, "").slice(0, 10),
+                })
+              }
+              placeholder="0123456789"
+            />
+          </Field>
+          <InlineNote tone="info">
+            The refund is funded from the original payment's settlement, so
+            Jeneviv never fronts merchant money. The ₦75 platform fee stays
+            with Jeneviv.
+          </InlineNote>
+          {bankTarget ? (
+            <p className="hint">
+              Refund {bankTarget.id.slice(0, 10)} ·{" "}
+              {formatMoney(bankTarget.amount)}
+            </p>
+          ) : null}
+        </div>
+      </Modal>
 
       <ConfirmDialog
         open={Boolean(target)}

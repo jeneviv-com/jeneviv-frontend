@@ -48,7 +48,11 @@
 
 @layer components {
   .card {
-    @apply min-w-0 rounded-card border border-line bg-white shadow-card;
+    @apply min-w-0 rounded-card border border-line bg-white shadow-card transition-[box-shadow,border-color,transform] duration-200;
+  }
+
+  .card-interactive {
+    @apply hover:-translate-y-0.5 hover:border-ink/15 hover:shadow-pop;
   }
 
   .card-pad {
@@ -69,7 +73,7 @@
 
   /* buttons ------------------------------------------------------------- */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-[8px] border border-transparent px-3.5 py-2.5 text-[13px] font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-55;
+    @apply inline-flex items-center justify-center gap-2 rounded-[8px] border border-transparent px-3.5 py-2.5 text-[13px] font-semibold transition-all duration-150 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-55 disabled:active:scale-100;
   }
 
   .btn-primary {
@@ -159,6 +163,10 @@
     @apply border-b-0;
   }
 
+  .table tbody tr {
+    @apply transition-colors duration-150;
+  }
+
   .table tbody tr:hover {
     @apply bg-cream/60;
   }
@@ -181,15 +189,15 @@
   }
 
   .side-link {
-    @apply relative flex items-center gap-2.5 rounded-[7px] px-2.5 py-2 text-[13px] font-medium text-white/55 transition-colors;
+    @apply relative flex items-center gap-2.5 rounded-[7px] px-2.5 py-2.5 text-[13px] font-medium text-ink-muted transition-[background-color,color] duration-150;
   }
 
   .side-link:hover {
-    @apply bg-white/[0.06] text-white;
+    @apply bg-cream text-ink;
   }
 
   .side-link-active {
-    @apply bg-white/[0.08] text-white;
+    @apply bg-brand-soft font-semibold text-ink;
   }
 
   .side-link-active::before {
@@ -214,6 +222,36 @@
 @layer utilities {
   .soft {
     font-weight: 400;
+  }
+
+  /* Sequenced entrance for grids and lists: children rise in one after the
+     other instead of the whole block popping at once. */
+  .stagger > * {
+    animation: rise-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .stagger > *:nth-child(2) {
+    animation-delay: 60ms;
+  }
+
+  .stagger > *:nth-child(3) {
+    animation-delay: 110ms;
+  }
+
+  .stagger > *:nth-child(4) {
+    animation-delay: 160ms;
+  }
+
+  .stagger > *:nth-child(5) {
+    animation-delay: 210ms;
+  }
+
+  .stagger > *:nth-child(6) {
+    animation-delay: 250ms;
+  }
+
+  .stagger > *:nth-child(n + 7) {
+    animation-delay: 290ms;
   }
 
   .no-scrollbar::-webkit-scrollbar {
@@ -255,5 +293,17 @@
 
   .stacked-card-green {
     @apply bg-[#B1F373] text-ink;
+  }
+}
+
+/* Motion is decoration here: everything that animates still works with it off. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

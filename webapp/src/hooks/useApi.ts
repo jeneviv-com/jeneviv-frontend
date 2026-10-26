@@ -7,6 +7,7 @@ import {
   collectionsAPI,
   merchantsAPI,
   payoutsAPI,
+  refundsAPI,
   templatesAPI,
   transactionsAPI,
   withdrawalsAPI,
@@ -322,15 +323,16 @@ export function useAuditLogs() {
 
 /* ------------------------------------------------------------------ refunds */
 
-/**
- * The documented API exposes refunds through the admin refund endpoint, so the
- * dashboard keeps the refunds it has issued alongside those transactions.
- */
 export function useRefunds() {
   return useResource<Refund[]>(
     async () => {
-      if (!isDemoMode()) return [];
-      const response = await apiFetch<{ refunds: Refund[] }>("/api/demo/refunds");
+      if (isDemoMode()) {
+        const response = await apiFetch<{ refunds: Refund[] }>(
+          "/api/demo/refunds",
+        );
+        return response.refunds;
+      }
+      const response = await refundsAPI.list();
       return response.refunds;
     },
     [isDemoMode() ? "demo" : "live"],

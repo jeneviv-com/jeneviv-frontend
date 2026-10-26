@@ -514,8 +514,10 @@ export interface Refund {
   merchant_id?: string;
   amount: number;
   reason?: string;
-  status: "pending" | "processing" | "success" | "failed";
+  status: "pending" | "needs_attention" | "success" | "failed";
   gateway_ref?: string;
+  gateway_refund_id?: string;
+  failure_reason?: string;
   created_at: string;
   updated_at?: string;
 }
@@ -701,6 +703,20 @@ export const payoutsAPI = {
         amount,
         currency,
       },
+    }),
+};
+
+/* -------------------------------------------------------------------- refunds */
+
+export const refundsAPI = {
+  list: (limit?: number) =>
+    apiFetch<{ refunds: Refund[] }>("/api/refunds", { query: { limit } }),
+
+  /** Paystack could not route a refund without the payer's bank details. */
+  retry: (refundId: string, accountNumber: string, bankCode: string) =>
+    apiFetch<{ refund: Refund }>(`/api/refunds/${refundId}/retry`, {
+      method: "POST",
+      body: { account_number: accountNumber, bank_code: bankCode },
     }),
 };
 

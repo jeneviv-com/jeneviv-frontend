@@ -169,7 +169,7 @@ export default function Transactions() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Gross charged" value={formatMoney(totals.gross)} hint="Amount + fees" tone="brand" />
         <StatCard label="Net to you" value={formatMoney(totals.net)} hint="What settles to your bank" />
         <StatCard label="Fees" value={formatMoney(totals.fees)} hint="Platform + gateway fees" />

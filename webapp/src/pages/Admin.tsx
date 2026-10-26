@@ -114,7 +114,7 @@ export default function Admin() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Merchants"
           value={formatNumber(stats.data?.total_merchants ?? 0)}

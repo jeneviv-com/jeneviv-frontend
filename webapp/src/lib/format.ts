@@ -155,6 +155,7 @@ export function transactionIdentifier(t: {
 export const STATUS_LABELS: Record<string, string> = {
   pending: "Pending",
   processing: "Processing",
+  needs_attention: "Needs attention",
   pending_treasurer: "Awaiting treasurer",
   success: "Paid",
   failed: "Failed",
@@ -181,6 +182,7 @@ export function statusTone(status?: string | null): Tone {
       return "green";
     case "pending":
     case "processing":
+    case "needs_attention":
     case "pending_treasurer":
     case "paused":
     case "draft":

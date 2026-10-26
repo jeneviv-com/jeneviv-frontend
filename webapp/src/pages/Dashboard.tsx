@@ -3,24 +3,19 @@ import { Link } from "react-router-dom";
 import {
   ArrowUpRight,
   Banknote,
-  CalendarClock,
   HandCoins,
   Plus,
   ReceiptText,
+  ShieldCheck,
   Users,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import {
-  useCollectionStats,
-  usePayouts,
-  useTransactions,
-} from "@/hooks/useApi";
-import { computeBalances } from "@/lib/demo";
+import { useCollectionStats, useTransactions } from "@/hooks/useApi";
 import {
   formatCompact,
-  formatDate,
   formatMoney,
   formatNumber,
+  initials,
   percent,
   statusTone,
   timeAgo,
@@ -32,7 +27,6 @@ import {
   type SeriesPoint,
 } from "@/components/charts";
 import {
-  Button,
   Card,
   CardHeader,
   EmptyState,
@@ -56,7 +50,6 @@ export default function Dashboard() {
 
   const collections = useCollectionStats();
   const transactions = useTransactions();
-  const payouts = usePayouts();
 
   const allTransactions = transactions.data ?? [];
   const stats = collections.data ?? [];
@@ -73,14 +66,25 @@ export default function Dashboard() {
 
   const successful = rangedTransactions.filter((t) => t.status === "success");
   const collected = successful.reduce((sum, t) => sum + t.amount, 0);
+  const settled = successful
+    .filter((transaction) => transaction.settled_at)
+    .reduce((sum, transaction) => sum + transaction.amount, 0);
   const pendingCount = allTransactions.filter((t) => t.status === "pending").length;
 
+  // Seven daily points with weekday labels keep the chart identical to the
+  // laptop mockup; longer ranges fall back to weekly points.
   const buckets = useMemo<SeriesPoint[]>(() => {
     const points: SeriesPoint[] = [];
-    const weeks = 8;
-    for (let index = weeks - 1; index >= 0; index -= 1) {
-      const end = Date.now() - index * 7 * 86_400_000;
-      const start = end - 7 * 86_400_000;
+    const daily = RANGE_DAYS[range] === 7;
+    const steps = daily ? 7 : range === "30d" ? 15 : 13;
+    const stepMs = daily
+      ? 86_400_000
+      : range === "30d"
+        ? 2 * 86_400_000
+        : 7 * 86_400_000;
+    for (let index = steps - 1; index >= 0; index -= 1) {
+      const end = Date.now() - index * stepMs;
+      const start = end - stepMs;
       const value = allTransactions
         .filter((transaction) => {
           const time = new Date(transaction.created_at).getTime();
@@ -90,15 +94,17 @@ export default function Dashboard() {
         })
         .reduce((sum, transaction) => sum + transaction.amount, 0);
       points.push({
-        label: new Date(end).toLocaleDateString("en-NG", {
-          day: "numeric",
-          month: "short",
-        }),
+        label: new Date(end).toLocaleDateString(
+          "en-NG",
+          daily
+            ? { weekday: "short" }
+            : { day: "numeric", month: "short" },
+        ),
         value,
       });
     }
     return points;
-  }, [allTransactions]);
+  }, [allTransactions, range]);
 
   const productSplit = useMemo(() => {
     const map = new Map<string, number>();
@@ -117,15 +123,6 @@ export default function Dashboard() {
       }));
   }, [successful]);
 
-  const balances = useMemo(() => {
-    if (!allTransactions.length && !(payouts.data ?? []).length) return null;
-    return computeBalances({
-      transactions: allTransactions,
-      payouts: payouts.data ?? [],
-      refunds: [],
-    });
-  }, [allTransactions, payouts.data]);
-
   const uniquePayers = useMemo(() => {
     const set = new Set<string>();
     successful.forEach((transaction) => {
@@ -139,9 +136,24 @@ export default function Dashboard() {
   const recent = allTransactions.slice(0, 7);
   const loading = collections.loading || transactions.loading;
 
-  const activePayout =
-    (payouts.data ?? []).find((p) => p.status === "pending") ||
-    (payouts.data ?? []).find((p) => p.status === "processing");
+  const payerTarget = stats.reduce(
+    (sum, collection) =>
+      sum + ((collection as { target_payers?: number }).target_payers ?? 0),
+    0,
+  );
+
+  const recentPayers = useMemo(() => {
+    const seen = new Set<string>();
+    const names: string[] = [];
+    allTransactions.forEach((transaction) => {
+      if (transaction.status !== "success") return;
+      const name = transactionPayer(transaction);
+      if (!name || seen.has(name)) return;
+      seen.add(name);
+      names.push(name);
+    });
+    return names;
+  }, [allTransactions]);
 
   return (
     <>
@@ -179,60 +191,31 @@ export default function Dashboard() {
         </Card>
       ) : null}
 
-      <div className="md:hidden">
-        <div className="stacked-cards">
-          <div className="stacked-card stacked-card-black">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[16px] font-bold">Collected</p>
-                <p className="text-[12px] text-white/70">{range === "7d" ? "Last 7 days" : range === "30d" ? "Last 30 days" : "Last 90 days"}</p>
-              </div>
-              <div className="text-right">
-                <p className="tabular text-[20px] font-extrabold leading-tight">{formatMoney(collected)}</p>
-                <p className="text-[11.5px] text-white/70">{successful.length} successful</p>
-              </div>
-            </div>
+      {/* The same dark prompt the laptop mockup shows. */}
+      <div className="relative mb-5 overflow-hidden rounded-card bg-[#101010] px-5 py-4 text-white shadow-card">
+        <div
+          aria-hidden="true"
+          className="absolute -right-10 -top-16 h-44 w-44 rounded-full bg-brand/25 blur-3xl"
+        />
+        <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[15px] font-bold tracking-tight">
+              Start a collection today
+            </p>
+            <p className="mt-1 text-[12.5px] text-white/65">
+              One link. Verified payments. No chasing receipts.
+            </p>
           </div>
-          <div className="stacked-card stacked-card-purple">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-[16px] font-bold">Credit</p>
-              <div className="text-right">
-                <p className="tabular text-[20px] font-extrabold leading-tight">{formatMoney(balances?.available ?? merchant?.payouts_balance_ngn ?? 0)}</p>
-                <p className="text-[11.5px] text-ink/70">Available limit</p>
-              </div>
-            </div>
-          </div>
-          <div className="stacked-card stacked-card-orange">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-[16px] font-bold">Savings</p>
-              <div className="text-right">
-                <p className="tabular text-[20px] font-extrabold leading-tight">{formatMoney(uniquePayers > 0 ? Math.round(collected * 0.01) : 0)}</p>
-                <p className="text-[11.5px] text-ink/70">Payers balance</p>
-              </div>
-            </div>
-          </div>
-          <div className="stacked-card stacked-card-cyan">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-[16px] font-bold">eSIM</p>
-              <div className="text-right">
-                <p className="tabular text-[20px] font-extrabold leading-tight">{formatNumber(pendingCount)}</p>
-                <p className="text-[11.5px] text-ink/70">Pending</p>
-              </div>
-            </div>
-          </div>
-          <div className="stacked-card stacked-card-pink">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-[16px] font-bold">Accounts</p>
-              <div className="text-right">
-                <p className="tabular text-[20px] font-extrabold leading-tight">{formatMoney((balances?.available ?? 0) + (balances?.collected ?? collected))}</p>
-                <p className="text-[11.5px] text-ink/70">Total balance</p>
-              </div>
-            </div>
-          </div>
+          <Link
+            to="/collections?new=1"
+            className="btn btn-sm self-start bg-white text-ink hover:bg-cream sm:self-auto"
+          >
+            <Plus size={14} /> New collection
+          </Link>
         </div>
       </div>
 
-      <div className="hidden gap-4 sm:grid-cols-2 xl:grid-cols-4 md:grid">
+      <div className="stagger grid gap-4 sm:grid-cols-3">
         <StatCard
           label={`Collected · ${range}`}
           value={formatMoney(collected)}
@@ -241,31 +224,25 @@ export default function Dashboard() {
           tone="brand"
         />
         <StatCard
-          label="Available to withdraw"
-          value={formatMoney(balances?.available ?? merchant?.payouts_balance_ngn ?? 0)}
-          hint={
-            activePayout
-              ? `${formatMoney(activePayout.amount)} payout in progress`
-              : "Settles twice daily to your bank"
+          label="Payers"
+          value={
+            payerTarget
+              ? `${formatNumber(uniquePayers)} / ${formatNumber(payerTarget)}`
+              : formatNumber(uniquePayers)
           }
-          icon={<Banknote size={16} />}
-        />
-        <StatCard
-          label="Payers · unique"
-          value={formatNumber(uniquePayers)}
-          hint={`Across ${stats.length} collections`}
+          hint={
+            payerTarget
+              ? `${percent(uniquePayers, payerTarget)}% of your target`
+              : `Across ${stats.length} collections`
+          }
           icon={<Users size={16} />}
         />
         <StatCard
-          label="Awaiting confirmation"
-          value={formatNumber(pendingCount)}
-          hint={
-            pendingCount
-              ? "Transfers not yet confirmed by the gateway"
-              : "Nothing outstanding right now"
-          }
-          icon={<CalendarClock size={16} />}
-          tone={pendingCount ? "neutral" : "green"}
+          label="Settled to your bank"
+          value={formatMoney(settled)}
+          hint="Paid out by Paystack — never held by Jeneviv"
+          icon={<Banknote size={16} />}
+          tone="green"
         />
       </div>
 
@@ -273,7 +250,11 @@ export default function Dashboard() {
         <Card>
           <CardHeader
             title="Collections over time"
-            subtitle="Successful payments per week, last 8 weeks"
+            subtitle={
+              range === "7d"
+                ? "Successful payments for each day this week"
+                : "Successful payments per week"
+            }
             action={
               <SegmentedControl
                 value={range}
@@ -315,6 +296,26 @@ export default function Dashboard() {
                   </p>
                 </div>
               </div>
+
+              <div className="mt-4 flex items-center gap-2.5 border-t border-line-soft pt-4">
+                <div className="flex -space-x-1.5">
+                  {recentPayers.slice(0, 5).map((name) => (
+                    <span
+                      key={name}
+                      title={name}
+                      className="grid h-7 w-7 place-items-center rounded-full border-2 border-white bg-brand-peach text-3xs font-bold text-[#79300f]"
+                    >
+                      {initials(name)}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-[12px] text-ink-muted">
+                  {recentPayers.length > 5
+                    ? `+${recentPayers.length - 5} more payers`
+                    : `${recentPayers.length} payers`}{" "}
+                  in this range
+                </p>
+              </div>
             </>
           )}
         </Card>
@@ -340,42 +341,36 @@ export default function Dashboard() {
 
           <Card>
             <CardHeader
-              title="Settlement schedule"
-              subtitle="Payouts run at 10:00 and 22:00 daily"
-              icon={<Banknote size={16} />}
+              title="Direct settlement"
+              subtitle="Your money never sits with Jeneviv"
+              icon={<ShieldCheck size={16} />}
             />
-            <ul className="space-y-3">
-              <li className="flex items-center justify-between gap-3 border-b border-line-soft pb-3">
-                <div>
-                  <p className="text-[13px] font-semibold">Next automatic payout</p>
-                  <p className="muted">
-                    {formatDate(new Date(Date.now() + 6 * 3600_000).toISOString())}{" "}
-                    · Wema Bank
-                  </p>
-                </div>
-                <span className="tabular text-[14px] font-bold">
-                  {formatMoney(balances?.available ?? 0)}
+            <p className="muted">
+              Every successful payment is split by Paystack at the moment it is
+              captured. Your collection amount, minus Paystack&apos;s processing
+              fee, reaches your verified bank account; the ₦75 platform fee goes
+              to Jeneviv.
+            </p>
+            <ul className="mt-4 space-y-2.5 border-t border-line-soft pt-4">
+              <li className="flex items-center justify-between gap-3 text-[12.5px]">
+                <span className="text-ink-muted">Settled in this range</span>
+                <span className="tabular font-semibold">
+                  {formatMoney(settled)}
                 </span>
               </li>
-              {(payouts.data ?? []).slice(0, 3).map((payout) => (
-                <li key={payout.id} className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[13px] font-semibold">
-                      {payout.bank_code ? `••${payout.account_number.slice(-4)}` : "Payout"}
-                    </p>
-                    <p className="muted">{timeAgo(payout.created_at)}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="tabular text-[13px] font-semibold">
-                      {formatMoney(payout.amount)}
-                    </p>
-                    <StatusPill status={payout.status} />
-                  </div>
-                </li>
-              ))}
+              <li className="flex items-center justify-between gap-3 text-[12.5px]">
+                <span className="text-ink-muted">Awaiting confirmation</span>
+                <span className="tabular font-semibold">
+                  {formatNumber(pendingCount)}
+                </span>
+              </li>
+              <li className="flex items-center justify-between gap-3 text-[12.5px]">
+                <span className="text-ink-muted">Platform fee per payment</span>
+                <span className="tabular font-semibold">₦75</span>
+              </li>
             </ul>
             <Link to="/payouts" className="btn btn-secondary btn-sm mt-4 w-full">
-              Manage payouts <ArrowUpRight size={14} />
+              Manage bank account <ArrowUpRight size={14} />
             </Link>
           </Card>
         </div>

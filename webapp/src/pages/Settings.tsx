@@ -16,7 +16,7 @@ import KycCard from "@/components/KycCard";
 import { useAction, useBankAccounts } from "@/hooks/useApi";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
-import { formatDate, formatMoney } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import {
   Button,
   Card,
@@ -81,10 +81,10 @@ export default function Settings() {
       <PageHeader
         eyebrow="Workspace"
         title="Settings"
-        description="Your profile, how your workspace appears to payers, and how money leaves the platform."
+        description="Your profile, how your workspace appears to payers, and where payments settle."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Workspace status"
           value={
@@ -101,19 +101,19 @@ export default function Settings() {
           icon={<BadgeCheck size={16} />}
         />
         <StatCard
-          label="Collected"
-          value={formatMoney(merchant?.wallet_balance_ngn ?? 0)}
-          hint="Successful payments, all time"
+          label="Settlement"
+          value="Direct to bank"
+          hint="Paystack splits each payment as it lands"
         />
         <StatCard
-          label="Available for payout"
-          value={formatMoney(merchant?.payouts_balance_ngn ?? 0)}
-          hint="Minus refunds and payouts in flight"
+          label="Platform fee"
+          value="₦75"
+          hint="Per successful payment — Jeneviv holds nothing else"
         />
         <StatCard
           label="Default bank"
           value={defaultAccount ? `••${defaultAccount.account_number.slice(-4)}` : "None"}
-          hint={defaultAccount?.bank_name ?? "Add one under Payouts"}
+          hint={defaultAccount?.bank_name ?? "Add one under Bank & settlement"}
           icon={<Building2 size={16} />}
         />
       </div>
@@ -276,33 +276,14 @@ export default function Settings() {
         <Card>
           <CardHeader
             title="Settlement & security"
-            subtitle="Where money lands and how your account is protected"
+            subtitle="Where payments land and how your account is protected"
             icon={<ShieldCheck size={16} />}
           />
-          <Field label="Payout mode" htmlFor="settings-payout-mode">
-            <Select
-              id="settings-payout-mode"
-              value={notify.payout_mode}
-              onChange={async (event) => {
-                const value = event.target.value as typeof notify.payout_mode;
-                setNotify({ ...notify, payout_mode: value });
-                try {
-                  await updateSettings.run({ payout_mode: value });
-                  await refreshMerchant();
-                  success("Settlement schedule updated");
-                } catch (err) {
-                  toastError(
-                    "Could not update",
-                    err instanceof Error ? err.message : "",
-                  );
-                }
-              }}
-            >
-              <option value="manual">Manual withdrawals only</option>
-              <option value="auto_daily">Automatic — twice daily</option>
-              <option value="auto_weekly">Automatic — weekly</option>
-            </Select>
-          </Field>
+          <InlineNote tone="info" title="Direct settlement">
+            Paystack sends each payment to your verified bank account as it is
+            captured. There is no platform wallet and no payout schedule to
+            configure.
+          </InlineNote>
 
           <div className="mt-4 space-y-2">
             <KeyValue

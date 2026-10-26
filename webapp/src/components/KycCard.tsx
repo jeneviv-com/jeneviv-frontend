@@ -102,8 +102,8 @@ export default function KycCard() {
     <Card padded={false}>
       <div className="px-5 pt-5">
         <CardHeader
-          title="Identity & withdrawals"
-          subtitle="Collect from day one. Unlock withdrawals when the NIN and bank account names match."
+          title="Identity & bank verification"
+          subtitle="Collect from day one. Payments settle once the NIN and bank account names match."
           icon={<ShieldCheck size={16} />}
           action={
             <div className="flex flex-wrap gap-2">
@@ -111,7 +111,7 @@ export default function KycCard() {
                 {data?.can_collect ? "Collect on" : "Collect off"}
               </Pill>
               <Pill tone={data?.can_withdraw ? "green" : "amber"}>
-                {data?.can_withdraw ? "Withdraw unlocked" : "Withdraw locked"}
+                {data?.can_withdraw ? "Settlement ready" : "Settlement locked"}
               </Pill>
             </div>
           }
@@ -199,7 +199,7 @@ export default function KycCard() {
 
             {data?.can_withdraw ? (
               <InlineNote tone="success" title="Bank verified">
-                Withdrawals now require the treasurer's OTP approval.
+                Paystack now settles collections straight into this account.
               </InlineNote>
             ) : (
               <>
@@ -242,7 +242,7 @@ export default function KycCard() {
                     run(
                       () => verifyBank.run(bankCode, accountNumber),
                       "Bank verified",
-                      "Withdrawals are unlocked and now need two approvals.",
+                      "Payments will settle straight into this account.",
                     )
                   }
                 >
@@ -347,7 +347,7 @@ export default function KycCard() {
             <div className="flex flex-wrap items-center gap-2 border-t border-line-soft pt-4 text-[12px] text-ink-muted">
               <Pill tone={data?.maturity === "ready" ? "green" : "amber"}>
                 {data?.maturity === "ready"
-                  ? "Ready for two-man withdrawals"
+                  ? "Ready for direct settlement"
                   : data?.maturity === "nin_verified"
                     ? "NIN verified · bank pending"
                     : "Verification pending"}

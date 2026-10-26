@@ -212,10 +212,11 @@ export default function LandingPage() {
                     </div>
                     <div className="m-lap-body">
                       <aside className="m-lap-side">
-                        <small>Workspace</small>
+                        <small>Overview</small>
                         <span className="on">
                           <i /> Dashboard
                         </span>
+                        <small>Collect</small>
                         <span>
                           <i /> Collections
                         </span>
@@ -223,19 +224,19 @@ export default function LandingPage() {
                           <i /> Payers
                         </span>
                         <span>
-                          <i /> Transactions
+                          <i /> Templates
                         </span>
                         <small>Money</small>
                         <span>
-                          <i /> Payouts
+                          <i /> Transactions
                         </span>
                         <span>
                           <i /> Refunds
                         </span>
                         <span>
-                          <i /> Templates
+                          <i /> Bank &amp; settlement
                         </span>
-                        <small>Manage</small>
+                        <small>Workspace</small>
                         <span>
                           <i /> Settings
                         </span>
@@ -264,7 +265,7 @@ export default function LandingPage() {
                           <div className="m-lap-kpi">
                             <small>Settled</small>
                             <b>₦389,000</b>
-                            <em>2 payouts today</em>
+                            <em>settled direct</em>
                           </div>
                         </div>
                         <div className="m-lap-chart">
