@@ -59,6 +59,8 @@ export default function Collections() {
   const [status, setStatus] = useState<"all" | "active" | "paused">("all");
   const [showCreate, setShowCreate] = useState(params.get("new") === "1");
   const [pendingDelete, setPendingDelete] = useState<Collection | null>(null);
+  // Instant card state after Pause / Resume, until the server list agrees.
+  const [overrides, setOverrides] = useState<Record<string, boolean>>({});
 
   const collections = useCollectionStats({ status: status === "all" ? undefined : status });
   const templates = useTemplates("all");
@@ -90,6 +92,22 @@ export default function Collections() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
+
+  useEffect(() => {
+    const list = (collections.data ?? []) as Collection[];
+    setOverrides((current) => {
+      const next = { ...current };
+      let changed = false;
+      for (const id of Object.keys(next)) {
+        const row = list.find((item) => item.id === id);
+        if (row && row.is_active === next[id]) {
+          delete next[id];
+          changed = true;
+        }
+      }
+      return changed ? next : current;
+    });
+  }, [collections.data]);
 
   const rows = useMemo(() => {
     const list = (collections.data ?? []) as CollectionWithStats[];
@@ -157,15 +175,22 @@ export default function Collections() {
   };
 
   const toggleActive = async (collection: Collection) => {
+    const current = overrides[collection.id] ?? collection.is_active;
+    const next = !current;
+    setOverrides((o) => ({ ...o, [collection.id]: next }));
     try {
-      await updateCollection.run(collection.id, { is_active: !collection.is_active });
-      // Reload the list so the card's state and button update straight away.
+      await updateCollection.run(collection.id, { is_active: next });
       await collections.refetch();
       success(
-        collection.is_active ? "Collection paused" : "Collection resumed",
-        `${collection.name} is now ${collection.is_active ? "closed to new payments" : "accepting payments"}.`,
+        next ? "Collection resumed" : "Collection paused",
+        `${collection.name} is now ${next ? "accepting payments" : "closed to new payments"}.`,
       );
     } catch (err) {
+      setOverrides((o) => {
+        const rolledBack = { ...o };
+        delete rolledBack[collection.id];
+        return rolledBack;
+      });
       toastError("Could not update the collection", err instanceof Error ? err.message : "");
     }
   };
@@ -270,11 +295,12 @@ export default function Collections() {
       ) : (
         <ul className="space-y-3">
           {rows.map((collection, index) => {
+            const active = overrides[collection.id] ?? active;
             const paid = collection.stats?.paid ?? 0;
             const collected = collection.stats?.collected ?? 0;
             const target = (collection as { target_payers?: number }).target_payers ?? 0;
             const progress = target ? percent(paid, target) : Math.min(100, paid);
-            const tone = toneFor(collection.is_active);
+            const tone = toneFor(active);
 
             return (
               <li
@@ -299,7 +325,7 @@ export default function Collections() {
                       </p>
                     </div>
                     <span className="shrink-0 rounded-full bg-white/75 px-2.5 py-1 font-mono text-[10.5px] font-semibold uppercase tracking-[0.1em]">
-                      {collection.is_active ? "Accepting" : "Paused"}
+                      {active ? "Resumed" : "Paused"}
                     </span>
                   </div>
 
@@ -335,7 +361,7 @@ export default function Collections() {
                   <div className="mt-3">
                     <ProgressBar
                       value={progress}
-                      tone={collection.is_active ? "brand" : "ink"}
+                      tone={active ? "brand" : "ink"}
                     />
                     <p className="mt-1.5 font-mono text-[11px] opacity-65">
                       {collection.short_code}
@@ -367,17 +393,17 @@ export default function Collections() {
                       </button>
                       <button
                         type="button"
-                        aria-label={collection.is_active ? "Pause collection" : "Resume collection"}
+                        aria-label={active ? "Pause collection" : "Resume collection"}
                         disabled={updateCollection.loading}
                         onClick={() => toggleActive(collection)}
                         className={`inline-flex h-9 items-center gap-1.5 rounded-[10px] px-3 text-[12.5px] font-semibold transition-all duration-150 active:scale-[0.97] disabled:opacity-50 ${
-                          collection.is_active
+                          active
                             ? "bg-white/75 text-ink hover:bg-white"
                             : "bg-ink text-white hover:bg-black"
                         }`}
                       >
-                        {collection.is_active ? <Pause size={13} /> : <Play size={13} />}
-                        {collection.is_active ? "Pause" : "Resume"}
+                        {active ? <Pause size={13} /> : <Play size={13} />}
+                        {active ? "Pause" : "Resume"}
                       </button>
                       <button
                         type="button"
