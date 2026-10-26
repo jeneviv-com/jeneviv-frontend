@@ -102,6 +102,26 @@ function useCountUp(target: number, duration = 700): number {
   return value;
 }
 
+/**
+ * Wraps any block so it rises in after a delay. The animation lives on this
+ * wrapper, so Card and other components keep their own props unchanged.
+ */
+function Reveal({
+  delay,
+  className = "",
+  children,
+}: {
+  delay: number;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={`dash-rise ${className}`} style={{ animationDelay: `${delay}ms` }}>
+      {children}
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------ stacked cards */
 
 const TONES = {
@@ -279,36 +299,39 @@ export default function Dashboard() {
       </header>
 
       {merchant?.status === "pending" ? (
-        <Card className="dash-rise mt-4 border-line bg-white" style={{ animationDelay: "60ms" }}>
-          <div className="flex flex-wrap items-center gap-3">
-            <Pill tone="amber">In review</Pill>
-            <p className="text-[13px] text-ink-muted">
-              You can build collections now. They go live for payers once we
-              approve the account.
-            </p>
-          </div>
-        </Card>
+        <Reveal delay={60} className="mt-4">
+          <Card className="border-line bg-white">
+            <div className="flex flex-wrap items-center gap-3">
+              <Pill tone="amber">In review</Pill>
+              <p className="text-[13px] text-ink-muted">
+                You can build collections now. They go live for payers once we
+                approve the account.
+              </p>
+            </div>
+          </Card>
+        </Reveal>
       ) : null}
 
       {/* dark headline card */}
-      <section
-        aria-label="Headline"
-        className="dash-rise mt-5 rounded-[20px] bg-[#101010] px-5 py-5 text-white shadow-card"
-        style={{ animationDelay: "40ms" }}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[16px] font-semibold tracking-tight">Collected</p>
-            <p className="mt-0.5 text-[12.5px] text-white/65">
-              {successful.length} successful payment
-              {successful.length === 1 ? "" : "s"} in this range
+      <Reveal delay={40} className="mt-5">
+        <section
+          aria-label="Headline"
+          className="rounded-[20px] bg-[#101010] px-5 py-5 text-white shadow-card"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[16px] font-semibold tracking-tight">Collected</p>
+              <p className="mt-0.5 text-[12.5px] text-white/65">
+                {successful.length} successful payment
+                {successful.length === 1 ? "" : "s"} in this range
+              </p>
+            </div>
+            <p className="text-right text-[24px] font-bold tabular">
+              {loading ? valueSkeleton : formatMoney(Math.round(animatedCollected))}
             </p>
           </div>
-          <p className="text-right text-[24px] font-bold tabular">
-            {loading ? valueSkeleton : formatMoney(Math.round(animatedCollected))}
-          </p>
-        </div>
-      </section>
+        </section>
+      </Reveal>
 
       {/* stacked colour cards */}
       <div className="mt-3">
@@ -356,81 +379,86 @@ export default function Dashboard() {
         />
       </div>
 
-      <Link
-        to="/collections?new=1"
-        className="dash-rise btn btn-primary mt-5 flex w-full items-center justify-center gap-2 rounded-[18px] py-3.5 transition-transform duration-150 active:scale-[0.985]"
-        style={{ animationDelay: "520ms" }}
-      >
-        <Plus size={15} aria-hidden="true" /> New collection
-      </Link>
+      <Reveal delay={520} className="mt-5">
+        <Link
+          to="/collections?new=1"
+          className="btn btn-primary flex w-full items-center justify-center gap-2 rounded-[18px] py-3.5 transition-transform duration-150 active:scale-[0.985]"
+        >
+          <Plus size={15} aria-hidden="true" /> New collection
+        </Link>
+      </Reveal>
 
       {/* chart */}
-      <Card className="dash-rise mt-5" style={{ animationDelay: "600ms" }}>
-        <CardHeader
-          title="Collections over time"
-          subtitle={
-            range === "7d"
-              ? "Successful payments per day"
-              : "Successful payments per period"
-          }
-          action={
-            <SegmentedControl
-              value={range}
-              onChange={setRange}
-              options={[
-                { value: "7d", label: "7d" },
-                { value: "30d", label: "30d" },
-                { value: "90d", label: "90d" },
-              ]}
-            />
-          }
-        />
-        {transactions.loading ? (
-          <TableSkeleton rows={3} cols={2} />
-        ) : transactions.error ? (
-          <ErrorState message={transactions.error} onRetry={transactions.refetch} />
-        ) : (
-          <>
-            <AreaChart data={buckets} />
-            <div className="mt-4 flex items-center gap-2.5 border-t border-line-soft pt-4">
-              <div className="flex -space-x-1.5">
-                {recentPayers.slice(0, 5).map((name) => (
-                  <span
-                    key={name}
-                    title={name}
-                    className="grid h-7 w-7 place-items-center rounded-full border-2 border-white bg-brand-peach text-3xs font-bold text-[#79300f]"
-                  >
-                    {initials(name)}
-                  </span>
-                ))}
+      <Reveal delay={600} className="mt-5">
+        <Card>
+          <CardHeader
+            title="Collections over time"
+            subtitle={
+              range === "7d"
+                ? "Successful payments per day"
+                : "Successful payments per period"
+            }
+            action={
+              <SegmentedControl
+                value={range}
+                onChange={setRange}
+                options={[
+                  { value: "7d", label: "7d" },
+                  { value: "30d", label: "30d" },
+                  { value: "90d", label: "90d" },
+                ]}
+              />
+            }
+          />
+          {transactions.loading ? (
+            <TableSkeleton rows={3} cols={2} />
+          ) : transactions.error ? (
+            <ErrorState message={transactions.error} onRetry={transactions.refetch} />
+          ) : (
+            <>
+              <AreaChart data={buckets} />
+              <div className="mt-4 flex items-center gap-2.5 border-t border-line-soft pt-4">
+                <div className="flex -space-x-1.5">
+                  {recentPayers.slice(0, 5).map((name) => (
+                    <span
+                      key={name}
+                      title={name}
+                      className="grid h-7 w-7 place-items-center rounded-full border-2 border-white bg-brand-peach text-3xs font-bold text-[#79300f]"
+                    >
+                      {initials(name)}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-[12px] text-ink-muted">
+                  {recentPayers.length > 5
+                    ? `+${recentPayers.length - 5} more payers`
+                    : `${recentPayers.length} payers`}
+                </p>
               </div>
-              <p className="text-[12px] text-ink-muted">
-                {recentPayers.length > 5
-                  ? `+${recentPayers.length - 5} more payers`
-                  : `${recentPayers.length} payers`}
-              </p>
-            </div>
-          </>
-        )}
-      </Card>
+            </>
+          )}
+        </Card>
+      </Reveal>
 
       {/* settlement note */}
-      <Card className="dash-rise mt-5" style={{ animationDelay: "680ms" }}>
-        <CardHeader
-          title="Direct settlement"
-          subtitle="Your money never sits with Jeneviv"
-          icon={<ShieldCheck size={16} />}
-        />
-        <p className="muted">
-          Each successful payment is split by Paystack when it is captured. The
-          collection amount, less Paystack&apos;s processing fee, goes to your
-          verified bank account. Jeneviv&apos;s platform fee is taken in the same
-          split.
-        </p>
-        <Link to="/payouts" className="btn btn-secondary btn-sm mt-4 w-full">
-          Manage bank account <ArrowUpRight size={14} />
-        </Link>
-      </Card>
+      <Reveal delay={680} className="mt-5">
+        <Card>
+          <CardHeader
+            title="Direct settlement"
+            subtitle="Your money never sits with Jeneviv"
+            icon={<ShieldCheck size={16} />}
+          />
+          <p className="muted">
+            Each successful payment is split by Paystack when it is captured. The
+            collection amount, less Paystack&apos;s processing fee, goes to your
+            verified bank account. Jeneviv&apos;s platform fee is taken in the same
+            split.
+          </p>
+          <Link to="/payouts" className="btn btn-secondary btn-sm mt-4 w-full">
+            Manage bank account <ArrowUpRight size={14} />
+          </Link>
+        </Card>
+      </Reveal>
 
       {/* recent payments */}
       <section className="mt-6" aria-labelledby="recent-payments">
