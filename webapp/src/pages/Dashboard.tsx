@@ -1,41 +1,32 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  ArrowUpRight,
-  Banknote,
-  HandCoins,
-  Plus,
-  ReceiptText,
-  ShieldCheck,
-  Users,
-} from "lucide-react";
+import { ArrowUpRight, Plus, ReceiptText, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useCollectionStats, useTransactions } from "@/hooks/useApi";
+import {
+  useCollectionStats,
+  useTransactions,
+  type CollectionWithStats,
+} from "@/hooks/useApi";
 import {
   formatCompact,
   formatMoney,
   formatNumber,
   initials,
   percent,
+  statusLabel,
   statusTone,
   timeAgo,
   transactionPayer,
 } from "@/lib/format";
-import {
-  AreaChart,
-  Donut,
-  type SeriesPoint,
-} from "@/components/charts";
+import { AreaChart, type SeriesPoint } from "@/components/charts";
 import {
   Card,
   CardHeader,
   EmptyState,
   ErrorState,
-  PageHeader,
   Pill,
   ProgressBar,
   SegmentedControl,
-  StatCard,
   StatusPill,
   TableSkeleton,
 } from "@/components/ui";
@@ -43,6 +34,132 @@ import {
 type Range = "7d" | "30d" | "90d";
 
 const RANGE_DAYS: Record<Range, number> = { "7d": 7, "30d": 30, "90d": 90 };
+
+/** Optional target from the API. Typed here so the code says what it expects. */
+type CollectionWithTarget = CollectionWithStats & { target_payers?: number };
+
+/* ------------------------------------------------------------- animation */
+
+/**
+ * Keyframes are scoped to `dash-` class names so they can't clash with the
+ * rest of the app. Everything is switched off for users who ask for reduced
+ * motion.
+ */
+const DASH_CSS = `
+@keyframes dash-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+.dash-rise {
+  animation: dash-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dash-rise { animation: none; }
+}
+`;
+
+function prefersReducedMotion() {
+  return (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+/**
+ * Eases a number from its previous value to the new one. Used for the headline
+ * figure so it counts up when data arrives or the range changes.
+ */
+function useCountUp(target: number, duration = 700): number {
+  const [value, setValue] = useState(target);
+  const fromRef = useRef(target);
+
+  useEffect(() => {
+    if (prefersReducedMotion()) {
+      setValue(target);
+      fromRef.current = target;
+      return;
+    }
+    const from = fromRef.current;
+    const start = performance.now();
+    let frame = 0;
+
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setValue(from + (target - from) * eased);
+      if (t < 1) {
+        frame = requestAnimationFrame(tick);
+      } else {
+        fromRef.current = target;
+      }
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [target, duration]);
+
+  return value;
+}
+
+/* ------------------------------------------------------------ stacked cards */
+
+const TONES = {
+  ink: "bg-[#101010] text-white",
+  lavender: "bg-[#c9c3f5] text-ink",
+  peach: "bg-[#ffc49a] text-ink",
+  mint: "bg-[#c8f58e] text-ink",
+  aqua: "bg-[#9ff0f5] text-ink",
+} as const;
+
+type Tone = keyof typeof TONES;
+
+/**
+ * A full-width coloured card that tucks under the one above, like the LemFi
+ * reference. It is a link, so it works with the keyboard and has a focus ring.
+ * Each card rises in with a short delay so the stack builds from the top.
+ */
+function StackedCard({
+  index,
+  tone,
+  title,
+  subtitle,
+  value,
+  to,
+}: {
+  index: number;
+  tone: Tone;
+  title: string;
+  subtitle: string;
+  value: React.ReactNode;
+  to: string;
+}) {
+  return (
+    <div
+      className="dash-rise relative -mt-6 first:mt-0"
+      style={{ zIndex: index + 1, animationDelay: `${120 + index * 90}ms` }}
+    >
+      <Link
+        to={to}
+        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-card active:scale-[0.985] focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 ${TONES[tone]}`}
+      >
+        <div className="min-w-0">
+          <p className="text-[16px] font-semibold tracking-tight">{title}</p>
+          <p className="mt-0.5 truncate text-[12.5px] opacity-70">{subtitle}</p>
+        </div>
+        <div className="shrink-0 text-right text-[20px] font-bold tabular">
+          {value}
+        </div>
+      </Link>
+    </div>
+  );
+}
+
+const valueSkeleton = (
+  <span aria-hidden="true" className="skeleton inline-block h-5 w-16 rounded-md" />
+);
+
+/* ---------------------------------------------------------------- dashboard */
 
 export default function Dashboard() {
   const { user, merchant } = useAuth();
@@ -52,10 +169,12 @@ export default function Dashboard() {
   const transactions = useTransactions();
 
   const allTransactions = transactions.data ?? [];
-  const stats = collections.data ?? [];
+  const stats = (collections.data ?? []) as CollectionWithTarget[];
 
   const since = Date.now() - RANGE_DAYS[range] * 86_400_000;
 
+  // Totals are summed from the transactions the page loaded. For large
+  // merchants this should move to a server-side summary endpoint.
   const rangedTransactions = useMemo(
     () =>
       allTransactions.filter(
@@ -67,15 +186,38 @@ export default function Dashboard() {
   const successful = rangedTransactions.filter((t) => t.status === "success");
   const collected = successful.reduce((sum, t) => sum + t.amount, 0);
   const settled = successful
-    .filter((transaction) => transaction.settled_at)
-    .reduce((sum, transaction) => sum + transaction.amount, 0);
+    .filter((t) => t.settled_at)
+    .reduce((sum, t) => sum + t.amount, 0);
   const pendingCount = allTransactions.filter((t) => t.status === "pending").length;
 
-  // Seven daily points with weekday labels keep the chart identical to the
-  // laptop mockup; longer ranges fall back to weekly points.
+  // Payers are keyed by email when the API has it, otherwise by name. Two
+  // people with the same name and no email will count as one.
+  const uniquePayers = useMemo(() => {
+    const set = new Set<string>();
+    successful.forEach((t) => set.add(t.payer_email || transactionPayer(t)));
+    return set.size;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [successful]);
+
+  const payerTarget = stats.reduce((sum, c) => sum + (c.target_payers ?? 0), 0);
+
+  const recentPayers = useMemo(() => {
+    const seen = new Set<string>();
+    const names: string[] = [];
+    allTransactions.forEach((t) => {
+      if (t.status !== "success") return;
+      const name = transactionPayer(t);
+      if (!name || seen.has(name)) return;
+      seen.add(name);
+      names.push(name);
+    });
+    return names;
+  }, [allTransactions]);
+
+  // Chart buckets follow the selected range.
   const buckets = useMemo<SeriesPoint[]>(() => {
     const points: SeriesPoint[] = [];
-    const daily = RANGE_DAYS[range] === 7;
+    const daily = range === "7d";
     const steps = daily ? 7 : range === "30d" ? 15 : 13;
     const stepMs = daily
       ? 86_400_000
@@ -86,19 +228,15 @@ export default function Dashboard() {
       const end = Date.now() - index * stepMs;
       const start = end - stepMs;
       const value = allTransactions
-        .filter((transaction) => {
-          const time = new Date(transaction.created_at).getTime();
-          return (
-            transaction.status === "success" && time >= start && time < end
-          );
+        .filter((t) => {
+          const time = new Date(t.created_at).getTime();
+          return t.status === "success" && time >= start && time < end;
         })
-        .reduce((sum, transaction) => sum + transaction.amount, 0);
+        .reduce((sum, t) => sum + t.amount, 0);
       points.push({
         label: new Date(end).toLocaleDateString(
           "en-NG",
-          daily
-            ? { weekday: "short" }
-            : { day: "numeric", month: "short" },
+          daily ? { weekday: "short" } : { day: "numeric", month: "short" },
         ),
         value,
       });
@@ -106,361 +244,289 @@ export default function Dashboard() {
     return points;
   }, [allTransactions, range]);
 
-  const productSplit = useMemo(() => {
-    const map = new Map<string, number>();
-    successful.forEach((transaction) => {
-      const key = transaction.collection_name || "Other";
-      map.set(key, (map.get(key) || 0) + transaction.amount);
-    });
-    const palette = ["#101010", "#5c5c5c", "#a6a6a6", "#ff4800", "#d4d4d4"];
-    return Array.from(map.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 4)
-      .map(([label, value], index) => ({
-        label,
-        value,
-        color: palette[index % palette.length],
-      }));
-  }, [successful]);
-
-  const uniquePayers = useMemo(() => {
-    const set = new Set<string>();
-    successful.forEach((transaction) => {
-      set.add(
-        `${transactionPayer(transaction)}|${transaction.collection_id ?? ""}`,
-      );
-    });
-    return set.size;
-  }, [successful]);
-
-  const recent = allTransactions.slice(0, 7);
+  const recent = allTransactions.slice(0, 6);
+  const firstName = (user?.name || "there").split(" ")[0];
   const loading = collections.loading || transactions.loading;
 
-  const payerTarget = stats.reduce(
-    (sum, collection) =>
-      sum + ((collection as { target_payers?: number }).target_payers ?? 0),
-    0,
-  );
-
-  const recentPayers = useMemo(() => {
-    const seen = new Set<string>();
-    const names: string[] = [];
-    allTransactions.forEach((transaction) => {
-      if (transaction.status !== "success") return;
-      const name = transactionPayer(transaction);
-      if (!name || seen.has(name)) return;
-      seen.add(name);
-      names.push(name);
-    });
-    return names;
-  }, [allTransactions]);
+  const animatedCollected = useCountUp(collected);
 
   return (
-    <>
-      <PageHeader
-        eyebrow={`${merchant?.display_name ? merchant.display_name : "Workspace"} · ${new Date().toLocaleDateString("en-NG", { weekday: "long", day: "numeric", month: "long" })}`}
-        title={`Good to see you, ${(user?.name || "Coordinator").split(" ")[0]}`}
-        description="Live view of what has been collected, who has paid, and what is still out there."
-        actions={
-          <>
-            <Link to="/transactions" className="btn btn-secondary">
-              <ReceiptText size={15} /> Transactions
-            </Link>
-            <Link to="/collections?new=1" className="btn btn-primary">
-              <Plus size={15} /> New collection
-            </Link>
-          </>
-        }
-      />
+    <div className="mx-auto w-full max-w-md pb-10">
+      <style>{DASH_CSS}</style>
+
+      {/* greeting */}
+      <header className="dash-rise flex items-start justify-between gap-3 pt-2">
+        <div className="min-w-0">
+          <p className="eyebrow truncate">
+            {merchant?.display_name || "Workspace"} ·{" "}
+            {new Date().toLocaleDateString("en-NG", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+            })}
+          </p>
+          <h1 className="mt-1 text-[22px] font-bold tracking-tight">
+            Good to see you, {firstName}
+          </h1>
+        </div>
+        <Link
+          to="/collections?new=1"
+          aria-label="New collection"
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-ink bg-white transition-transform duration-200 hover:rotate-90 active:scale-95"
+        >
+          <Plus size={17} aria-hidden="true" />
+        </Link>
+      </header>
 
       {merchant?.status === "pending" ? (
-        <Card className="mb-5 border-line bg-white">
+        <Card className="dash-rise mt-4 border-line bg-white" style={{ animationDelay: "60ms" }}>
           <div className="flex flex-wrap items-center gap-3">
             <Pill tone="amber">In review</Pill>
             <p className="text-[13px] text-ink-muted">
-              Your workspace is awaiting approval. You can build collections
-              now — they go live for payers as soon as we approve the account.
+              You can build collections now. They go live for payers once we
+              approve the account.
             </p>
-            <Link
-              to="/onboarding"
-              className="ml-auto text-[12.5px] font-semibold text-ink underline decoration-line underline-offset-2 hover:text-brand-dark"
-            >
-              View application
-            </Link>
           </div>
         </Card>
       ) : null}
 
-      {/* The same dark prompt the laptop mockup shows. */}
-      <div className="relative mb-5 overflow-hidden rounded-card bg-[#101010] px-5 py-4 text-white shadow-card">
-        <div
-          aria-hidden="true"
-          className="absolute -right-10 -top-16 h-44 w-44 rounded-full bg-brand/25 blur-3xl"
-        />
-        <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* dark headline card */}
+      <section
+        aria-label="Headline"
+        className="dash-rise mt-5 rounded-[20px] bg-[#101010] px-5 py-5 text-white shadow-card"
+        style={{ animationDelay: "40ms" }}
+      >
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[15px] font-bold tracking-tight">
-              Start a collection today
-            </p>
-            <p className="mt-1 text-[12.5px] text-white/65">
-              One link. Verified payments. No chasing receipts.
+            <p className="text-[16px] font-semibold tracking-tight">Collected</p>
+            <p className="mt-0.5 text-[12.5px] text-white/65">
+              {successful.length} successful payment
+              {successful.length === 1 ? "" : "s"} in this range
             </p>
           </div>
-          <Link
-            to="/collections?new=1"
-            className="btn btn-sm self-start bg-white text-ink hover:bg-cream sm:self-auto"
-          >
-            <Plus size={14} /> New collection
-          </Link>
+          <p className="text-right text-[24px] font-bold tabular">
+            {loading ? valueSkeleton : formatMoney(Math.round(animatedCollected))}
+          </p>
         </div>
-      </div>
+      </section>
 
-      <div className="stagger grid gap-4 sm:grid-cols-3">
-        <StatCard
-          label={`Collected · ${range}`}
-          value={formatMoney(collected)}
-          hint={`${successful.length} successful payments`}
-          icon={<HandCoins size={16} />}
-          tone="brand"
-        />
-        <StatCard
-          label="Payers"
-          value={
-            payerTarget
-              ? `${formatNumber(uniquePayers)} / ${formatNumber(payerTarget)}`
-              : formatNumber(uniquePayers)
-          }
-          hint={
+      {/* stacked colour cards */}
+      <div className="mt-3">
+        <StackedCard
+          index={0}
+          tone="lavender"
+          title="Payers"
+          subtitle={
             payerTarget
               ? `${percent(uniquePayers, payerTarget)}% of your target`
-              : `Across ${stats.length} collections`
+              : `Across ${formatNumber(stats.length)} collection${stats.length === 1 ? "" : "s"}`
           }
-          icon={<Users size={16} />}
+          value={
+            loading
+              ? valueSkeleton
+              : payerTarget
+                ? `${formatNumber(uniquePayers)} / ${formatNumber(payerTarget)}`
+                : formatNumber(uniquePayers)
+          }
+          to="/transactions"
         />
-        <StatCard
-          label="Settled to your bank"
-          value={formatMoney(settled)}
-          hint="Paid out by Paystack — never held by Jeneviv"
-          icon={<Banknote size={16} />}
-          tone="green"
+        <StackedCard
+          index={1}
+          tone="mint"
+          title="Settled"
+          subtitle="Paid straight to your bank"
+          value={loading ? valueSkeleton : formatMoney(settled)}
+          to="/transactions"
+        />
+        <StackedCard
+          index={2}
+          tone="peach"
+          title="Payments"
+          subtitle={`${formatNumber(pendingCount)} awaiting confirmation`}
+          value={loading ? valueSkeleton : formatNumber(successful.length)}
+          to="/transactions"
+        />
+        <StackedCard
+          index={3}
+          tone="aqua"
+          title="Workspace"
+          subtitle={merchant?.display_name || user?.name || "Your workspace"}
+          value={merchant ? statusLabel(merchant.status) : "—"}
+          to="/settings"
         />
       </div>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1.55fr_1fr]">
-        <Card>
-          <CardHeader
-            title="Collections over time"
-            subtitle={
-              range === "7d"
-                ? "Successful payments for each day this week"
-                : "Successful payments per week"
-            }
-            action={
-              <SegmentedControl
-                value={range}
-                onChange={setRange}
-                options={[
-                  { value: "7d", label: "7 days" },
-                  { value: "30d", label: "30 days" },
-                  { value: "90d", label: "90 days" },
-                ]}
-              />
-            }
-          />
+      <Link
+        to="/collections?new=1"
+        className="dash-rise btn btn-primary mt-5 flex w-full items-center justify-center gap-2 rounded-[18px] py-3.5 transition-transform duration-150 active:scale-[0.985]"
+        style={{ animationDelay: "520ms" }}
+      >
+        <Plus size={15} aria-hidden="true" /> New collection
+      </Link>
+
+      {/* chart */}
+      <Card className="dash-rise mt-5" style={{ animationDelay: "600ms" }}>
+        <CardHeader
+          title="Collections over time"
+          subtitle={
+            range === "7d"
+              ? "Successful payments per day"
+              : "Successful payments per period"
+          }
+          action={
+            <SegmentedControl
+              value={range}
+              onChange={setRange}
+              options={[
+                { value: "7d", label: "7d" },
+                { value: "30d", label: "30d" },
+                { value: "90d", label: "90d" },
+              ]}
+            />
+          }
+        />
+        {transactions.loading ? (
+          <TableSkeleton rows={3} cols={2} />
+        ) : transactions.error ? (
+          <ErrorState message={transactions.error} onRetry={transactions.refetch} />
+        ) : (
+          <>
+            <AreaChart data={buckets} />
+            <div className="mt-4 flex items-center gap-2.5 border-t border-line-soft pt-4">
+              <div className="flex -space-x-1.5">
+                {recentPayers.slice(0, 5).map((name) => (
+                  <span
+                    key={name}
+                    title={name}
+                    className="grid h-7 w-7 place-items-center rounded-full border-2 border-white bg-brand-peach text-3xs font-bold text-[#79300f]"
+                  >
+                    {initials(name)}
+                  </span>
+                ))}
+              </div>
+              <p className="text-[12px] text-ink-muted">
+                {recentPayers.length > 5
+                  ? `+${recentPayers.length - 5} more payers`
+                  : `${recentPayers.length} payers`}
+              </p>
+            </div>
+          </>
+        )}
+      </Card>
+
+      {/* settlement note */}
+      <Card className="dash-rise mt-5" style={{ animationDelay: "680ms" }}>
+        <CardHeader
+          title="Direct settlement"
+          subtitle="Your money never sits with Jeneviv"
+          icon={<ShieldCheck size={16} />}
+        />
+        <p className="muted">
+          Each successful payment is split by Paystack when it is captured. The
+          collection amount, less Paystack&apos;s processing fee, goes to your
+          verified bank account. Jeneviv&apos;s platform fee is taken in the same
+          split.
+        </p>
+        <Link to="/payouts" className="btn btn-secondary btn-sm mt-4 w-full">
+          Manage bank account <ArrowUpRight size={14} />
+        </Link>
+      </Card>
+
+      {/* recent payments */}
+      <section className="mt-6" aria-labelledby="recent-payments">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 id="recent-payments" className="section-title">
+            Recent payments
+          </h2>
+          <Link
+            to="/transactions"
+            className="text-[12.5px] font-semibold text-brand hover:underline"
+          >
+            View all
+          </Link>
+        </div>
+
+        <Card padded={false} className="mt-3">
           {transactions.loading ? (
-            <TableSkeleton rows={4} cols={3} />
+            <TableSkeleton rows={4} cols={2} />
           ) : transactions.error ? (
             <ErrorState message={transactions.error} onRetry={transactions.refetch} />
-          ) : (
-            <>
-              <AreaChart data={buckets} />
-              <div className="mt-5 grid grid-cols-3 gap-3 border-t border-line-soft pt-4">
-                <div>
-                  <p className="eyebrow">Total</p>
-                  <p className="tabular mt-1 text-[16px] font-bold">
-                    {formatMoney(collected)}
-                  </p>
-                </div>
-                <div>
-                  <p className="eyebrow">Average payment</p>
-                  <p className="tabular mt-1 text-[16px] font-bold">
-                    {formatMoney(
-                      successful.length ? collected / successful.length : 0,
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <p className="eyebrow">Success rate</p>
-                  <p className="tabular mt-1 text-[16px] font-bold">
-                    {percent(successful.length, rangedTransactions.length)}%
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-4 flex items-center gap-2.5 border-t border-line-soft pt-4">
-                <div className="flex -space-x-1.5">
-                  {recentPayers.slice(0, 5).map((name) => (
-                    <span
-                      key={name}
-                      title={name}
-                      className="grid h-7 w-7 place-items-center rounded-full border-2 border-white bg-brand-peach text-3xs font-bold text-[#79300f]"
-                    >
-                      {initials(name)}
-                    </span>
-                  ))}
-                </div>
-                <p className="text-[12px] text-ink-muted">
-                  {recentPayers.length > 5
-                    ? `+${recentPayers.length - 5} more payers`
-                    : `${recentPayers.length} payers`}{" "}
-                  in this range
-                </p>
-              </div>
-            </>
-          )}
-        </Card>
-
-        <div className="space-y-5">
-          <Card>
-            <CardHeader
-              title="Where the money came from"
-              subtitle="Share of successful payments in range"
-            />
-            {productSplit.length ? (
-              <Donut
-                segments={productSplit}
-                centerLabel="collected"
-                centerValue={formatCompact(collected)}
-              />
-            ) : (
-              <p className="muted py-6 text-center">
-                No successful payments in this range yet.
-              </p>
-            )}
-          </Card>
-
-          <Card>
-            <CardHeader
-              title="Direct settlement"
-              subtitle="Your money never sits with Jeneviv"
-              icon={<ShieldCheck size={16} />}
-            />
-            <p className="muted">
-              Every successful payment is split by Paystack at the moment it is
-              captured. Your collection amount, minus Paystack&apos;s processing
-              fee, reaches your verified bank account; the ₦75 platform fee goes
-              to Jeneviv.
-            </p>
-            <ul className="mt-4 space-y-2.5 border-t border-line-soft pt-4">
-              <li className="flex items-center justify-between gap-3 text-[12.5px]">
-                <span className="text-ink-muted">Settled in this range</span>
-                <span className="tabular font-semibold">
-                  {formatMoney(settled)}
-                </span>
-              </li>
-              <li className="flex items-center justify-between gap-3 text-[12.5px]">
-                <span className="text-ink-muted">Awaiting confirmation</span>
-                <span className="tabular font-semibold">
-                  {formatNumber(pendingCount)}
-                </span>
-              </li>
-              <li className="flex items-center justify-between gap-3 text-[12.5px]">
-                <span className="text-ink-muted">Platform fee per payment</span>
-                <span className="tabular font-semibold">₦75</span>
-              </li>
-            </ul>
-            <Link to="/payouts" className="btn btn-secondary btn-sm mt-4 w-full">
-              Manage bank account <ArrowUpRight size={14} />
-            </Link>
-          </Card>
-        </div>
-      </div>
-
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1.55fr_1fr]">
-        <Card padded={false}>
-          <div className="flex items-center justify-between gap-3 px-5 pb-3 pt-5">
-            <div>
-              <h2 className="section-title">Recent payments</h2>
-              <p className="muted mt-0.5">The last seven movements across your collections</p>
-            </div>
-            <Link
-              to="/transactions"
-              className="text-[12.5px] font-semibold text-brand hover:underline"
-            >
-              View all
-            </Link>
-          </div>
-
-          {transactions.loading ? (
-            <TableSkeleton rows={6} cols={4} />
           ) : recent.length === 0 ? (
             <EmptyState
               icon={<ReceiptText size={20} />}
               title="No payments yet"
-              description="Once someone pays into a collection link, their payment appears here within seconds of confirmation."
+              description="Payments into your collection links appear here within seconds of confirmation."
               action={
                 <Link to="/collections?new=1" className="btn btn-primary btn-sm">
-                  <Plus size={14} /> Create a collection
+                  <Plus size={14} aria-hidden="true" /> Create a collection
                 </Link>
               }
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Payer</th>
-                    <th>Collection</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>When</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recent.map((transaction) => (
-                    <tr key={transaction.id}>
-                      <td>
-                        <p className="font-semibold">{transactionPayer(transaction)}</p>
-                        <p className="font-mono text-3xs text-ink-muted">
-                          {transaction.reference}
-                        </p>
-                      </td>
-                      <td className="text-ink-soft">
-                        {transaction.collection_name || "—"}
-                      </td>
-                      <td className="tabular font-semibold">
-                        {formatMoney(transaction.amount, transaction.currency)}
-                      </td>
-                      <td>
-                        <StatusPill status={transaction.status} />
-                      </td>
-                      <td className="text-ink-muted">{timeAgo(transaction.created_at)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ul className="divide-y divide-line-soft">
+              {recent.map((t, index) => (
+                <li
+                  key={t.id}
+                  className="dash-rise flex items-center justify-between gap-3 px-5 py-3.5 transition-colors duration-150 hover:bg-cream/60"
+                  style={{ animationDelay: `${index * 70}ms` }}
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-[13.5px] font-semibold">
+                      {transactionPayer(t)}
+                    </p>
+                    <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">
+                      {t.collection_name || "—"} · {timeAgo(t.created_at)}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="tabular text-[13.5px] font-bold">
+                      {formatMoney(t.amount, t.currency)}
+                    </p>
+                    <div className="mt-1 flex justify-end">
+                      <StatusPill status={t.status} />
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
         </Card>
+      </section>
 
-        <Card>
-          <CardHeader
-            title="Collection progress"
-            subtitle="Paid against target payers"
-          />
+      {/* collection progress */}
+      <section className="mt-6" aria-labelledby="collection-progress">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 id="collection-progress" className="section-title">
+            Collections
+          </h2>
+          <Link
+            to="/collections"
+            className="text-[12.5px] font-semibold text-brand hover:underline"
+          >
+            All
+          </Link>
+        </div>
+
+        <Card className="mt-3">
           {collections.loading ? (
-            <TableSkeleton rows={4} cols={2} />
+            <TableSkeleton rows={3} cols={2} />
+          ) : collections.error ? (
+            <ErrorState message={collections.error} onRetry={collections.refetch} />
           ) : stats.length === 0 ? (
             <p className="muted py-6 text-center">No collections yet.</p>
           ) : (
             <ul className="space-y-4">
-              {stats.slice(0, 5).map((collection) => {
+              {stats.slice(0, 5).map((collection, index) => {
                 const paid = collection.stats?.paid ?? 0;
-                const target = (collection as { target_payers?: number })
-                  .target_payers;
+                const target = collection.target_payers;
                 const collectedSum = collection.stats?.collected ?? 0;
+                const progress = target ? percent(paid, target) : Math.min(100, paid);
                 return (
-                  <li key={collection.id}>
+                  <li
+                    key={collection.id}
+                    className="dash-rise"
+                    style={{ animationDelay: `${index * 80}ms` }}
+                  >
                     <div className="flex items-center justify-between gap-3">
                       <Link
                         to={`/collections/${collection.id}`}
@@ -474,10 +540,8 @@ export default function Dashboard() {
                     </div>
                     <div className="mt-2">
                       <ProgressBar
-                        value={target ? percent(paid, target) : Math.min(100, paid)}
-                        tone={
-                          collection.is_active ? "brand" : "ink"
-                        }
+                        value={progress}
+                        tone={collection.is_active ? "brand" : "ink"}
                       />
                     </div>
                     <div className="mt-1.5 flex items-center justify-between">
@@ -494,15 +558,8 @@ export default function Dashboard() {
               })}
             </ul>
           )}
-          <Link to="/collections" className="btn btn-secondary btn-sm mt-5 w-full">
-            All collections <ArrowUpRight size={14} />
-          </Link>
         </Card>
-      </div>
-
-      {loading && !stats.length ? (
-        <p className="muted mt-6 text-center">Loading your workspace…</p>
-      ) : null}
-    </>
+      </section>
+    </div>
   );
 }
