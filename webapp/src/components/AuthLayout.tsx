@@ -23,19 +23,15 @@ export default function AuthLayout({
 
   return (
     <div className="min-h-screen bg-cream lg:grid lg:grid-cols-[1.08fr_1fr]">
-      {/* brand panel — the same laptop and dashboard shown on the landing page */}
-      <aside className="relative hidden overflow-hidden border-r border-line bg-[#fbfaf7] px-10 py-8 lg:flex lg:flex-col xl:px-14">
+      {/* brand panel: the same laptop and dashboard as the landing page */}
+      <aside className="relative hidden overflow-hidden bg-[#fbfaf7] px-10 py-8 lg:flex lg:flex-col xl:px-14">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 opacity-[0.55] [background-image:linear-gradient(to_right,rgba(16,16,16,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(16,16,16,0.045)_1px,transparent_1px)] [background-size:26px_26px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_78%)]"
         />
 
         <div className="relative flex items-center justify-between">
-          <a
-            href={landing}
-            className="flex items-center gap-2.5"
-            aria-label="Jeneviv — back to the website"
-          >
+          <a href={landing} className="flex items-center gap-2.5" aria-label="Jeneviv — back to the website">
             <img
               src="/assets/images/jeneviv.png"
               alt=""
@@ -54,10 +50,7 @@ export default function AuthLayout({
             href={landing}
             className="group flex items-center gap-1.5 text-[12.5px] font-medium text-ink-muted transition-colors hover:text-ink"
           >
-            <ArrowLeft
-              size={13}
-              className="transition-transform duration-200 group-hover:-translate-x-0.5"
-            />
+            <ArrowLeft size={13} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
             Back to site
           </a>
         </div>
@@ -65,18 +58,17 @@ export default function AuthLayout({
         <div className="relative my-auto w-full max-w-[620px] self-center py-9">
           <LaptopMockup className="animate-rise-in" />
 
-          <div className="mt-8 animate-rise-in [animation-delay:120ms]">
+          <div className="mt-9 animate-rise-in [animation-delay:120ms]">
             <p className="eyebrow">One link. Every payer.</p>
-            <h2 className="mt-2 text-[24px] font-semibold leading-[1.1] tracking-[-0.035em] text-ink xl:text-[27px]">
+            <h2 className="mt-3 text-[30px] font-bold leading-[1.05] tracking-[-0.045em] text-ink xl:text-[36px]">
               The dashboard you sign in to looks exactly like this.
             </h2>
-            <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+            <ul className="mt-5 space-y-2.5">
               {PROOF.map((item) => (
-                <li
-                  key={item}
-                  className="flex items-center gap-1.5 text-[12.5px] text-ink-muted"
-                >
-                  <Check size={13} className="shrink-0 text-brand" />
+                <li key={item} className="flex items-center gap-2.5 text-[13px] text-ink-soft">
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#c8f58e]">
+                    <Check size={11} className="text-ink" />
+                  </span>
                   {item}
                 </li>
               ))}
@@ -97,34 +89,23 @@ export default function AuthLayout({
             className="flex items-center gap-2 text-[21px] font-extrabold tracking-[-0.05em]"
             aria-label="Jeneviv — back to the website"
           >
-            <img
-              src="/assets/images/jeneviv.png"
-              alt=""
-              width={28}
-              height={28}
-              className="h-7 w-7 rounded-[9px] object-cover"
-            />
+            <img src="/assets/images/jeneviv.png" alt="" width={28} height={28} className="h-7 w-7 rounded-[9px] object-cover" />
             jeneviv<span className="text-brand">.</span>
           </a>
-          <a
-            href={landing}
-            className="flex items-center gap-1.5 text-[12.5px] text-ink-muted"
-          >
+          <a href={landing} className="flex items-center gap-1.5 text-[12.5px] text-ink-muted">
             <ArrowLeft size={13} /> Site
           </a>
         </div>
 
-        <div className="mx-auto my-auto w-full max-w-[420px] py-10">
+        <div className="mx-auto my-auto w-full max-w-[420px] py-12">
           <div className="animate-rise-in">
-            <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.03em]">
+            <h1 className="text-[38px] font-bold leading-[1.02] tracking-[-0.045em] text-ink sm:text-[42px]">
               {title}
             </h1>
-            <p className="muted mt-2">{subtitle}</p>
+            <p className="muted mt-3 text-[14.5px]">{subtitle}</p>
           </div>
-          <div className="mt-7 animate-rise-in [animation-delay:80ms]">
-            {children}
-          </div>
-          <div className="mt-6 text-[13px] text-ink-muted">{footer}</div>
+          <div className="mt-9 animate-rise-in [animation-delay:80ms]">{children}</div>
+          <div className="mt-8 border-t border-line pt-6 text-[13px] text-ink-muted">{footer}</div>
         </div>
       </main>
     </div>
