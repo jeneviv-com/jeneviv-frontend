@@ -26,10 +26,49 @@ import {
   PageHeader,
   Pill,
   Select,
-  StatCard,
-  TableSkeleton,
+  TONE_MEANING,
+  type ToneKind,
   Toggle,
 } from "@/components/ui";
+
+/** One stacked summary tile, coloured by meaning. Matches the dashboard. */
+function SummaryTile({
+  index,
+  tone,
+  label,
+  value,
+  hint,
+  icon,
+}: {
+  index: number;
+  tone: ToneKind;
+  label: string;
+  value: string;
+  hint: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div
+      className="dash-rise relative -mt-6 first:mt-0"
+      style={{ zIndex: index + 1, animationDelay: `${index * 80}ms` }}
+    >
+      <div
+        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 ${TONE_MEANING[tone]}`}
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/70">
+            {icon}
+          </span>
+          <div className="min-w-0">
+            <p className="text-[15px] font-semibold tracking-tight">{label}</p>
+            <p className="mt-0.5 truncate text-[12px] opacity-70">{hint}</p>
+          </div>
+        </div>
+        <p className="shrink-0 text-right text-[19px] font-bold tabular">{value}</p>
+      </div>
+    </div>
+  );
+}
 
 /**
  * Bank & settlement. Under Paystack's split, every payment is routed to the
@@ -77,9 +116,8 @@ export default function Payouts() {
   };
 
   const defaultAccount =
-    (accounts.data ?? []).find(
-      (account) => accountDetails(account).isDefault,
-    ) ?? (accounts.data ?? [])[0];
+    (accounts.data ?? []).find((account) => accountDetails(account).isDefault) ??
+    (accounts.data ?? [])[0];
   const defaultAccountDetails = accountDetails(defaultAccount);
   const verified = kyc.data?.kyc_status === "verified";
 
@@ -109,45 +147,43 @@ export default function Payouts() {
         title="Bank & settlement"
         description="Paystack splits every payment as it is captured. Your collection goes straight to your bank — Jeneviv never holds merchant money."
         actions={
-          <Button
-            icon={<Plus size={15} />}
-            onClick={() => setShowAddAccount(true)}
-          >
+          <Button icon={<Plus size={15} />} onClick={() => setShowAddAccount(true)}>
             Add bank account
           </Button>
         }
       />
 
-      <div className="stagger grid gap-4 sm:grid-cols-3">
-        <StatCard
+      {/* summary: meaning-based tiles */}
+      <div className="mb-6">
+        <SummaryTile
+          index={0}
+          tone={defaultAccount ? "money" : "attention"}
           label="Settlement account"
-          value={
-            defaultAccount
-              ? `••${defaultAccountDetails.accountNumber.slice(-4)}`
-              : "Not set"
-          }
+          value={defaultAccount ? `••${defaultAccountDetails.accountNumber.slice(-4)}` : "Not set"}
           hint={
-            defaultAccountDetails.bankName ||
-            "Add a verified account to receive payments"
+            defaultAccountDetails.bankName || "Add a verified account to receive payments"
           }
           icon={<Building2 size={16} />}
-          tone={defaultAccount ? "green" : "brand"}
         />
-        <StatCard
+        <SummaryTile
+          index={1}
+          tone="people"
           label="Accounts on file"
           value={String((accounts.data ?? []).length)}
-          hint="Money only ever goes to accounts in your workspace name"
+          hint="Money only goes to accounts in your workspace name"
           icon={<Landmark size={16} />}
         />
-        <StatCard
+        <SummaryTile
+          index={2}
+          tone="neutral"
           label="Platform fee"
           value="₦75"
-          hint="Per successful payment, added on top of the collection amount"
+          hint="Per successful payment, on top of the collection amount"
           icon={<Banknote size={16} />}
         />
       </div>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1.4fr_1fr]">
+      <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
         <Card padded={false}>
           <div className="flex flex-wrap items-center justify-between gap-3 px-5 pb-3 pt-5">
             <div>
@@ -167,7 +203,9 @@ export default function Payouts() {
           </div>
 
           {accounts.loading ? (
-            <TableSkeleton rows={2} cols={2} />
+            <div className="px-5 pb-6">
+              <div className="skeleton h-16 w-full rounded-[16px]" />
+            </div>
           ) : (accounts.data ?? []).length === 0 ? (
             <div className="px-5 pb-6">
               <InlineNote tone="warning" title="No account on file">
@@ -183,27 +221,37 @@ export default function Payouts() {
                 return (
                   <li
                     key={account.id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line px-3.5 py-3 transition-colors hover:border-ink/15"
+                    className={`rounded-[18px] border border-ink p-4 ${
+                      details.isDefault ? TONE_MEANING.money : "bg-white"
+                    }`}
                   >
-                    <div className="min-w-0">
-                      <p className="flex items-center gap-2 text-[13.5px] font-semibold">
-                        <span className="truncate">
-                          {details.bankName || details.bankCode}
-                        </span>
-                        {details.isDefault ? (
-                          <span className="pill pill-green">
-                            <Star size={11} /> Default
-                          </span>
-                        ) : null}
-                      </p>
-                      <p className="font-mono text-3xs text-ink-muted">
-                        {details.accountNumber} · {details.accountName || "—"}
-                      </p>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="flex flex-wrap items-center gap-2 text-[14px] font-semibold">
+                          <span className="truncate">{details.bankName || details.bankCode}</span>
+                          {details.isDefault ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-white/75 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em]">
+                              <Star size={10} /> Default
+                            </span>
+                          ) : null}
+                        </p>
+                        <p className="mt-1 font-mono text-[12px] opacity-75">
+                          {details.accountNumber} · {details.accountName || "—"}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        aria-label={`Remove ${details.bankName}`}
+                        onClick={() => setPendingDelete(account)}
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-white/75 text-danger transition-colors hover:bg-white"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
-                    <div className="flex items-center gap-1">
-                      {!details.isDefault ? (
+                    {!details.isDefault ? (
+                      <div className="mt-3">
                         <Button
-                          variant="ghost"
+                          variant="secondary"
                           size="sm"
                           onClick={async () => {
                             try {
@@ -220,16 +268,8 @@ export default function Payouts() {
                         >
                           Make default
                         </Button>
-                      ) : null}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-danger hover:bg-[#fdecea]"
-                        icon={<Trash2 size={13} />}
-                        onClick={() => setPendingDelete(account)}
-                        aria-label={`Remove ${details.bankName}`}
-                      />
-                    </div>
+                      </div>
+                    ) : null}
                   </li>
                 );
               })}
@@ -318,9 +358,7 @@ export default function Payouts() {
             </Button>
             <Button
               loading={addAccount.loading}
-              disabled={
-                !accountForm.bank_code || accountForm.account_number.length !== 10
-              }
+              disabled={!accountForm.bank_code || accountForm.account_number.length !== 10}
               onClick={submitAccount}
             >
               Add account
@@ -345,11 +383,7 @@ export default function Payouts() {
               ))}
             </Select>
           </Field>
-          <Field
-            label="Account number"
-            htmlFor="account-number"
-            hint="10 digits (NUBAN)."
-          >
+          <Field label="Account number" htmlFor="account-number" hint="10 digits (NUBAN).">
             <Input
               id="account-number"
               inputMode="numeric"
@@ -365,12 +399,10 @@ export default function Payouts() {
               className="font-mono"
             />
           </Field>
-          <div className="rounded-xl border border-line bg-cream px-4 py-3">
+          <div className="rounded-[14px] border border-line bg-cream px-4 py-3">
             <Toggle
               checked={accountForm.is_default}
-              onChange={(value) =>
-                setAccountForm({ ...accountForm, is_default: value })
-              }
+              onChange={(value) => setAccountForm({ ...accountForm, is_default: value })}
               label="Use for automatic settlement"
               description="Every new collection settles into this account."
             />
