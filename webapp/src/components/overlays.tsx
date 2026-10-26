@@ -1,4 +1,5 @@
 import {
+  FocusEvent as ReactFocusEvent,
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
   ReactNode,
@@ -9,7 +10,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, X } from "lucide-react";
+import { Loader2, ShieldCheck, TriangleAlert, X } from "lucide-react";
 
 /**
  * Dialogs render through a portal on `document.body`. Without the portal a
@@ -143,6 +144,41 @@ function useDialogBehaviour({
 
 const PANEL_EASE = "ease-[cubic-bezier(0.22,1,0.36,1)]";
 
+/** The area of the screen not covered by the on-screen keyboard. */
+export function useVisualViewport() {
+  const [area, setArea] = useState<{ top: number; height: number } | null>(null);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => setArea({ top: vv.offsetTop, height: vv.height });
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, []);
+
+  return area;
+}
+
+/* ---------------------------------------------------------------- pieces */
+
+/** Round icon well shown in a dialog header. Tones match the app's meanings. */
+function DialogMark({ tone, children }: { tone: "money" | "attention" | "danger" | "neutral"; children: ReactNode }) {
+  const styles = {
+    money: "bg-[#c8f58e] text-ink",
+    attention: "bg-[#ffc49a] text-ink",
+    danger: "bg-[#ffd6cf] text-ink",
+    neutral: "bg-[#9ff0f5] text-ink",
+  } as const;
+  return (
+    <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${styles[tone]}`}>{children}</span>
+  );
+}
+
 export function Modal({
   open,
   onClose,
@@ -151,6 +187,8 @@ export function Modal({
   children,
   footer,
   width = 520,
+  icon,
+  tone = "neutral",
 }: {
   open: boolean;
   onClose: () => void;
@@ -159,9 +197,11 @@ export function Modal({
   children: ReactNode;
   footer?: ReactNode;
   width?: number;
+  icon?: ReactNode;
+  tone?: "money" | "attention" | "danger" | "neutral";
 }) {
-  const { mounted, visible, panelRef, onBackdropPointerDown } =
-    useDialogBehaviour({ open, onClose });
+  const { mounted, visible, panelRef, onBackdropPointerDown } = useDialogBehaviour({ open, onClose });
+  const area = useVisualViewport();
   const titleId = useId();
   const descriptionId = useId();
 
@@ -170,14 +210,25 @@ export function Modal({
     if (event.key === "Escape") event.stopPropagation();
   };
 
+  // When a field gets focus the keyboard opens over it. Wait for the keyboard
+  // to finish animating, then centre the field in the visible area.
+  const keepFieldVisible = (event: ReactFocusEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (!target.matches("input, textarea, select")) return;
+    window.setTimeout(() => target.scrollIntoView({ block: "center", behavior: "smooth" }), 300);
+  };
+
   if (!mounted || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-6">
+    <div
+      className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-6"
+      style={area ? { top: area.top, height: area.height, bottom: "auto" } : undefined}
+    >
       <div
         aria-hidden="true"
         onPointerDown={onBackdropPointerDown}
-        className={`absolute inset-0 bg-ink/45 backdrop-blur-[3px] transition-opacity duration-200 ${
+        className={`absolute inset-0 bg-ink/40 backdrop-blur-[4px] transition-opacity duration-200 ${
           visible ? "opacity-100" : "opacity-0"
         }`}
       />
@@ -190,25 +241,22 @@ export function Modal({
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
         onKeyDown={onPanelKeyDown}
+        onFocus={keepFieldVisible}
         style={{ maxWidth: width }}
-        className={`relative z-10 flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-[22px] bg-white shadow-pop outline-none transition-[opacity,transform] duration-300 ${PANEL_EASE} sm:max-h-[min(88dvh,860px)] sm:rounded-[18px] ${
-          visible
-            ? "translate-y-0 opacity-100 sm:scale-100"
-            : "translate-y-8 opacity-0 sm:translate-y-3 sm:scale-[0.985]"
+        className={`relative z-10 flex max-h-[92%] w-full flex-col overflow-hidden rounded-t-[28px] bg-white shadow-pop outline-none transition-[opacity,transform] duration-300 ${PANEL_EASE} sm:max-h-[min(88dvh,860px)] sm:rounded-[24px] ${
+          visible ? "translate-y-0 opacity-100 sm:scale-100" : "translate-y-8 opacity-0 sm:translate-y-3 sm:scale-[0.985]"
         }`}
       >
-        <div
-          aria-hidden="true"
-          className="mx-auto mt-2.5 h-1 w-9 shrink-0 rounded-pill bg-line sm:hidden"
-        />
+        <div aria-hidden="true" className="mx-auto mt-3 h-1.5 w-11 shrink-0 rounded-full bg-line sm:hidden" />
 
-        <header className="flex shrink-0 items-start justify-between gap-4 px-5 pb-4 pt-4 sm:px-6 sm:pt-5">
-          <div className="min-w-0">
-            <h2 id={titleId} className="text-[16.5px] font-bold leading-tight text-ink">
+        <header className="flex shrink-0 items-start gap-4 px-6 pb-5 pt-6 sm:pt-7">
+          {icon ? <DialogMark tone={tone}>{icon}</DialogMark> : null}
+          <div className="min-w-0 flex-1 pt-0.5">
+            <h2 id={titleId} className="text-[19px] font-bold leading-tight tracking-[-0.02em] text-ink">
               {title}
             </h2>
             {description ? (
-              <p id={descriptionId} className="muted mt-1">
+              <p id={descriptionId} className="muted mt-1.5">
                 {description}
               </p>
             ) : null}
@@ -216,23 +264,21 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink-muted transition-colors hover:bg-cream hover:text-ink focus-visible:bg-cream"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cream text-ink-muted transition-colors hover:bg-cream-deep hover:text-ink focus-visible:ring-2 focus-visible:ring-ink"
             aria-label="Close dialog"
           >
-            <X size={16} />
+            <X size={15} />
           </button>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-2 sm:px-6">
-          {children}
-        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-6">{children}</div>
 
         {footer ? (
-          <footer className="flex shrink-0 flex-col-reverse gap-2 border-t border-line-soft bg-white px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:flex-row sm:justify-end sm:px-6 sm:pb-5 [&>*]:w-full sm:[&>*]:w-auto">
+          <footer className="flex shrink-0 flex-col-reverse gap-2.5 border-t border-line bg-cream/60 px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 sm:flex-row sm:justify-end [&>*]:w-full sm:[&>*]:w-auto">
             {footer}
           </footer>
         ) : (
-          <div className="pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-4" />
+          <div className="pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6" />
         )}
       </div>
     </div>,
@@ -255,18 +301,21 @@ export function Drawer({
   children: ReactNode;
   footer?: ReactNode;
 }) {
-  const { mounted, visible, panelRef, onBackdropPointerDown } =
-    useDialogBehaviour({ open, onClose });
+  const { mounted, visible, panelRef, onBackdropPointerDown } = useDialogBehaviour({ open, onClose });
+  const area = useVisualViewport();
   const titleId = useId();
 
   if (!mounted || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] flex justify-end">
+    <div
+      className="fixed inset-0 z-[80] flex justify-end"
+      style={area ? { top: area.top, height: area.height, bottom: "auto" } : undefined}
+    >
       <div
         aria-hidden="true"
         onPointerDown={onBackdropPointerDown}
-        className={`absolute inset-0 bg-ink/40 backdrop-blur-[2px] transition-opacity duration-200 ${
+        className={`absolute inset-0 bg-ink/40 backdrop-blur-[4px] transition-opacity duration-200 ${
           visible ? "opacity-100" : "opacity-0"
         }`}
       />
@@ -277,33 +326,32 @@ export function Drawer({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`relative z-10 flex h-full w-full max-w-[560px] flex-col overflow-hidden bg-white shadow-pop outline-none transition-transform duration-300 ${PANEL_EASE} ${
+        className={`relative z-10 flex h-full w-full max-w-[580px] flex-col overflow-hidden bg-white shadow-pop outline-none transition-transform duration-300 sm:rounded-l-[28px] ${PANEL_EASE} ${
           visible ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <header className="flex shrink-0 items-start justify-between gap-4 border-b border-line-soft px-5 py-4">
+        <header className="flex shrink-0 items-start justify-between gap-4 px-6 pb-5 pt-7">
           <div className="min-w-0">
-            <h2 id={titleId} className="text-[15.5px] font-bold text-ink">
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">Details</p>
+            <h2 id={titleId} className="mt-1.5 truncate text-[20px] font-bold tracking-[-0.02em] text-ink">
               {title}
             </h2>
-            {subtitle ? <p className="muted mt-0.5">{subtitle}</p> : null}
+            {subtitle ? <p className="muted mt-1 truncate font-mono text-[12px]">{subtitle}</p> : null}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ink-muted transition-colors hover:bg-cream hover:text-ink"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cream text-ink-muted transition-colors hover:bg-cream-deep hover:text-ink"
             aria-label="Close panel"
           >
-            <X size={16} />
+            <X size={15} />
           </button>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5">
-          {children}
-        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-8">{children}</div>
 
         {footer ? (
-          <footer className="shrink-0 border-t border-line-soft px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4">
+          <footer className="shrink-0 border-t border-line bg-cream/60 px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5">
             {footer}
           </footer>
         ) : null}
@@ -345,6 +393,8 @@ export function ConfirmDialog({
       title={title}
       description={description}
       width={440}
+      tone={destructive ? "danger" : "money"}
+      icon={destructive ? <TriangleAlert size={19} /> : <ShieldCheck size={19} />}
       footer={
         <>
           <button type="button" className="btn btn-secondary" onClick={onClose}>
@@ -356,19 +406,14 @@ export function ConfirmDialog({
             onClick={confirm}
             disabled={loading}
           >
-            {loading ? (
-              <Loader2 size={15} className="animate-spin" aria-hidden="true" />
-            ) : null}
+            {loading ? <Loader2 size={15} className="animate-spin" aria-hidden="true" /> : null}
             {confirmLabel}
           </button>
         </>
       }
     >
       {children ?? (
-        <p className="muted">
-          This action is recorded against your workspace and cannot be undone
-          from the dashboard.
-        </p>
+        <p className="muted">This action is recorded against your workspace and cannot be undone from the dashboard.</p>
       )}
     </Modal>
   );
