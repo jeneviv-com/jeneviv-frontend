@@ -128,15 +128,21 @@ export default function Refunds() {
         description="Return a payment to the payer and keep the reversal attached to the original transaction."
       />
 
-      {!isAdmin ? (
-        <div className="mb-5">
+      <div className="mb-6">
+        {!isAdmin ? (
           <InlineNote tone="warning" title="Admin access required">
             Refunds are an administrative action on the Jeneviv API. Ask a
             workspace admin to issue one — everyone else can still see the refund
             history below.
           </InlineNote>
-        </div>
-      ) : null}
+        ) : refunds.data && refunds.data.length === 0 && !refunds.loading ? (
+          <InlineNote tone="info" title="Feature availability">
+            The refunds feature is available in demo mode or when the backend refunds
+            table is fully configured. If you're seeing this message in production,
+            contact your system administrator to complete the database setup.
+          </InlineNote>
+        ) : null}
+      </div>
 
       {/* summary: one tile per meaning */}
       <div className="mb-6">

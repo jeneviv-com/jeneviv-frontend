@@ -332,8 +332,17 @@ export function useRefunds() {
         );
         return response.refunds;
       }
-      const response = await refundsAPI.list();
-      return response.refunds;
+      try {
+        const response = await refundsAPI.list();
+        return response.refunds;
+      } catch (err) {
+        // Refunds endpoint may not be fully implemented yet
+        // Return empty array instead of failing
+        if (err instanceof APIError && (err.status === 404 || err.status >= 500)) {
+          return [];
+        }
+        throw err;
+      }
     },
     [isDemoMode() ? "demo" : "live"],
   );

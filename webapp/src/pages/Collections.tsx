@@ -295,7 +295,7 @@ export default function Collections() {
       ) : (
         <ul className="space-y-3">
           {rows.map((collection, index) => {
-            const active = overrides[collection.id] ?? active;
+            const active = overrides[collection.id] ?? collection.is_active;
             const paid = collection.stats?.paid ?? 0;
             const collected = collection.stats?.collected ?? 0;
             const target = (collection as { target_payers?: number }).target_payers ?? 0;

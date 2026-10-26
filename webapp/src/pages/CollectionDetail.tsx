@@ -185,17 +185,33 @@ export default function CollectionDetail() {
 
   if (collection.error) {
     return (
-      <Card>
-        <ErrorState message={collection.error} onRetry={collection.refetch} />
-      </Card>
+      <div className="space-y-4">
+        <Link
+          to="/collections"
+          className="mb-4 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-ink-muted transition-colors hover:text-ink"
+        >
+          <ArrowLeft size={14} /> All collections
+        </Link>
+        <Card>
+          <ErrorState message={collection.error} onRetry={collection.refetch} />
+        </Card>
+      </div>
     );
   }
 
   if (collection.loading || !data) {
     return (
-      <Card>
-        <TableSkeleton rows={6} cols={4} />
-      </Card>
+      <div className="space-y-4">
+        <Link
+          to="/collections"
+          className="mb-4 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-ink-muted transition-colors hover:text-ink"
+        >
+          <ArrowLeft size={14} /> All collections
+        </Link>
+        <Card>
+          <TableSkeleton rows={6} cols={4} />
+        </Card>
+      </div>
     );
   }
 

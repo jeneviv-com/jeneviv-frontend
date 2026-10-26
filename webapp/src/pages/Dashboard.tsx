@@ -271,7 +271,7 @@ export default function Dashboard() {
   const animatedCollected = useCountUp(collected);
 
   return (
-    <div className="mx-auto w-full max-w-md pb-10">
+    <div className="mx-auto w-full max-w-[1400px] pb-10">
       <style>{DASH_CSS}</style>
 
       {/* greeting */}
@@ -285,7 +285,7 @@ export default function Dashboard() {
               month: "long",
             })}
           </p>
-          <h1 className="mt-1 text-[22px] font-bold tracking-tight">
+          <h1 className="mt-1 text-[22px] font-bold tracking-tight lg:text-[28px]">
             Good to see you, {firstName}
           </h1>
         </div>
@@ -312,282 +312,326 @@ export default function Dashboard() {
         </Reveal>
       ) : null}
 
-      {/* dark headline card */}
-      <Reveal delay={40} className="mt-5">
-        <section
-          aria-label="Headline"
-          className="rounded-[20px] bg-[#101010] px-5 py-5 text-white shadow-card"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[16px] font-semibold tracking-tight">Collected</p>
-              <p className="mt-0.5 text-[12.5px] text-white/65">
-                {successful.length} successful payment
-                {successful.length === 1 ? "" : "s"} in this range
-              </p>
-            </div>
-            <p className="text-right text-[24px] font-bold tabular">
-              {loading ? valueSkeleton : formatMoney(Math.round(animatedCollected))}
-            </p>
-          </div>
-        </section>
-      </Reveal>
-
-      {/* stacked colour cards */}
-      <div className="mt-3">
-        <StackedCard
-          index={0}
-          tone="lavender"
-          title="Payers"
-          subtitle={
-            payerTarget
-              ? `${percent(uniquePayers, payerTarget)}% of your target`
-              : `Across ${formatNumber(stats.length)} collection${stats.length === 1 ? "" : "s"}`
-          }
-          value={
-            loading
-              ? valueSkeleton
-              : payerTarget
-                ? `${formatNumber(uniquePayers)} / ${formatNumber(payerTarget)}`
-                : formatNumber(uniquePayers)
-          }
-          to="/transactions"
-        />
-        <StackedCard
-          index={1}
-          tone="mint"
-          title="Settled"
-          subtitle="Paid straight to your bank"
-          value={loading ? valueSkeleton : formatMoney(settled)}
-          to="/transactions"
-        />
-        <StackedCard
-          index={2}
-          tone="peach"
-          title="Payments"
-          subtitle={`${formatNumber(pendingCount)} awaiting confirmation`}
-          value={loading ? valueSkeleton : formatNumber(successful.length)}
-          to="/transactions"
-        />
-        <StackedCard
-          index={3}
-          tone="aqua"
-          title="Workspace"
-          subtitle={merchant?.display_name || user?.name || "Your workspace"}
-          value={merchant ? statusLabel(merchant.status) : "—"}
-          to="/settings"
-        />
-      </div>
-
-      <Reveal delay={520} className="mt-5">
-        <Link
-          to="/collections?new=1"
-          className="btn btn-primary flex w-full items-center justify-center gap-2 rounded-[18px] py-3.5 transition-transform duration-150 active:scale-[0.985]"
-        >
-          <Plus size={15} aria-hidden="true" /> New collection
-        </Link>
-      </Reveal>
-
-      {/* chart */}
-      <Reveal delay={600} className="mt-5">
-        <Card>
-          <CardHeader
-            title="Collections over time"
-            subtitle={
-              range === "7d"
-                ? "Successful payments per day"
-                : "Successful payments per period"
-            }
-            action={
-              <SegmentedControl
-                value={range}
-                onChange={setRange}
-                options={[
-                  { value: "7d", label: "7d" },
-                  { value: "30d", label: "30d" },
-                  { value: "90d", label: "90d" },
-                ]}
-              />
-            }
-          />
-          {transactions.loading ? (
-            <TableSkeleton rows={3} cols={2} />
-          ) : transactions.error ? (
-            <ErrorState message={transactions.error} onRetry={transactions.refetch} />
-          ) : (
-            <>
-              <AreaChart data={buckets} />
-              <div className="mt-4 flex items-center gap-2.5 border-t border-line-soft pt-4">
-                <div className="flex -space-x-1.5">
-                  {recentPayers.slice(0, 5).map((name) => (
-                    <span
-                      key={name}
-                      title={name}
-                      className="grid h-7 w-7 place-items-center rounded-full border-2 border-white bg-brand-peach text-3xs font-bold text-[#79300f]"
-                    >
-                      {initials(name)}
-                    </span>
-                  ))}
+      {/* Main content grid - single column on mobile, two columns on laptop */}
+      <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px]">
+        {/* Left column - main metrics and charts */}
+        <div className="space-y-5">
+          {/* dark headline card */}
+          <Reveal delay={40}>
+            <section
+              aria-label="Headline"
+              className="rounded-[20px] bg-[#101010] px-5 py-5 text-white shadow-card lg:px-6 lg:py-6"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[16px] font-semibold tracking-tight lg:text-[18px]">Collected</p>
+                  <p className="mt-0.5 text-[12.5px] text-white/65 lg:text-[13px]">
+                    {successful.length} successful payment
+                    {successful.length === 1 ? "" : "s"} in this range
+                  </p>
                 </div>
-                <p className="text-[12px] text-ink-muted">
-                  {recentPayers.length > 5
-                    ? `+${recentPayers.length - 5} more payers`
-                    : `${recentPayers.length} payers`}
+                <p className="text-right text-[24px] font-bold tabular lg:text-[32px]">
+                  {loading ? valueSkeleton : formatMoney(Math.round(animatedCollected))}
                 </p>
               </div>
-            </>
-          )}
-        </Card>
-      </Reveal>
+            </section>
+          </Reveal>
 
-      {/* settlement note */}
-      <Reveal delay={680} className="mt-5">
-        <Card>
-          <CardHeader
-            title="Direct settlement"
-            subtitle="Your money never sits with Jeneviv"
-            icon={<ShieldCheck size={16} />}
-          />
-          <p className="muted">
-            Each successful payment is split by Paystack when it is captured. The
-            collection amount, less Paystack&apos;s processing fee, goes to your
-            verified bank account. Jeneviv&apos;s platform fee is taken in the same
-            split.
-          </p>
-          <Link to="/payouts" className="btn btn-secondary btn-sm mt-4 w-full">
-            Manage bank account <ArrowUpRight size={14} />
-          </Link>
-        </Card>
-      </Reveal>
+          {/* Grid of metric cards - stacked on mobile, 2x2 grid on laptop */}
+          <div className="lg:grid lg:grid-cols-2 lg:gap-4">
+            {/* stacked colour cards */}
+            <div className="mt-3 lg:mt-0">
+              <StackedCard
+                index={0}
+                tone="lavender"
+                title="Payers"
+                subtitle={
+                  payerTarget
+                    ? `${percent(uniquePayers, payerTarget)}% of your target`
+                    : `Across ${formatNumber(stats.length)} collection${stats.length === 1 ? "" : "s"}`
+                }
+                value={
+                  loading
+                    ? valueSkeleton
+                    : payerTarget
+                      ? `${formatNumber(uniquePayers)} / ${formatNumber(payerTarget)}`
+                      : formatNumber(uniquePayers)
+                }
+                to="/transactions"
+              />
+              <StackedCard
+                index={1}
+                tone="mint"
+                title="Settled"
+                subtitle="Paid straight to your bank"
+                value={loading ? valueSkeleton : formatMoney(settled)}
+                to="/transactions"
+              />
+            </div>
+            <div className="lg:mt-0">
+              <StackedCard
+                index={2}
+                tone="peach"
+                title="Payments"
+                subtitle={`${formatNumber(pendingCount)} awaiting confirmation`}
+                value={loading ? valueSkeleton : formatNumber(successful.length)}
+                to="/transactions"
+              />
+              <StackedCard
+                index={3}
+                tone="aqua"
+                title="Workspace"
+                subtitle={merchant?.display_name || user?.name || "Your workspace"}
+                value={merchant ? statusLabel(merchant.status) : "—"}
+                to="/settings"
+              />
+            </div>
+          </div>
 
-      {/* recent payments */}
-      <section className="mt-6" aria-labelledby="recent-payments">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 id="recent-payments" className="section-title">
-            Recent payments
-          </h2>
-          <Link
-            to="/transactions"
-            className="text-[12.5px] font-semibold text-brand hover:underline"
-          >
-            View all
-          </Link>
-        </div>
+          <Reveal delay={520} className="lg:hidden">
+            <Link
+              to="/collections?new=1"
+              className="btn btn-primary flex w-full items-center justify-center gap-2 rounded-[18px] py-3.5 transition-transform duration-150 active:scale-[0.985]"
+            >
+              <Plus size={15} aria-hidden="true" /> New collection
+            </Link>
+          </Reveal>
 
-        <Card padded={false} className="mt-3">
-          {transactions.loading ? (
-            <TableSkeleton rows={4} cols={2} />
-          ) : transactions.error ? (
-            <ErrorState message={transactions.error} onRetry={transactions.refetch} />
-          ) : recent.length === 0 ? (
-            <EmptyState
-              icon={<ReceiptText size={20} />}
-              title="No payments yet"
-              description="Payments into your collection links appear here within seconds of confirmation."
-              action={
-                <Link to="/collections?new=1" className="btn btn-primary btn-sm">
-                  <Plus size={14} aria-hidden="true" /> Create a collection
-                </Link>
-              }
-            />
-          ) : (
-            <ul className="divide-y divide-line-soft">
-              {recent.map((t, index) => (
-                <li
-                  key={t.id}
-                  className="dash-rise flex items-center justify-between gap-3 px-5 py-3.5 transition-colors duration-150 hover:bg-cream/60"
-                  style={{ animationDelay: `${index * 70}ms` }}
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-[13.5px] font-semibold">
-                      {transactionPayer(t)}
-                    </p>
-                    <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">
-                      {t.collection_name || "—"} · {timeAgo(t.created_at)}
-                    </p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="tabular text-[13.5px] font-bold">
-                      {formatMoney(t.amount, t.currency)}
-                    </p>
-                    <div className="mt-1 flex justify-end">
-                      <StatusPill status={t.status} />
+          {/* chart */}
+          <Reveal delay={600}>
+            <Card>
+              <CardHeader
+                title="Collections over time"
+                subtitle={
+                  range === "7d"
+                    ? "Successful payments per day"
+                    : "Successful payments per period"
+                }
+                action={
+                  <SegmentedControl
+                    value={range}
+                    onChange={setRange}
+                    options={[
+                      { value: "7d", label: "7d" },
+                      { value: "30d", label: "30d" },
+                      { value: "90d", label: "90d" },
+                    ]}
+                  />
+                }
+              />
+              {transactions.loading ? (
+                <TableSkeleton rows={3} cols={2} />
+              ) : transactions.error ? (
+                <ErrorState message={transactions.error} onRetry={transactions.refetch} />
+              ) : (
+                <>
+                  <AreaChart data={buckets} />
+                  <div className="mt-4 flex items-center gap-2.5 border-t border-line-soft pt-4">
+                    <div className="flex -space-x-1.5">
+                      {recentPayers.slice(0, 5).map((name) => (
+                        <span
+                          key={name}
+                          title={name}
+                          className="grid h-7 w-7 place-items-center rounded-full border-2 border-white bg-brand-peach text-3xs font-bold text-[#79300f]"
+                        >
+                          {initials(name)}
+                        </span>
+                      ))}
                     </div>
+                    <p className="text-[12px] text-ink-muted">
+                      {recentPayers.length > 5
+                        ? `+${recentPayers.length - 5} more payers`
+                        : `${recentPayers.length} payers`}
+                    </p>
                   </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-      </section>
+                </>
+              )}
+            </Card>
+          </Reveal>
 
-      {/* collection progress */}
-      <section className="mt-6" aria-labelledby="collection-progress">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 id="collection-progress" className="section-title">
-            Collections
-          </h2>
-          <Link
-            to="/collections"
-            className="text-[12.5px] font-semibold text-brand hover:underline"
-          >
-            All
-          </Link>
+          {/* settlement note - moved below chart on laptop */}
+          <Reveal delay={680} className="hidden lg:block">
+            <Card>
+              <CardHeader
+                title="Direct settlement"
+                subtitle="Your money never sits with Jeneviv"
+                icon={<ShieldCheck size={16} />}
+              />
+              <p className="muted">
+                Each successful payment is split by Paystack when it is captured. The
+                collection amount, less Paystack&apos;s processing fee, goes to your
+                verified bank account. Jeneviv&apos;s platform fee is taken in the same
+                split.
+              </p>
+              <Link to="/payouts" className="btn btn-secondary btn-sm mt-4 w-full">
+                Manage bank account <ArrowUpRight size={14} />
+              </Link>
+            </Card>
+          </Reveal>
         </div>
 
-        <Card className="mt-3">
-          {collections.loading ? (
-            <TableSkeleton rows={3} cols={2} />
-          ) : collections.error ? (
-            <ErrorState message={collections.error} onRetry={collections.refetch} />
-          ) : stats.length === 0 ? (
-            <p className="muted py-6 text-center">No collections yet.</p>
-          ) : (
-            <ul className="space-y-4">
-              {stats.slice(0, 5).map((collection, index) => {
-                const paid = collection.stats?.paid ?? 0;
-                const target = collection.target_payers;
-                const collectedSum = collection.stats?.collected ?? 0;
-                const progress = target ? percent(paid, target) : Math.min(100, paid);
-                return (
-                  <li
-                    key={collection.id}
-                    className="dash-rise"
-                    style={{ animationDelay: `${index * 80}ms` }}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <Link
-                        to={`/collections/${collection.id}`}
-                        className="truncate text-[13.5px] font-semibold hover:text-brand"
+        {/* Right column - sidebar with quick actions and lists */}
+        <div className="space-y-5">
+          {/* Quick action button - only on laptop */}
+          <Reveal delay={520} className="hidden lg:block">
+            <Link
+              to="/collections?new=1"
+              className="btn btn-primary flex w-full items-center justify-center gap-2 rounded-[18px] py-3.5 transition-transform duration-150 active:scale-[0.985]"
+            >
+              <Plus size={15} aria-hidden="true" /> New collection
+            </Link>
+          </Reveal>
+
+          {/* recent payments */}
+          <section aria-labelledby="recent-payments">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 id="recent-payments" className="section-title">
+                Recent payments
+              </h2>
+              <Link
+                to="/transactions"
+                className="text-[12.5px] font-semibold text-brand hover:underline"
+              >
+                View all
+              </Link>
+            </div>
+
+            <Card padded={false} className="mt-3">
+              {transactions.loading ? (
+                <TableSkeleton rows={4} cols={2} />
+              ) : transactions.error ? (
+                <ErrorState message={transactions.error} onRetry={transactions.refetch} />
+              ) : recent.length === 0 ? (
+                <EmptyState
+                  icon={<ReceiptText size={20} />}
+                  title="No payments yet"
+                  description="Payments into your collection links appear here within seconds of confirmation."
+                  action={
+                    <Link to="/collections?new=1" className="btn btn-primary btn-sm">
+                      <Plus size={14} aria-hidden="true" /> Create a collection
+                    </Link>
+                  }
+                />
+              ) : (
+                <ul className="divide-y divide-line-soft">
+                  {recent.map((t, index) => (
+                    <li
+                      key={t.id}
+                      className="dash-rise flex items-center justify-between gap-3 px-4 py-3.5 transition-colors duration-150 hover:bg-cream/60 lg:px-5"
+                      style={{ animationDelay: `${index * 70}ms` }}
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-[13.5px] font-semibold">
+                          {transactionPayer(t)}
+                        </p>
+                        <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">
+                          {t.collection_name || "—"} · {timeAgo(t.created_at)}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="tabular text-[13.5px] font-bold">
+                          {formatMoney(t.amount, t.currency)}
+                        </p>
+                        <div className="mt-1 flex justify-end">
+                          <StatusPill status={t.status} />
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          </section>
+
+          {/* collection progress */}
+          <section aria-labelledby="collection-progress">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 id="collection-progress" className="section-title">
+                Collections
+              </h2>
+              <Link
+                to="/collections"
+                className="text-[12.5px] font-semibold text-brand hover:underline"
+              >
+                All
+              </Link>
+            </div>
+
+            <Card className="mt-3">
+              {collections.loading ? (
+                <TableSkeleton rows={3} cols={2} />
+              ) : collections.error ? (
+                <ErrorState message={collections.error} onRetry={collections.refetch} />
+              ) : stats.length === 0 ? (
+                <p className="muted py-6 text-center">No collections yet.</p>
+              ) : (
+                <ul className="space-y-4">
+                  {stats.slice(0, 5).map((collection, index) => {
+                    const paid = collection.stats?.paid ?? 0;
+                    const target = collection.target_payers;
+                    const collectedSum = collection.stats?.collected ?? 0;
+                    const progress = target ? percent(paid, target) : Math.min(100, paid);
+                    return (
+                      <li
+                        key={collection.id}
+                        className="dash-rise"
+                        style={{ animationDelay: `${index * 80}ms` }}
                       >
-                        {collection.name}
-                      </Link>
-                      <span className="tabular text-[12.5px] font-semibold">
-                        {formatCompact(collectedSum, collection.currency)}
-                      </span>
-                    </div>
-                    <div className="mt-2">
-                      <ProgressBar
-                        value={progress}
-                        tone={collection.is_active ? "brand" : "ink"}
-                      />
-                    </div>
-                    <div className="mt-1.5 flex items-center justify-between">
-                      <p className="font-mono text-3xs text-ink-muted">
-                        {paid}
-                        {target ? ` / ${target}` : ""} payers
-                      </p>
-                      <Pill tone={statusTone(collection.is_active ? "active" : "paused")}>
-                        {collection.is_active ? "Accepting" : "Paused"}
-                      </Pill>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </Card>
-      </section>
+                        <div className="flex items-center justify-between gap-3">
+                          <Link
+                            to={`/collections/${collection.id}`}
+                            className="truncate text-[13.5px] font-semibold hover:text-brand"
+                          >
+                            {collection.name}
+                          </Link>
+                          <span className="tabular text-[12.5px] font-semibold">
+                            {formatCompact(collectedSum, collection.currency)}
+                          </span>
+                        </div>
+                        <div className="mt-2">
+                          <ProgressBar
+                            value={progress}
+                            tone={collection.is_active ? "brand" : "ink"}
+                          />
+                        </div>
+                        <div className="mt-1.5 flex items-center justify-between">
+                          <p className="font-mono text-3xs text-ink-muted">
+                            {paid}
+                            {target ? ` / ${target}` : ""} payers
+                          </p>
+                          <Pill tone={statusTone(collection.is_active ? "active" : "paused")}>
+                            {collection.is_active ? "Accepting" : "Paused"}
+                          </Pill>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </Card>
+          </section>
+
+          {/* settlement note - shown on mobile below collections */}
+          <Reveal delay={680} className="lg:hidden">
+            <Card>
+              <CardHeader
+                title="Direct settlement"
+                subtitle="Your money never sits with Jeneviv"
+                icon={<ShieldCheck size={16} />}
+              />
+              <p className="muted">
+                Each successful payment is split by Paystack when it is captured. The
+                collection amount, less Paystack&apos;s processing fee, goes to your
+                verified bank account. Jeneviv&apos;s platform fee is taken in the same
+                split.
+              </p>
+              <Link to="/payouts" className="btn btn-secondary btn-sm mt-4 w-full">
+                Manage bank account <ArrowUpRight size={14} />
+              </Link>
+            </Card>
+          </Reveal>
+        </div>
+      </div>
     </div>
   );
 }

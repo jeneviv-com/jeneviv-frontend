@@ -273,7 +273,9 @@ export default function Templates() {
                     name: editing.name,
                     description: editing.description,
                   });
-                  await saveFields.run(editing.id, fields);
+                  const result = await saveFields.run(editing.id, fields);
+                  // Update the editing state with the saved fields from the server
+                  setEditing({ ...editing, fields: result.template.fields ?? fields });
                   await templates.refetch();
                   success("Template saved", `${editing.name} is up to date.`);
                   setEditing(null);
