@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ExternalLink, Link2, Plus, QrCode, Share2 } from "lucide-react";
 import { useCollectionStats } from "@/hooks/useApi";
 import { useToast } from "@/context/ToastContext";
-import { copyText, formatMoney, paymentLink } from "@/lib/format";
+import { copyText, formatMoney, formatNumber, paymentLink } from "@/lib/format";
 import {
   Button,
   Card,
@@ -11,9 +11,9 @@ import {
   ErrorState,
   InlineNote,
   PageHeader,
-  Pill,
   SearchInput,
   TableSkeleton,
+  TONE_CARD,
 } from "@/components/ui";
 
 export default function PaymentLinks() {
@@ -32,8 +32,23 @@ export default function PaymentLinks() {
     );
   }, [collections.data, search]);
 
+  const totals = useMemo(() => {
+    const list = collections.data ?? [];
+    return {
+      links: list.length,
+      collected: list.reduce((sum, c) => sum + (c.stats?.collected ?? 0), 0),
+      payments: list.reduce((sum, c) => sum + (c.stats?.paid ?? 0), 0),
+    };
+  }, [collections.data]);
+
   const buildMessage = (name: string, amount: number, currency: string, code: string) =>
     `Pay for ${name} — ${formatMoney(amount, currency)}\n${paymentLink(code)}\n\nOpen the link, fill in your details and transfer to the account shown. Your receipt is emailed automatically.`;
+
+  const summary = [
+    { tone: "lavender" as const, label: "Active links", value: formatNumber(totals.links), hint: "Accepting payments now" },
+    { tone: "mint" as const, label: "Collected", value: formatMoney(totals.collected), hint: "Through these links" },
+    { tone: "peach" as const, label: "Payments", value: formatNumber(totals.payments), hint: "Successful, all links" },
+  ];
 
   return (
     <>
@@ -48,6 +63,27 @@ export default function PaymentLinks() {
         }
       />
 
+      {/* summary: the same stacked pastel cards as the dashboard */}
+      <div className="mb-6">
+        {summary.map((item, index) => (
+          <div
+            key={item.label}
+            className="dash-rise relative -mt-6 first:mt-0"
+            style={{ zIndex: index + 1, animationDelay: `${index * 90}ms` }}
+          >
+            <div
+              className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 ${TONE_CARD[item.tone]}`}
+            >
+              <div className="min-w-0">
+                <p className="text-[16px] font-semibold tracking-tight">{item.label}</p>
+                <p className="mt-0.5 truncate text-[12.5px] opacity-70">{item.hint}</p>
+              </div>
+              <p className="shrink-0 text-right text-[20px] font-bold tabular">{item.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
       <InlineNote tone="info" title="No app for payers, ever">
         Links open in any browser — WhatsApp, Instagram or Chrome. Payers enter
         the details you asked for, transfer to the account shown, and receive a
@@ -61,14 +97,14 @@ export default function PaymentLinks() {
           placeholder="Search active collections"
           className="w-full sm:w-[300px]"
         />
-        <span className="font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted">
+        <span className="ml-auto font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted">
           {rows.length} active link{rows.length === 1 ? "" : "s"}
         </span>
       </div>
 
       <div className="mt-4 space-y-3">
         {collections.loading ? (
-          <Card padded={false}>
+          <Card>
             <TableSkeleton rows={4} cols={3} />
           </Card>
         ) : collections.error ? (
@@ -79,11 +115,7 @@ export default function PaymentLinks() {
           <Card>
             <EmptyState
               icon={<Link2 size={20} />}
-              title={
-                search
-                  ? "No links match that search"
-                  : "No active collection links"
-              }
+              title={search ? "No links match that search" : "No active collection links"}
               description={
                 search
                   ? "Try another name or code, or clear the search."
@@ -97,83 +129,112 @@ export default function PaymentLinks() {
             />
           </Card>
         ) : (
-          rows.map((collection) => {
+          rows.map((collection, index) => {
             const link = paymentLink(collection.short_code);
             const collected = collection.stats?.collected ?? 0;
             const paid = collection.stats?.paid ?? 0;
             return (
-              <Card key={collection.id}>
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2.5">
-                      <Link
-                        to={`/collections/${collection.id}`}
-                        className="text-[15px] font-bold tracking-tight hover:text-brand"
-                      >
-                        {collection.name}
-                      </Link>
-                      <Pill tone="brand">{collection.short_code}</Pill>
-                      <Pill tone="green">Accepting</Pill>
-                    </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-[12.5px] text-ink-muted">
-                      <span className="tabular">
-                        {formatMoney(collection.amount, collection.currency)} per payer
-                      </span>
-                      <span className="tabular">
-                        {formatMoney(collected, collection.currency)} collected
-                      </span>
-                      <span>{paid} payments</span>
-                    </div>
-                    <div className="mt-3 rounded-xl border border-dashed border-line bg-cream px-3.5 py-2.5 font-mono text-[12px] text-ink-soft">
-                      <span className="break-all">{link}</span>
-                    </div>
+              <article
+                key={collection.id}
+                className="dash-rise rounded-[20px] border border-ink bg-white p-4 sm:p-5"
+                style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
+              >
+                {/* title and state */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <Link
+                      to={`/collections/${collection.id}`}
+                      className="block truncate text-[16px] font-semibold tracking-tight hover:text-brand-dark"
+                    >
+                      {collection.name}
+                    </Link>
+                    <p className="mt-0.5 font-mono text-[11px] text-ink-muted">
+                      {collection.short_code}
+                    </p>
                   </div>
+                  <span className="shrink-0 rounded-full bg-[#c8f58e] px-2.5 py-1 font-mono text-[10.5px] font-semibold uppercase tracking-[0.1em] text-ink">
+                    Accepting
+                  </span>
+                </div>
 
-                  <div className="flex flex-wrap items-center gap-2 lg:flex-col lg:items-stretch">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      icon={<Link2 size={13} />}
-                      onClick={async () => {
-                        const ok = await copyText(link);
-                        if (ok) success("Link copied", link);
-                      }}
-                    >
-                      Copy link
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      icon={<Share2 size={13} />}
-                      onClick={async () => {
-                        const ok = await copyText(
-                          buildMessage(
-                            collection.name,
-                            collection.amount,
-                            collection.currency,
-                            collection.short_code,
-                          ),
-                        );
-                        if (ok)
-                          success(
-                            "Message copied",
-                            "Paste it into WhatsApp to share with payers.",
-                          );
-                      }}
-                    >
-                      Copy message
-                    </Button>
-                    <a
-                      href={link}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn btn-ghost btn-sm"
-                    >
-                      <ExternalLink size={13} /> Open page
-                    </a>
+                {/* figures */}
+                <div className="mt-4 grid grid-cols-3 gap-2 rounded-[14px] bg-cream p-3">
+                  <div className="min-w-0">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
+                      Per payer
+                    </p>
+                    <p className="tabular mt-0.5 truncate text-[13.5px] font-bold">
+                      {formatMoney(collection.amount, collection.currency)}
+                    </p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
+                      Collected
+                    </p>
+                    <p className="tabular mt-0.5 truncate text-[13.5px] font-bold">
+                      {formatMoney(collected, collection.currency)}
+                    </p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
+                      Payments
+                    </p>
+                    <p className="tabular mt-0.5 truncate text-[13.5px] font-bold">
+                      {formatNumber(paid)}
+                    </p>
                   </div>
                 </div>
-              </Card>
+
+                {/* the link itself */}
+                <div className="mt-3 rounded-[14px] border border-dashed border-ink/25 bg-white px-3.5 py-2.5 font-mono text-[12px] text-ink-soft">
+                  <span className="break-all">{link}</span>
+                </div>
+
+                {/* actions */}
+                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={<Link2 size={13} />}
+                    onClick={async () => {
+                      const ok = await copyText(link);
+                      if (ok) success("Link copied", link);
+                    }}
+                  >
+                    Copy link
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={<Share2 size={13} />}
+                    onClick={async () => {
+                      const ok = await copyText(
+                        buildMessage(
+                          collection.name,
+                          collection.amount,
+                          collection.currency,
+                          collection.short_code,
+                        ),
+                      );
+                      if (ok)
+                        success(
+                          "Message copied",
+                          "Paste it into WhatsApp to share with payers.",
+                        );
+                    }}
+                  >
+                    Copy message
+                  </Button>
+                  <a
+                    href={link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-ghost btn-sm"
+                  >
+                    <ExternalLink size={13} /> Open page
+                  </a>
+                </div>
+              </article>
             );
           })
         )}
@@ -181,7 +242,7 @@ export default function PaymentLinks() {
 
       <Card className="mt-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#9ff0f5] text-ink">
             <QrCode size={19} />
           </span>
           <div>
