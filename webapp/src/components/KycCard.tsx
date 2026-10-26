@@ -1,13 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   BadgeCheck,
   Banknote,
-  Building2,
   Fingerprint,
   Image as ImageIcon,
   Loader2,
   Save,
-  ShieldCheck,
   Users,
 } from "lucide-react";
 import { APIError, merchantsAPI } from "@/lib/api";
@@ -17,19 +15,17 @@ import { useToast } from "@/context/ToastContext";
 import { formatDateTime } from "@/lib/format";
 import {
   Button,
-  Card,
-  CardHeader,
   Field,
   InlineNote,
   Input,
-  Pill,
   Select,
+  TONE_MEANING,
+  type ToneKind,
 } from "@/components/ui";
 
 function messageOf(error: unknown): string {
   if (error instanceof APIError) {
-    const details = (error.data as { error?: { details?: unknown } })?.error
-      ?.details;
+    const details = (error.data as { error?: { details?: unknown } })?.error?.details;
     if (details && typeof details === "object") {
       const record = details as Record<string, unknown>;
       if (typeof record.account_name === "string" && typeof record.legal_name === "string") {
@@ -39,6 +35,68 @@ function messageOf(error: unknown): string {
     return error.message;
   }
   return error instanceof Error ? error.message : "Something went wrong.";
+}
+
+/** Status chip with a round icon well, shared look with Settings. */
+function Chip({
+  tone,
+  icon,
+  children,
+}: {
+  tone: ToneKind;
+  icon?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center gap-2 rounded-full py-1 pl-1 pr-3 text-[12px] font-semibold ${TONE_MEANING[tone]}`}
+    >
+      {icon ? (
+        <span className="grid h-5 w-5 place-items-center rounded-full bg-white/85 text-ink">
+          {icon}
+        </span>
+      ) : null}
+      {children}
+    </span>
+  );
+}
+
+/** One numbered step in the verification flow. Steps are a line, not boxes. */
+function Step({
+  number,
+  done,
+  title,
+  body,
+  children,
+}: {
+  number: number;
+  done: boolean;
+  title: string;
+  body: string;
+  children?: ReactNode;
+}) {
+  return (
+    <li className="relative flex gap-4 pb-9 last:pb-0">
+      <span
+        aria-hidden="true"
+        className="absolute bottom-0 left-[15px] top-9 w-px bg-line last:hidden"
+      />
+      <span
+        className={`relative z-10 grid h-8 w-8 shrink-0 place-items-center rounded-full text-[13px] font-bold ${
+          done ? "bg-ink text-cream" : "border border-ink bg-white text-ink"
+        }`}
+      >
+        {done ? <BadgeCheck size={15} /> : number}
+      </span>
+      <div className="min-w-0 flex-1 space-y-4 pt-0.5">
+        <div>
+          <p className="text-[15px] font-bold tracking-tight">{title}</p>
+          <p className="muted mt-1">{body}</p>
+        </div>
+        {children}
+      </div>
+    </li>
+  );
 }
 
 export default function KycCard() {
@@ -82,11 +140,7 @@ export default function KycCard() {
     await refreshMerchant();
   };
 
-  const run = async (
-    task: () => Promise<unknown>,
-    okTitle: string,
-    okBody: string,
-  ) => {
+  const run = async (task: () => Promise<unknown>, okTitle: string, okBody: string) => {
     try {
       await task();
       await refresh();
@@ -97,270 +151,242 @@ export default function KycCard() {
   };
 
   const busy = verifyNin.loading || verifyBank.loading;
+  const ninDone = Boolean(data?.verified_legal_name);
+  const bankDone = Boolean(data?.can_withdraw);
+  const treasurerDone = Boolean(data?.treasurer_name && data?.treasurer_phone);
+
+  const maturity =
+    data?.maturity === "ready"
+      ? { tone: "money" as const, label: "Ready for direct settlement" }
+      : data?.maturity === "nin_verified"
+        ? { tone: "attention" as const, label: "NIN verified · bank pending" }
+        : { tone: "attention" as const, label: "Verification pending" };
+
+  if (kyc.loading) {
+    return (
+      <div className="flex items-center gap-2 py-6 text-[13px] text-ink-muted">
+        <Loader2 size={16} className="animate-spin" /> Loading verification…
+      </div>
+    );
+  }
+
+  if (kyc.error) {
+    return <InlineNote tone="error">{kyc.error}</InlineNote>;
+  }
 
   return (
-    <Card padded={false}>
-      <div className="px-5 pt-5">
-        <CardHeader
-          title="Identity & bank verification"
-          subtitle="Collect from day one. Payments settle once the NIN and bank account names match."
-          icon={<ShieldCheck size={16} />}
-          action={
-            <div className="flex flex-wrap gap-2">
-              <Pill tone={data?.can_collect ? "green" : "neutral"}>
-                {data?.can_collect ? "Collect on" : "Collect off"}
-              </Pill>
-              <Pill tone={data?.can_withdraw ? "green" : "amber"}>
-                {data?.can_withdraw ? "Settlement ready" : "Settlement locked"}
-              </Pill>
-            </div>
-          }
-        />
+    <div className="space-y-8">
+      {/* status row */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Chip
+          tone={data?.can_collect ? "money" : "neutral"}
+          icon={<span className="h-1.5 w-1.5 rounded-full bg-ink" />}
+        >
+          {data?.can_collect ? "Collect on" : "Collect off"}
+        </Chip>
+        <Chip
+          tone={data?.can_withdraw ? "money" : "attention"}
+          icon={<span className="h-1.5 w-1.5 rounded-full bg-ink" />}
+        >
+          {data?.can_withdraw ? "Settlement ready" : "Settlement locked"}
+        </Chip>
+        <Chip tone={maturity.tone}>{maturity.label}</Chip>
+        {busy ? (
+          <span className="flex items-center gap-1.5 text-[12px] text-ink-muted">
+            <Loader2 size={12} className="animate-spin" /> checking…
+          </span>
+        ) : null}
       </div>
 
-      {kyc.loading ? (
-        <div className="flex items-center gap-2 px-5 py-8 text-[13px] text-ink-muted">
-          <Loader2 size={16} className="animate-spin" /> Loading verification…
-        </div>
-      ) : kyc.error ? (
-        <div className="px-5 py-6">
-          <InlineNote tone="error">{kyc.error}</InlineNote>
-        </div>
-      ) : (
-        <div className="grid gap-0 divide-y divide-line-soft lg:grid-cols-2 lg:divide-x lg:divide-y-0">
-          <div className="space-y-4 p-5">
-            <div className="flex items-start gap-3">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">
-                <Fingerprint size={17} />
-              </span>
-              <div>
-                <p className="text-[13.5px] font-semibold">1. Verify your NIN</p>
-                <p className="muted mt-0.5">
-                  Checked with Dojah against the NIMC record.
-                </p>
-              </div>
-            </div>
+      <p className="muted -mt-4 max-w-2xl">
+        Collect from day one. Payments settle once the NIN and bank account names match.
+      </p>
 
-            {data?.verified_legal_name ? (
-              <InlineNote tone="success" title="NIN verified">
-                {data.verified_legal_name}
-                {data.nin_last4 ? ` ·••• ${data.nin_last4}` : ""}
-                {data.nin_verified_at
-                  ? ` · ${formatDateTime(data.nin_verified_at)}`
-                  : ""}
-              </InlineNote>
-            ) : (
-              <>
-                <Field
-                  label="National Identity Number"
-                  htmlFor="kyc-nin"
-                  hint="11 digits. Stored as a hash, never in plain text."
-                >
-                  <Input
-                    id="kyc-nin"
-                    inputMode="numeric"
-                    maxLength={11}
-                    value={nin}
-                    onChange={(event) =>
-                      setNin(event.target.value.replace(/\D/g, "").slice(0, 11))
-                    }
-                    placeholder="70123456789"
-                    className="font-mono"
-                  />
-                </Field>
-                <Button
-                  icon={<BadgeCheck size={14} />}
-                  loading={verifyNin.loading}
-                  disabled={nin.length !== 11}
-                  onClick={() =>
-                    run(
-                      () => verifyNin.run(nin),
-                      "NIN verified",
-                      "Now link the settlement bank account.",
-                    )
-                  }
-                >
-                  Verify NIN
-                </Button>
-              </>
-            )}
-
-            <div className="flex items-start gap-3 border-t border-line-soft pt-4">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">
-                <Building2 size={17} />
-              </span>
-              <div>
-                <p className="text-[13.5px] font-semibold">2. Link the settlement bank</p>
-                <p className="muted mt-0.5">
-                  Resolved with Paystack. The account name must match the NIN name.
-                </p>
-              </div>
-            </div>
-
-            {data?.can_withdraw ? (
-              <InlineNote tone="success" title="Bank verified">
-                Paystack now settles collections straight into this account.
-              </InlineNote>
-            ) : (
-              <>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label="Bank" htmlFor="kyc-bank">
-                    <Select
-                      id="kyc-bank"
-                      value={bankCode}
-                      onChange={(event) => setBankCode(event.target.value)}
-                    >
-                      <option value="">Select bank</option>
-                      {(banks.data ?? []).map((bank) => (
-                        <option key={bank.code} value={bank.code}>
-                          {bank.name}
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
-                  <Field label="Account number" htmlFor="kyc-account">
-                    <Input
-                      id="kyc-account"
-                      inputMode="numeric"
-                      maxLength={10}
-                      value={accountNumber}
-                      onChange={(event) =>
-                        setAccountNumber(
-                          event.target.value.replace(/\D/g, "").slice(0, 10),
-                        )
-                      }
-                      placeholder="0123456789"
-                      className="font-mono"
-                    />
-                  </Field>
-                </div>
-                <Button
-                  icon={<Banknote size={14} />}
-                  loading={verifyBank.loading}
-                  disabled={!data?.verified_legal_name || !bankCode || accountNumber.length !== 10}
-                  onClick={() =>
-                    run(
-                      () => verifyBank.run(bankCode, accountNumber),
-                      "Bank verified",
-                      "Payments will settle straight into this account.",
-                    )
-                  }
-                >
-                  Verify account name
-                </Button>
-                {!data?.verified_legal_name ? (
-                  <p className="hint">Verify the NIN first — the names must match.</p>
-                ) : null}
-              </>
-            )}
-          </div>
-
-          <div className="space-y-4 p-5">
-            <div className="flex items-start gap-3">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">
-                <Users size={17} />
-              </span>
-              <div>
-                <p className="text-[13.5px] font-semibold">3. Add the treasurer</p>
-                <p className="muted mt-0.5">
-                  Every sweep needs their OTP. The rep alone can never move money.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Treasurer name" htmlFor="treasurer-name">
+      {/* the three steps */}
+      <ol className="relative">
+        <Step
+          number={1}
+          done={ninDone}
+          title="Verify your NIN"
+          body="Checked with Dojah against the NIMC record."
+        >
+          {ninDone ? (
+            <InlineNote tone="success" title="NIN verified">
+              {data?.verified_legal_name}
+              {data?.nin_last4 ? ` ·••• ${data.nin_last4}` : ""}
+              {data?.nin_verified_at ? ` · ${formatDateTime(data.nin_verified_at)}` : ""}
+            </InlineNote>
+          ) : (
+            <>
+              <Field
+                label="National Identity Number"
+                htmlFor="kyc-nin"
+                hint="11 digits. Stored as a hash, never in plain text."
+              >
                 <Input
-                  id="treasurer-name"
-                  value={treasurer.name}
-                  onChange={(event) =>
-                    setTreasurer({ ...treasurer, name: event.target.value })
-                  }
-                  placeholder="Mrs Adeyemi"
-                />
-              </Field>
-              <Field label="Phone number" htmlFor="treasurer-phone" hint="OTP is sent here by SMS.">
-                <Input
-                  id="treasurer-phone"
-                  inputMode="tel"
-                  value={treasurer.phone}
-                  onChange={(event) =>
-                    setTreasurer({ ...treasurer, phone: event.target.value })
-                  }
-                  placeholder="08012345678"
+                  id="kyc-nin"
+                  inputMode="numeric"
+                  maxLength={11}
+                  value={nin}
+                  onChange={(event) => setNin(event.target.value.replace(/\D/g, "").slice(0, 11))}
+                  placeholder="70123456789"
                   className="font-mono"
                 />
               </Field>
-            </div>
-            <Button
-              variant="secondary"
-              icon={<Save size={14} />}
-              loading={saveTreasurer.loading}
-              disabled={treasurer.name.trim().length < 2 || treasurer.phone.trim().length < 10}
-              onClick={() =>
-                run(
-                  () =>
-                    saveTreasurer.run(treasurer.name.trim(), treasurer.phone.trim()),
-                  "Treasurer saved",
-                  "Sweeps will now wait for their approval.",
-                )
-              }
-            >
-              Save treasurer
-            </Button>
+              <Button
+                icon={<Fingerprint size={14} />}
+                loading={verifyNin.loading}
+                disabled={nin.length !== 11}
+                onClick={() =>
+                  run(
+                    () => verifyNin.run(nin),
+                    "NIN verified",
+                    "Now link the settlement bank account.",
+                  )
+                }
+              >
+                Verify NIN
+              </Button>
+            </>
+          )}
+        </Step>
 
-            <div className="border-t border-line-soft pt-4">
-              <div className="flex items-start gap-3">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">
-                  <ImageIcon size={17} />
-                </span>
-                <div>
-                  <p className="text-[13.5px] font-semibold">School logo</p>
-                  <p className="muted mt-0.5">
-                    Appears on the PDF receipt and the public verification page.
-                  </p>
-                </div>
+        <Step
+          number={2}
+          done={bankDone}
+          title="Link the settlement bank"
+          body="Resolved with Paystack. The account name must match the NIN name."
+        >
+          {bankDone ? (
+            <InlineNote tone="success" title="Bank verified">
+              Paystack now settles collections straight into this account.
+            </InlineNote>
+          ) : (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Bank" htmlFor="kyc-bank">
+                  <Select
+                    id="kyc-bank"
+                    value={bankCode}
+                    onChange={(event) => setBankCode(event.target.value)}
+                  >
+                    <option value="">Select bank</option>
+                    {(banks.data ?? []).map((bank) => (
+                      <option key={bank.code} value={bank.code}>
+                        {bank.name}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Account number" htmlFor="kyc-account">
+                  <Input
+                    id="kyc-account"
+                    inputMode="numeric"
+                    maxLength={10}
+                    value={accountNumber}
+                    onChange={(event) =>
+                      setAccountNumber(event.target.value.replace(/\D/g, "").slice(0, 10))
+                    }
+                    placeholder="0123456789"
+                    className="font-mono"
+                  />
+                </Field>
               </div>
-              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                <Input
-                  value={logoUrl}
-                  onChange={(event) => setLogoUrl(event.target.value)}
-                  placeholder="https://res.cloudinary.com/…/logo.png"
-                  aria-label="School logo URL"
-                />
-                <Button
-                  variant="secondary"
-                  loading={saveLogo.loading}
-                  onClick={() =>
-                    run(
-                      () => saveLogo.run(logoUrl.trim()),
-                      "Logo saved",
-                      "New receipts will use it.",
-                    )
-                  }
-                >
-                  Save
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 border-t border-line-soft pt-4 text-[12px] text-ink-muted">
-              <Pill tone={data?.maturity === "ready" ? "green" : "amber"}>
-                {data?.maturity === "ready"
-                  ? "Ready for direct settlement"
-                  : data?.maturity === "nin_verified"
-                    ? "NIN verified · bank pending"
-                    : "Verification pending"}
-              </Pill>
-              {busy ? (
-                <span className="flex items-center gap-1">
-                  <Loader2 size={12} className="animate-spin" /> checking…
-                </span>
+              <Button
+                icon={<Banknote size={14} />}
+                loading={verifyBank.loading}
+                disabled={!ninDone || !bankCode || accountNumber.length !== 10}
+                onClick={() =>
+                  run(
+                    () => verifyBank.run(bankCode, accountNumber),
+                    "Bank verified",
+                    "Payments will settle straight into this account.",
+                  )
+                }
+              >
+                Verify account name
+              </Button>
+              {!ninDone ? (
+                <p className="hint">Verify the NIN first — the names must match.</p>
               ) : null}
-            </div>
+            </>
+          )}
+        </Step>
+
+        <Step
+          number={3}
+          done={treasurerDone}
+          title="Add the treasurer"
+          body="Every sweep needs their OTP. The rep alone can never move money."
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Treasurer name" htmlFor="treasurer-name">
+              <Input
+                id="treasurer-name"
+                value={treasurer.name}
+                onChange={(event) => setTreasurer({ ...treasurer, name: event.target.value })}
+                placeholder="Mrs Adeyemi"
+              />
+            </Field>
+            <Field label="Phone number" htmlFor="treasurer-phone" hint="OTP is sent here by SMS.">
+              <Input
+                id="treasurer-phone"
+                inputMode="tel"
+                value={treasurer.phone}
+                onChange={(event) => setTreasurer({ ...treasurer, phone: event.target.value })}
+                placeholder="08012345678"
+                className="font-mono"
+              />
+            </Field>
+          </div>
+          <Button
+            variant="secondary"
+            icon={<Users size={14} />}
+            loading={saveTreasurer.loading}
+            disabled={treasurer.name.trim().length < 2 || treasurer.phone.trim().length < 10}
+            onClick={() =>
+              run(
+                () => saveTreasurer.run(treasurer.name.trim(), treasurer.phone.trim()),
+                "Treasurer saved",
+                "Sweeps will now wait for their approval.",
+              )
+            }
+          >
+            Save treasurer
+          </Button>
+        </Step>
+      </ol>
+
+      {/* logo: a quiet add-on, not a step */}
+      <div className="border-t border-line pt-7">
+        <div className="mb-3 flex items-start gap-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] bg-cream text-ink-soft">
+            <ImageIcon size={16} />
+          </span>
+          <div>
+            <p className="text-[14px] font-bold tracking-tight">School logo</p>
+            <p className="muted mt-0.5">Appears on the PDF receipt and the public verification page.</p>
           </div>
         </div>
-      )}
-    </Card>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Input
+            value={logoUrl}
+            onChange={(event) => setLogoUrl(event.target.value)}
+            placeholder="https://res.cloudinary.com/…/logo.png"
+            aria-label="School logo URL"
+          />
+          <Button
+            variant="secondary"
+            icon={<Save size={14} />}
+            loading={saveLogo.loading}
+            onClick={() =>
+              run(() => saveLogo.run(logoUrl.trim()), "Logo saved", "New receipts will use it.")
+            }
+          >
+            Save logo
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
