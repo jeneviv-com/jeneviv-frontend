@@ -29,11 +29,44 @@ import {
   Modal,
   PageHeader,
   Select,
-  StatCard,
   StatusPill,
   TableSkeleton,
   Textarea,
+  TONE_MEANING,
+  type ToneKind,
 } from "@/components/ui";
+
+/** One stacked summary tile, coloured by meaning. Matches the dashboard. */
+function SummaryTile({
+  index,
+  tone,
+  label,
+  value,
+  hint,
+}: {
+  index: number;
+  tone: ToneKind;
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <div
+      className="dash-rise relative -mt-6 first:mt-0"
+      style={{ zIndex: index + 1, animationDelay: `${index * 80}ms` }}
+    >
+      <div
+        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 ${TONE_MEANING[tone]}`}
+      >
+        <div className="min-w-0">
+          <p className="text-[16px] font-semibold tracking-tight">{label}</p>
+          <p className="mt-0.5 truncate text-[12.5px] opacity-70">{hint}</p>
+        </div>
+        <p className="shrink-0 text-right text-[20px] font-bold tabular">{value}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function Refunds() {
   const { isAdmin } = useAuth();
@@ -62,11 +95,7 @@ export default function Refunds() {
   const submitBankDetails = async () => {
     if (!bankTarget) return;
     try {
-      await retryRefund.run(
-        bankTarget.id,
-        bankForm.account_number,
-        bankForm.bank_code,
-      );
+      await retryRefund.run(bankTarget.id, bankForm.account_number, bankForm.bank_code);
       await refunds.refetch();
       success(
         "Refund sent back to Paystack",
@@ -87,11 +116,9 @@ export default function Refunds() {
       count: issued.length,
       value: issued.reduce((sum, item) => sum + item.amount, 0),
       processing: issued.filter((item) => item.status === "pending").length,
-      needsAttention: issued.filter((item) => item.status === "needs_attention")
-        .length,
-      refundable: (transactions.data ?? []).length,
+      needsAttention: issued.filter((item) => item.status === "needs_attention").length,
     };
-  }, [refunds.data, transactions.data]);
+  }, [refunds.data]);
 
   return (
     <>
@@ -102,23 +129,20 @@ export default function Refunds() {
       />
 
       {!isAdmin ? (
-        <InlineNote tone="warning" title="Admin access required">
-          Refunds are an administrative action on the Jeneviv API. Ask a
-          workspace admin to issue one — everyone else can still see the refund
-          history below.
-        </InlineNote>
+        <div className="mb-5">
+          <InlineNote tone="warning" title="Admin access required">
+            Refunds are an administrative action on the Jeneviv API. Ask a
+            workspace admin to issue one — everyone else can still see the refund
+            history below.
+          </InlineNote>
+        </div>
       ) : null}
 
-      <div className="mt-5 stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="Refunds issued"
-          value={String(totals.count)}
-          hint="All time"
-          icon={<Undo2 size={16} />}
-          tone="brand"
-        />
-        <StatCard label="Value refunded" value={formatMoney(totals.value)} hint="Original payment amounts" />
-        <StatCard
+      {/* summary: one tile per meaning */}
+      <div className="mb-6">
+        <SummaryTile
+          index={0}
+          tone={totals.needsAttention ? "attention" : "neutral"}
           label="Needs attention"
           value={String(totals.needsAttention)}
           hint={
@@ -126,25 +150,34 @@ export default function Refunds() {
               ? "Add the payer's bank details to finish"
               : `${totals.processing} still processing`
           }
-          tone={totals.needsAttention ? "brand" : "neutral"}
         />
-        <StatCard
-          label="Refundable payments"
-          value={String(totals.refundable)}
-          hint="Successful payments in your ledger"
+        <SummaryTile
+          index={1}
+          tone="people"
+          label="Refunds issued"
+          value={String(totals.count)}
+          hint="All time"
+        />
+        <SummaryTile
+          index={2}
+          tone="neutral"
+          label="Value refunded"
+          value={formatMoney(totals.value)}
+          hint="Original payment amounts"
         />
       </div>
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-[1.4fr_1fr]">
+      <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
         <Card padded={false}>
           <div className="px-5 pb-3 pt-5">
             <h2 className="section-title">Refund history</h2>
-            <p className="muted mt-0.5">
-              Refunds are returned through the original payment method
-            </p>
+            <p className="muted mt-0.5">Refunds are returned through the original payment method</p>
           </div>
+
           {refunds.loading ? (
-            <TableSkeleton rows={3} cols={4} />
+            <div className="px-5 pb-6">
+              <TableSkeleton rows={3} cols={3} />
+            </div>
           ) : refunds.error ? (
             <ErrorState message={refunds.error} onRetry={refunds.refetch} />
           ) : (refunds.data ?? []).length === 0 ? (
@@ -154,68 +187,114 @@ export default function Refunds() {
               description="When you return a payment to a payer, the reversal appears here with its gateway reference."
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Transaction</th>
-                    <th>Amount</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                    <th>Requested</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody>
-                  {(refunds.data ?? []).map((item) => (
-                    <tr key={item.id}>
-                      <td className="font-mono text-3xs">{item.transaction_id}</td>
-                      <td className="tabular font-semibold">
+            <>
+              {/* phones: one card per refund */}
+              <ul className="space-y-3 px-4 pb-5 md:hidden">
+                {(refunds.data ?? []).map((item) => (
+                  <li
+                    key={item.id}
+                    className={`rounded-[18px] border border-ink p-4 ${
+                      item.status === "needs_attention" ? TONE_MEANING.attention : "bg-white"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-mono text-[11px] opacity-75 truncate">
+                          {item.transaction_id}
+                        </p>
+                        <p className="mt-1 text-[13px] font-medium opacity-90">
+                          {item.reason || "No reason given"}
+                        </p>
+                      </div>
+                      <p className="tabular shrink-0 text-[15px] font-bold">
                         {formatMoney(item.amount)}
-                      </td>
-                      <td className="max-w-[240px] text-ink-soft">{item.reason || "—"}</td>
-                      <td>
+                      </p>
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 text-[11.5px]">
                         <StatusPill status={item.status} />
-                      </td>
-                      <td className="text-ink-muted">{timeAgo(item.created_at)}</td>
-                      <td className="text-right">
-                        {item.status === "needs_attention" ? (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => {
-                              setBankTarget(item);
-                              setBankForm({ account_number: "", bank_code: "" });
-                            }}
-                          >
-                            Add bank details
-                          </Button>
-                        ) : item.failure_reason ? (
-                          <span
-                            className="text-[11px] text-ink-muted"
-                            title={item.failure_reason}
-                          >
-                            {item.failure_reason.slice(0, 32)}
-                          </span>
-                        ) : null}
-                      </td>
+                        <span className="opacity-75">{timeAgo(item.created_at)}</span>
+                      </div>
+                      {item.status === "needs_attention" ? (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            setBankTarget(item);
+                            setBankForm({ account_number: "", bank_code: "" });
+                          }}
+                        >
+                          Add bank details
+                        </Button>
+                      ) : item.failure_reason ? (
+                        <span className="text-[11px] opacity-75" title={item.failure_reason}>
+                          {item.failure_reason.slice(0, 32)}
+                        </span>
+                      ) : null}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              {/* tablets and up: the full table */}
+              <div className="hidden overflow-x-auto md:block">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Transaction</th>
+                      <th>Amount</th>
+                      <th>Reason</th>
+                      <th>Status</th>
+                      <th>Requested</th>
+                      <th />
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {(refunds.data ?? []).map((item) => (
+                      <tr key={item.id}>
+                        <td className="font-mono text-3xs">{item.transaction_id}</td>
+                        <td className="tabular font-semibold">{formatMoney(item.amount)}</td>
+                        <td className="max-w-[240px] text-ink-soft">{item.reason || "—"}</td>
+                        <td>
+                          <StatusPill status={item.status} />
+                        </td>
+                        <td className="text-ink-muted">{timeAgo(item.created_at)}</td>
+                        <td className="text-right">
+                          {item.status === "needs_attention" ? (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => {
+                                setBankTarget(item);
+                                setBankForm({ account_number: "", bank_code: "" });
+                              }}
+                            >
+                              Add bank details
+                            </Button>
+                          ) : item.failure_reason ? (
+                            <span className="text-[11px] text-ink-muted" title={item.failure_reason}>
+                              {item.failure_reason.slice(0, 32)}
+                            </span>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </Card>
 
         <Card padded={false}>
           <div className="px-5 pb-3 pt-5">
             <h2 className="section-title">Refund a payment</h2>
-            <p className="muted mt-0.5">
-              Pick a successful payment to return to the payer
-            </p>
+            <p className="muted mt-0.5">Pick a successful payment to return to the payer</p>
           </div>
           {transactions.loading ? (
-            <TableSkeleton rows={4} cols={2} />
+            <div className="px-5 pb-6">
+              <TableSkeleton rows={4} cols={2} />
+            </div>
           ) : (transactions.data ?? []).length === 0 ? (
             <EmptyState
               icon={<Undo2 size={20} />}
@@ -228,21 +307,19 @@ export default function Refunds() {
               }
             />
           ) : (
-            <ul className="max-h-[460px] divide-y divide-line-soft overflow-y-auto">
+            <ul className="max-h-[460px] space-y-2.5 overflow-y-auto px-4 pb-4">
               {(transactions.data ?? []).slice(0, 25).map((transaction) => (
                 <li
                   key={transaction.id}
-                  className="flex items-center justify-between gap-3 px-5 py-3"
+                  className="flex items-center justify-between gap-3 rounded-[16px] border border-line bg-white px-4 py-3"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-[13px] font-semibold">
                       {transactionPayer(transaction)}
                     </p>
-                    <p className="font-mono text-3xs text-ink-muted">
-                      {transaction.reference}
-                    </p>
+                    <p className="font-mono text-3xs text-ink-muted">{transaction.reference}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="flex shrink-0 items-center gap-3">
                     <p className="tabular text-[13px] font-semibold">
                       {formatMoney(transaction.amount, transaction.currency)}
                     </p>
@@ -283,7 +360,7 @@ export default function Refunds() {
               "If Paystack cannot route the refund, the payment is marked “Needs attention”. Add the payer's account number and the refund is retried.",
             ],
           ].map(([title, body]) => (
-            <li key={title} className="rounded-xl border border-line bg-cream px-4 py-3">
+            <li key={title} className="rounded-[16px] border border-ink/15 bg-cream px-4 py-3.5">
               <p className="text-[13px] font-semibold">{title}</p>
               <p className="muted mt-1">{body}</p>
             </li>
@@ -303,9 +380,7 @@ export default function Refunds() {
             </Button>
             <Button
               loading={retryRefund.loading}
-              disabled={
-                !bankForm.bank_code || bankForm.account_number.length !== 10
-              }
+              disabled={!bankForm.bank_code || bankForm.account_number.length !== 10}
               onClick={submitBankDetails}
             >
               Send to Paystack
@@ -318,9 +393,7 @@ export default function Refunds() {
             <Select
               id="refund-bank"
               value={bankForm.bank_code}
-              onChange={(event) =>
-                setBankForm({ ...bankForm, bank_code: event.target.value })
-              }
+              onChange={(event) => setBankForm({ ...bankForm, bank_code: event.target.value })}
             >
               <option value="">Select a bank</option>
               {(banks.data ?? []).map((bank) => (
@@ -352,13 +425,12 @@ export default function Refunds() {
           </Field>
           <InlineNote tone="info">
             The refund is funded from the original payment's settlement, so
-            Jeneviv never fronts merchant money. The ₦75 platform fee stays
-            with Jeneviv.
+            Jeneviv never fronts merchant money. The ₦75 platform fee stays with
+            Jeneviv.
           </InlineNote>
           {bankTarget ? (
             <p className="hint">
-              Refund {bankTarget.id.slice(0, 10)} ·{" "}
-              {formatMoney(bankTarget.amount)}
+              Refund {bankTarget.id.slice(0, 10)} · {formatMoney(bankTarget.amount)}
             </p>
           ) : null}
         </div>
@@ -377,10 +449,7 @@ export default function Refunds() {
             await refund.run(target.id, reason || "Requested from dashboard");
             await refunds.refetch();
             await transactions.refetch();
-            success(
-              "Refund started",
-              `${target.reference} is being returned to the payer.`,
-            );
+            success("Refund started", `${target.reference} is being returned to the payer.`);
             setTarget(null);
           } catch (err) {
             toastError("Refund failed", err instanceof Error ? err.message : "");
