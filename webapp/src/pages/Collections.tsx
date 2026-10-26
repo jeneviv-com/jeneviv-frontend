@@ -220,7 +220,7 @@ export default function Collections() {
       />
 
       {/* summary: the same stacked pastel cards as the dashboard */}
-      <div className="mb-6">
+      <div className="mb-6 lg:grid lg:grid-cols-3 lg:gap-4">
         {[
           { tone: "lavender" as const, label: "Collections", value: String(totals.count), hint: "Active and paused" },
           { tone: "mint" as const, label: "Collected", value: formatMoney(totals.collected), hint: "Across all collections" },
@@ -228,17 +228,17 @@ export default function Collections() {
         ].map((item, index) => (
           <div
             key={item.label}
-            className="dash-rise relative -mt-6 first:mt-0"
+            className="dash-rise relative -mt-6 first:mt-0 lg:mt-0"
             style={{ zIndex: index + 1, animationDelay: `${index * 90}ms` }}
           >
             <div
-              className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 ${TONE_CARD[item.tone]}`}
+              className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD[item.tone]}`}
             >
               <div className="min-w-0">
-                <p className="text-[16px] font-semibold tracking-tight">{item.label}</p>
+                <p className="text-[16px] font-semibold tracking-tight lg:text-[18px]">{item.label}</p>
                 <p className="mt-0.5 truncate text-[12.5px] opacity-70">{item.hint}</p>
               </div>
-              <p className="shrink-0 text-right text-[20px] font-bold tabular">{item.value}</p>
+              <p className="shrink-0 text-right text-[20px] font-bold tabular lg:mt-2 lg:text-left lg:text-[28px]">{item.value}</p>
             </div>
           </div>
         ))}
@@ -293,8 +293,7 @@ export default function Collections() {
           />
         </Card>
       ) : (
-        <ul className="space-y-3">
-          {rows.map((collection, index) => {
+        <ul className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">{rows.map((collection, index) => {
             const active = overrides[collection.id] ?? collection.is_active;
             const paid = collection.stats?.paid ?? 0;
             const collected = collection.stats?.collected ?? 0;

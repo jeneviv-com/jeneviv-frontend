@@ -49,22 +49,22 @@ function SummaryTile({
 }) {
   return (
     <div
-      className="dash-rise relative -mt-6 first:mt-0"
+      className="dash-rise relative -mt-6 first:mt-0 lg:mt-0"
       style={{ zIndex: index + 1, animationDelay: `${index * 80}ms` }}
     >
       <div
-        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 ${TONE_MEANING[tone]}`}
+        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_MEANING[tone]}`}
       >
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3 lg:flex-row lg:items-start">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/70">
             {icon}
           </span>
           <div className="min-w-0">
-            <p className="text-[15px] font-semibold tracking-tight">{label}</p>
+            <p className="text-[15px] font-semibold tracking-tight lg:text-[16px]">{label}</p>
             <p className="mt-0.5 truncate text-[12px] opacity-70">{hint}</p>
           </div>
         </div>
-        <p className="shrink-0 text-right text-[19px] font-bold tabular">{value}</p>
+        <p className="shrink-0 text-right text-[19px] font-bold tabular lg:mt-2 lg:text-left lg:text-[24px]">{value}</p>
       </div>
     </div>
   );
@@ -154,7 +154,7 @@ export default function Payouts() {
       />
 
       {/* summary: meaning-based tiles */}
-      <div className="mb-6">
+      <div className="mb-6 lg:grid lg:grid-cols-3 lg:gap-4">
         <SummaryTile
           index={0}
           tone={defaultAccount ? "money" : "attention"}

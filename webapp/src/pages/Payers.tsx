@@ -56,17 +56,17 @@ function SummaryTile({
 }) {
   return (
     <div
-      className="dash-rise relative -mt-6 first:mt-0"
+      className="dash-rise relative -mt-6 first:mt-0 lg:mt-0"
       style={{ zIndex: index + 1, animationDelay: `${index * 80}ms` }}
     >
       <div
-        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 ${TONE_MEANING[tone]}`}
+        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_MEANING[tone]}`}
       >
         <div className="min-w-0">
-          <p className="text-[16px] font-semibold tracking-tight">{label}</p>
+          <p className="text-[16px] font-semibold tracking-tight lg:text-[18px]">{label}</p>
           <p className="mt-0.5 truncate text-[12.5px] opacity-70">{hint}</p>
         </div>
-        <p className="shrink-0 text-right text-[20px] font-bold tabular">{value}</p>
+        <p className="shrink-0 text-right text-[20px] font-bold tabular lg:mt-2 lg:text-left lg:text-[28px]">{value}</p>
       </div>
     </div>
   );
@@ -181,7 +181,7 @@ export default function Payers() {
       </div>
 
       {/* summary: one tile per meaning */}
-      <div className="mb-6">
+      <div className="mb-6 lg:grid lg:grid-cols-3 lg:gap-4">
         <SummaryTile
           index={0}
           tone="people"
