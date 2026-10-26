@@ -8,7 +8,6 @@ import {
   ExternalLink,
   Eye,
   HandCoins,
-  Link2,
   Pause,
   Play,
   Save,
@@ -39,6 +38,7 @@ import {
   statusTone,
   timeAgo,
   transactionIdentifier,
+  initials,
   transactionPayer,
 } from "@/lib/format";
 import { HeatStrip } from "@/components/charts";
@@ -46,12 +46,10 @@ import FieldEditor, { type DraftField } from "@/components/FieldEditor";
 import {
   Button,
   Card,
-  CardHeader,
   ConfirmDialog,
   EmptyState,
   ErrorState,
   Field,
-  InlineNote,
   Input,
   Pill,
   ProgressBar,
@@ -328,8 +326,8 @@ export default function CollectionDetail() {
 
       <div className="mt-5">
         {tab === "overview" ? (
-          <div className="space-y-5">
-            {/* summary: stacked pastel tiles */}
+          <div className="space-y-14">
+            {/* summary tiles */}
             <div className="pt-1">
               <SummaryTile
                 index={0}
@@ -365,85 +363,86 @@ export default function CollectionDetail() {
               />
             </div>
 
-            <div className="grid gap-5 xl:grid-cols-[1.5fr_1fr]">
-              <Card>
-                <CardHeader
-                  title="Payments in the last 14 days"
-                  subtitle="Darker squares mean more successful payments that day"
-                />
+            <div className="grid gap-14 xl:grid-cols-[1.5fr_1fr]">
+              {/* activity */}
+              <section>
+                <div className="mb-6 flex items-end justify-between gap-4">
+                  <div>
+                    <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">Last 14 days</p>
+                    <h2 className="mt-2 text-[22px] font-bold tracking-[-0.03em]">Payments by day</h2>
+                  </div>
+                  <span className="tabular font-mono text-[12px] text-ink-muted">
+                    {paid} / {target || "—"}
+                  </span>
+                </div>
                 <HeatStrip values={dailyCounts.values} labels={dailyCounts.labels} />
-                <div className="mt-6">
+                <div className="mt-9 border-t border-line pt-7">
                   <div className="flex items-center justify-between">
-                    <p className="text-[13px] font-semibold">Progress to target</p>
-                    <p className="tabular font-mono text-3xs text-ink-muted">
-                      {paid} / {target || "—"}
+                    <p className="text-[13.5px] font-semibold">Progress to target</p>
+                    <p className="tabular font-mono text-[12px] text-ink-muted">
+                      {target ? percent(paid, target) : Math.min(100, paid)}%
                     </p>
                   </div>
-                  <div className="mt-2">
+                  <div className="mt-3">
                     <ProgressBar value={target ? percent(paid, target) : Math.min(100, paid)} />
                   </div>
                 </div>
-              </Card>
+              </section>
 
-              <Card>
-                <CardHeader
-                  title="Share this collection"
-                  subtitle="One link works for every payer"
-                  icon={<Link2 size={16} />}
-                />
-                <div className="rounded-[14px] border border-dashed border-ink/25 bg-cream px-3.5 py-3 font-mono text-[12px] text-ink-soft">
-                  <span className="break-all">{link}</span>
+              {/* share: one dark block with the link and quick actions */}
+              <section className="self-start rounded-[22px] bg-ink p-6 text-cream">
+                <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-cream/60">Share</p>
+                <h2 className="mt-2 text-[21px] font-bold tracking-[-0.03em]">One link for every payer</h2>
+                <div className="mt-5 break-all rounded-[14px] border border-cream/15 bg-cream/5 px-4 py-3.5 font-mono text-[12px] text-cream/85">
+                  {link}
                 </div>
-                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    icon={<Copy size={13} />}
+                <div className="mt-4 grid gap-2">
+                  <button
+                    type="button"
                     onClick={async () => {
                       const ok = await copyText(link);
                       if (ok) success("Link copied", link);
                     }}
+                    className="inline-flex items-center justify-center gap-2 rounded-[12px] bg-white px-4 py-3 text-[13.5px] font-semibold text-ink transition-transform duration-150 active:scale-[0.98]"
                   >
-                    Copy link
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    icon={<Copy size={13} />}
+                    <Copy size={14} /> Copy link
+                  </button>
+                  <button
+                    type="button"
                     onClick={async () => {
                       const ok = await copyText(shareMessage);
-                      if (ok)
-                        success(
-                          "Message copied",
-                          "Paste it into WhatsApp — payers just tap the link.",
-                        );
+                      if (ok) success("Message copied", "Paste it into WhatsApp — payers just tap the link.");
                     }}
+                    className="inline-flex items-center justify-center gap-2 rounded-[12px] border border-cream/20 px-4 py-3 text-[13.5px] font-semibold text-cream transition-colors hover:bg-cream/10"
                   >
-                    WhatsApp message
-                  </Button>
-                  <a href={link} target="_blank" rel="noreferrer" className="btn btn-ghost btn-sm">
-                    <ExternalLink size={13} /> Open
+                    <Copy size={14} /> WhatsApp message
+                  </button>
+                  <a
+                    href={link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-[12px] px-4 py-3 text-[13.5px] font-semibold text-cream/80 transition-colors hover:text-cream"
+                  >
+                    <ExternalLink size={14} /> Open payer page
                   </a>
                 </div>
-                <div className="mt-4">
-                  <InlineNote tone="info" title="What payers see">
-                    A form built from your payer fields, your amount, and a
-                    dedicated account number to transfer to. Payments are confirmed
-                    by webhook — not by narration.
-                  </InlineNote>
-                </div>
-              </Card>
+                <p className="mt-6 border-t border-cream/10 pt-5 text-[12.5px] leading-relaxed text-cream/60">
+                  Payers see a form built from your payer fields, your amount, and a dedicated account to transfer to.
+                  Payments are confirmed by webhook, not by narration.
+                </p>
+              </section>
             </div>
           </div>
         ) : null}
 
         {tab === "fields" ? (
-          <Card>
-            <CardHeader
-              title="Payer fields"
-              subtitle="What you ask for on the payment page"
-              icon={<Users size={16} />}
-            />
+          <section className="max-w-3xl">
+            <div className="mb-8">
+              <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">Payer fields</p>
+              <h2 className="mt-2 text-[24px] font-bold tracking-[-0.03em]">What payers answer</h2>
+              <p className="muted mt-1.5">These questions appear on the payment page, in this order.</p>
+            </div>
+
             {fields.loading && !data.fields ? (
               <TableSkeleton rows={3} cols={2} />
             ) : (
@@ -463,19 +462,30 @@ export default function CollectionDetail() {
                 saveLabel="Save payer fields"
               />
             )}
+
             {drafts.length > 0 ? (
-              <p className="hint mt-3">
-                {drafts.filter((field) => field.required).length} required ·{" "}
-                {drafts.filter((field) => !field.required).length} optional
-              </p>
+              <div className="mt-7 flex flex-wrap gap-2 text-[12px] font-semibold">
+                <span className="rounded-full bg-ink px-3.5 py-1.5 text-cream">
+                  {drafts.filter((field) => field.required).length} required
+                </span>
+                <span className="rounded-full bg-cream px-3.5 py-1.5 text-ink-soft">
+                  {drafts.filter((field) => !field.required).length} optional
+                </span>
+              </div>
             ) : null}
-          </Card>
+          </section>
         ) : null}
 
         {tab === "payments" ? (
-          <Card padded={false}>
-            {/* toolbar */}
-            <div className="flex flex-col gap-3 border-b border-line-soft px-4 py-3 lg:flex-row lg:flex-wrap lg:items-center">
+          <section>
+            {/* header and filters */}
+            <div className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">Payments</p>
+                <h2 className="mt-2 text-[24px] font-bold tracking-[-0.03em]">
+                  {formatNumber(rows.length)} in this view
+                </h2>
+              </div>
               <SegmentedControl
                 value={paymentFilter}
                 onChange={setPaymentFilter}
@@ -486,56 +496,53 @@ export default function CollectionDetail() {
                   { value: "failed", label: "Failed" },
                 ]}
               />
-              <span className="font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted lg:ml-auto">
-                {rows.length} rows
-              </span>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:flex lg:flex-wrap">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  icon={<Download size={13} />}
-                  loading={exportRows.loading}
-                  onClick={async () => {
-                    try {
-                      await exportRows.run("paid");
-                    } catch (err) {
-                      toastError("Export failed", err instanceof Error ? err.message : "");
-                    }
-                  }}
-                >
-                  Paid Excel
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  icon={<Download size={13} />}
-                  loading={exportRows.loading}
-                  onClick={async () => {
-                    try {
-                      await exportRows.run("unpaid");
-                    } catch (err) {
-                      toastError("Export failed", err instanceof Error ? err.message : "");
-                    }
-                  }}
-                >
-                  Unpaid Excel
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={selected.length === 0}
-                  loading={reconcile.loading}
-                  onClick={markReconciled}
-                >
-                  Mark reconciled {selected.length ? `(${selected.length})` : ""}
-                </Button>
-              </div>
+            </div>
+
+            {/* actions */}
+            <div className="mb-8 flex flex-wrap gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<Download size={13} />}
+                loading={exportRows.loading}
+                onClick={async () => {
+                  try {
+                    await exportRows.run("paid");
+                  } catch (err) {
+                    toastError("Export failed", err instanceof Error ? err.message : "");
+                  }
+                }}
+              >
+                Paid Excel
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<Download size={13} />}
+                loading={exportRows.loading}
+                onClick={async () => {
+                  try {
+                    await exportRows.run("unpaid");
+                  } catch (err) {
+                    toastError("Export failed", err instanceof Error ? err.message : "");
+                  }
+                }}
+              >
+                Unpaid Excel
+              </Button>
+              <Button
+                size="sm"
+                icon={<BadgeCheck size={13} />}
+                disabled={selected.length === 0}
+                loading={reconcile.loading}
+                onClick={markReconciled}
+              >
+                Mark reconciled {selected.length ? `(${selected.length})` : ""}
+              </Button>
             </div>
 
             {transactions.loading ? (
-              <div className="p-4">
-                <TableSkeleton rows={6} cols={3} />
-              </div>
+              <TableSkeleton rows={6} cols={3} />
             ) : transactions.error ? (
               <ErrorState message={transactions.error} onRetry={transactions.refetch} />
             ) : rows.length === 0 ? (
@@ -546,43 +553,39 @@ export default function CollectionDetail() {
               />
             ) : (
               <>
-                {/* phones: one card per payment */}
-                <ul className="divide-y divide-line-soft md:hidden">
-                  {rows.slice(0, 60).map((transaction) => (
-                    <li key={transaction.id} className="flex items-start gap-3 px-4 py-3.5">
-                      <input
-                        type="checkbox"
-                        aria-label={`Select ${transaction.reference}`}
-                        checked={selected.includes(transaction.id)}
-                        onChange={(event) => toggleRow(transaction.id, event.target.checked)}
-                        className="mt-1 h-4 w-4 shrink-0 rounded border-line"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate text-[13.5px] font-semibold">
-                              {transactionPayer(transaction)}
-                            </p>
-                            <p className="mt-0.5 truncate font-mono text-[11px] text-ink-muted">
-                              {transactionIdentifier(transaction)}
+                {/* phones: a calm list with initials, no boxes */}
+                <ul className="divide-y divide-line md:hidden">
+                  {rows.slice(0, 60).map((transaction) => {
+                    const checked = selected.includes(transaction.id);
+                    return (
+                      <li key={transaction.id} className="flex items-center gap-3.5 py-4">
+                        <input
+                          type="checkbox"
+                          aria-label={`Select ${transaction.reference}`}
+                          checked={checked}
+                          onChange={(event) => toggleRow(transaction.id, event.target.checked)}
+                          className="h-4 w-4 shrink-0 rounded border-line"
+                        />
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-[12px] font-bold text-cream">
+                          {initials(transactionPayer(transaction))}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="truncate text-[14px] font-semibold">{transactionPayer(transaction)}</p>
+                            <p className="tabular shrink-0 text-[14px] font-bold">
+                              {formatMoney(transaction.amount, transaction.currency)}
                             </p>
                           </div>
-                          <p className="tabular shrink-0 text-[13.5px] font-bold">
-                            {formatMoney(transaction.amount, transaction.currency)}
-                          </p>
+                          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11.5px] text-ink-muted">
+                            <StatusPill status={transaction.status} />
+                            <span>
+                              {transaction.reconciled ? "Reconciled" : "Not reconciled"} · {timeAgo(transaction.created_at)}
+                            </span>
+                          </div>
                         </div>
-                        <div className="mt-2 flex flex-wrap items-center gap-2 text-[11.5px] text-ink-muted">
-                          <StatusPill status={transaction.status} />
-                          {transaction.reconciled ? (
-                            <Pill tone="green">Reconciled</Pill>
-                          ) : (
-                            <Pill tone="neutral">Not reconciled</Pill>
-                          )}
-                          <span>· {timeAgo(transaction.created_at)}</span>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
 
                 {/* tablets and up: the full table */}
@@ -647,17 +650,24 @@ export default function CollectionDetail() {
                 </div>
               </>
             )}
-          </Card>
+          </section>
         ) : null}
 
         {tab === "settings" ? (
-          <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
-            <Card>
-              <CardHeader title="Collection details" subtitle="Changes are live immediately" />
-              <div className="space-y-4">
+          <div className="grid gap-12 xl:grid-cols-[1.4fr_1fr]">
+            {/* edit */}
+            <section>
+              <div className="mb-7">
+                <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">Edit collection</p>
+                <h2 className="mt-2 text-[24px] font-bold tracking-[-0.03em]">Collection details</h2>
+                <p className="muted mt-1.5">Changes go live on the payment page straight away.</p>
+              </div>
+
+              <div className="space-y-5">
                 <Field label="Name" htmlFor="edit-name">
                   <Input
                     id="edit-name"
+                    className="h-[50px] rounded-[12px]"
                     value={settings.name}
                     onChange={(event) => setSettings({ ...settings, name: event.target.value })}
                   />
@@ -665,16 +675,16 @@ export default function CollectionDetail() {
                 <Field label="Description" htmlFor="edit-description">
                   <Textarea
                     id="edit-description"
+                    className="rounded-[12px]"
                     value={settings.description}
-                    onChange={(event) =>
-                      setSettings({ ...settings, description: event.target.value })
-                    }
+                    onChange={(event) => setSettings({ ...settings, description: event.target.value })}
                   />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-3">
                   <Field label="Amount per payer" htmlFor="edit-amount">
                     <Input
                       id="edit-amount"
+                      className="h-[50px] rounded-[12px]"
                       value={settings.amount}
                       onChange={(event) => setSettings({ ...settings, amount: event.target.value })}
                     />
@@ -682,10 +692,9 @@ export default function CollectionDetail() {
                   <Field label="Currency" htmlFor="edit-currency">
                     <Select
                       id="edit-currency"
+                      className="h-[50px] rounded-[12px]"
                       value={settings.currency}
-                      onChange={(event) =>
-                        setSettings({ ...settings, currency: event.target.value })
-                      }
+                      onChange={(event) => setSettings({ ...settings, currency: event.target.value })}
                     >
                       <option value="NGN">NGN</option>
                       <option value="USD">USD</option>
@@ -694,14 +703,14 @@ export default function CollectionDetail() {
                   <Field label="Expected payers" htmlFor="edit-target">
                     <Input
                       id="edit-target"
+                      className="h-[50px] rounded-[12px]"
                       value={settings.target_payers}
-                      onChange={(event) =>
-                        setSettings({ ...settings, target_payers: event.target.value })
-                      }
+                      onChange={(event) => setSettings({ ...settings, target_payers: event.target.value })}
                     />
                   </Field>
                 </div>
-                <div className="rounded-[14px] border border-line bg-cream px-4 py-3">
+
+                <div className="flex items-center justify-between gap-4 rounded-[16px] bg-cream px-5 py-4">
                   <Toggle
                     checked={data.is_active}
                     onChange={toggleActive}
@@ -709,35 +718,38 @@ export default function CollectionDetail() {
                     description="Pausing keeps the data but stops new payers from paying."
                   />
                 </div>
-                <Button
-                  icon={<Save size={14} />}
-                  loading={updateCollection.loading}
-                  onClick={saveSettings}
-                >
-                  Save changes
-                </Button>
-              </div>
-            </Card>
 
-            <div className="relative rounded-[20px] border border-ink bg-[#ffd6cf] p-5">
-              <CardHeader
-                title="Delete this collection"
-                subtitle="Payments already recorded are removed with it"
-              />
-              <p className="muted">
-                If you only want to stop new payments, pause it instead. Deleting
-                cannot be undone from the dashboard — export your payer list
-                first.
+                <div className="pt-2">
+                  <Button
+                    size="lg"
+                    className="h-[50px] rounded-[12px] px-7"
+                    icon={<Save size={14} />}
+                    loading={updateCollection.loading}
+                    onClick={saveSettings}
+                  >
+                    Save changes
+                  </Button>
+                </div>
+              </div>
+            </section>
+
+            {/* danger zone */}
+            <aside className="self-start rounded-[20px] bg-[#ffd6cf] p-6">
+              <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">Danger zone</p>
+              <h3 className="mt-2 text-[18px] font-bold tracking-tight">Delete this collection</h3>
+              <p className="mt-2 text-[13.5px] leading-relaxed text-ink-soft">
+                Payments already recorded are removed with it. If you only want to stop new payments, pause it instead.
+                Deleting cannot be undone from the dashboard, so export your payer list first.
               </p>
               <Button
                 variant="danger"
-                className="mt-4"
+                className="mt-5 rounded-[12px]"
                 icon={<Trash2 size={14} />}
                 onClick={() => setConfirmDelete(true)}
               >
                 Delete collection
               </Button>
-            </div>
+            </aside>
           </div>
         ) : null}
       </div>
