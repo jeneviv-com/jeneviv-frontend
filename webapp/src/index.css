@@ -48,11 +48,11 @@
 
 @layer components {
   .card {
-    @apply min-w-0 rounded-card border border-line bg-white shadow-card transition-[box-shadow,border-color,transform] duration-200;
+    @apply min-w-0 rounded-card border border-ink/20 bg-white shadow-card transition-[box-shadow,border-color,transform] duration-200;
   }
 
   .card-interactive {
-    @apply hover:-translate-y-0.5 hover:border-ink/15 hover:shadow-pop;
+    @apply hover:-translate-y-0.5 hover:border-ink/35 hover:shadow-pop;
   }
 
   .card-pad {

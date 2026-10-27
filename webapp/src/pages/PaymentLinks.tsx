@@ -72,7 +72,7 @@ export default function PaymentLinks() {
             style={{ zIndex: index + 1, animationDelay: `${index * 90}ms` }}
           >
             <div
-              className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 ${TONE_CARD[item.tone]}`}
+              className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink/20 px-5 py-4 ${TONE_CARD[item.tone]}`}
             >
               <div className="min-w-0">
                 <p className="text-[16px] font-semibold tracking-tight">{item.label}</p>

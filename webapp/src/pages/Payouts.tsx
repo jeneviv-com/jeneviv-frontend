@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Banknote,
   Building2,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { merchantsAPI, type BankAccount } from "@/lib/api";
 import { useAction, useBankAccounts, useBanks, useKyc } from "@/hooks/useApi";
+import BankSelect from "@/components/BankSelect";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { formatDate, pick } from "@/lib/format";
@@ -25,7 +26,6 @@ import {
   Modal,
   PageHeader,
   Pill,
-  Select,
   TONE_MEANING,
   type ToneKind,
   Toggle,
@@ -53,7 +53,7 @@ function SummaryTile({
       style={{ zIndex: index + 1, animationDelay: `${index * 80}ms` }}
     >
       <div
-        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_MEANING[tone]}`}
+        className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/20 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_MEANING[tone]}`}
       >
         <div className="flex min-w-0 flex-1 items-center gap-3 lg:w-full lg:flex-row lg:items-start">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/70">
@@ -104,11 +104,22 @@ export default function Payouts() {
     merchantsAPI.bankAccounts.delete(id),
   );
 
+  /* Linked accounts come back with a bank code only, so the name is resolved
+     from the bank list the picker searches. */
+  const bankNames = useMemo(
+    () => new Map((banks.data ?? []).map((bank) => [bank.code, bank.name])),
+    [banks.data],
+  );
+
   const accountDetails = (account: BankAccount | undefined) => {
     const source = account as unknown as Record<string, unknown> | undefined;
+    const bankCode = pick<string>(source, "bank_code", "bankCode") ?? "";
     return {
-      bankCode: pick<string>(source, "bank_code", "bankCode") ?? "",
-      bankName: pick<string>(source, "bank_name", "bankName") ?? "",
+      bankCode,
+      bankName:
+        pick<string>(source, "bank_name", "bankName") ??
+        bankNames.get(bankCode) ??
+        "",
       accountNumber: pick<string>(source, "account_number", "accountNumber") ?? "",
       accountName: pick<string>(source, "account_name", "accountName") ?? "",
       isDefault: Boolean(pick<boolean>(source, "is_default", "isDefault")),
@@ -221,7 +232,7 @@ export default function Payouts() {
                 return (
                   <li
                     key={account.id}
-                    className={`rounded-[18px] border border-ink p-4 ${
+                    className={`rounded-[18px] border border-ink/20 p-4 ${
                       details.isDefault ? TONE_MEANING.money : "bg-white"
                     }`}
                   >
@@ -367,21 +378,20 @@ export default function Payouts() {
         }
       >
         <div className="space-y-4">
-          <Field label="Bank" htmlFor="bank">
-            <Select
+          <Field
+            label="Bank"
+            htmlFor="bank"
+            hint="Search by name — the list is long, so type a few letters."
+          >
+            <BankSelect
               id="bank"
+              banks={banks.data ?? []}
+              loading={banks.loading}
               value={accountForm.bank_code}
-              onChange={(event) =>
-                setAccountForm({ ...accountForm, bank_code: event.target.value })
+              onChange={(code) =>
+                setAccountForm({ ...accountForm, bank_code: code })
               }
-            >
-              <option value="">Select your bank</option>
-              {(banks.data ?? []).map((bank) => (
-                <option key={bank.code} value={bank.code}>
-                  {bank.name}
-                </option>
-              ))}
-            </Select>
+            />
           </Field>
           <Field label="Account number" htmlFor="account-number" hint="10 digits (NUBAN).">
             <Input

@@ -622,6 +622,92 @@ export const authAPI = {
     }),
 };
 
+/* -------------------------------------------------------- response shapes */
+
+/**
+ * The dashboard models are snake_case, drizzle rows arrive camelCase, and the
+ * two backends nest payer fields differently — `{ collection, fields }` beside
+ * each other, or `fields` inside the collection. Reading through these helpers
+ * keeps every page independent of which server answered.
+ */
+function pickKey<T>(
+  source: Record<string, unknown> | null | undefined,
+  ...keys: string[]
+): T | undefined {
+  if (!source) return undefined;
+  for (const key of keys) {
+    const value = source[key];
+    if (value !== undefined && value !== null) return value as T;
+  }
+  return undefined;
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function normalizeField(raw: unknown): CollectionField {
+  const row = asRecord(raw);
+  return {
+    ...(row as unknown as CollectionField),
+    position: pickKey<number>(row, "position") ?? 0,
+    display_name: pickKey<string>(row, "display_name", "displayName") ?? "",
+    field_id: pickKey<string>(row, "field_id", "fieldId") ?? "",
+    type: pickKey<FieldType>(row, "type") ?? "short_text",
+    required: pickKey<boolean>(row, "required") ?? true,
+    options: pickKey<string[]>(row, "options"),
+  };
+}
+
+function readFields(value: unknown): CollectionField[] {
+  return Array.isArray(value) ? value.map(normalizeField) : [];
+}
+
+/** Fields are returned beside the collection, or nested inside it. */
+function fieldsFrom(payload: unknown, collection: unknown): CollectionField[] {
+  const beside = readFields(pickKey<unknown[]>(asRecord(payload), "fields"));
+  if (beside.length > 0) return beside;
+  return readFields(pickKey<unknown[]>(asRecord(collection), "fields"));
+}
+
+function normalizeCollection(
+  raw: unknown,
+  fields?: CollectionField[],
+): Collection {
+  const row = asRecord(raw);
+  const normalized = {
+    ...(row as unknown as Collection),
+    short_code: pickKey<string>(row, "short_code", "shortCode") ?? "",
+    is_active: pickKey<boolean>(row, "is_active", "isActive") ?? true,
+    merchant_id: pickKey<string>(row, "merchant_id", "merchantId"),
+    cover_image_url: pickKey<string>(row, "cover_image_url", "coverImageUrl"),
+    created_at: pickKey<string>(row, "created_at", "createdAt") ?? "",
+    fields: fields ?? readFields(pickKey<unknown[]>(row, "fields")),
+  };
+  const updatedAt = pickKey<string>(row, "updated_at", "updatedAt");
+  if (updatedAt) normalized.updated_at = updatedAt;
+  return normalized;
+}
+
+function normalizeTemplate(
+  raw: unknown,
+  fields?: CollectionField[],
+): Template {
+  const row = asRecord(raw);
+  const normalized = {
+    ...(row as unknown as Template),
+    merchant_id: pickKey<string>(row, "merchant_id", "merchantId"),
+    is_public: pickKey<boolean>(row, "is_public", "isPublic") ?? false,
+    created_at: pickKey<string>(row, "created_at", "createdAt") ?? "",
+    fields: fields ?? readFields(pickKey<unknown[]>(row, "fields")),
+  };
+  const updatedAt = pickKey<string>(row, "updated_at", "updatedAt");
+  if (updatedAt) normalized.updated_at = updatedAt;
+  return normalized;
+}
+
 /* --------------------------------------------------------------- collections */
 
 export interface CreateCollectionInput {
@@ -634,28 +720,62 @@ export interface CreateCollectionInput {
 }
 
 export const collectionsAPI = {
-  list: (query?: { status?: string; search?: string }) =>
-    apiFetch<{ collections: Collection[] }>("/api/collections", { query }),
+  list: async (query?: { status?: string; search?: string }) => {
+    const response = await apiFetch<{ collections?: unknown[] }>(
+      "/api/collections",
+      { query },
+    );
+    return {
+      collections: (response.collections ?? []).map((item) =>
+        normalizeCollection(item),
+      ),
+    };
+  },
 
-  create: (data: CreateCollectionInput) =>
-    apiFetch<{ collection: Collection }>("/api/collections", {
-      method: "POST",
-      body: data,
-    }),
+  create: async (data: CreateCollectionInput) => {
+    const response = await apiFetch<{ collection?: unknown; fields?: unknown[] }>(
+      "/api/collections",
+      { method: "POST", body: data },
+    );
+    return {
+      collection: normalizeCollection(
+        response.collection,
+        fieldsFrom(response, response.collection),
+      ),
+    };
+  },
 
-  get: (id: string) =>
-    apiFetch<{ collection: Collection }>(`/api/collections/${id}`),
+  get: async (id: string) => {
+    const response = await apiFetch<{ collection?: unknown; fields?: unknown[] }>(
+      `/api/collections/${id}`,
+    );
+    return {
+      collection: normalizeCollection(
+        response.collection,
+        fieldsFrom(response, response.collection),
+      ),
+    };
+  },
 
-  getByCode: (shortCode: string) =>
-    apiFetch<{ collection: Collection }>(
+  getByCode: async (shortCode: string) => {
+    const response = await apiFetch<{ collection?: unknown; fields?: unknown[] }>(
       `/api/collections/by-code/${encodeURIComponent(shortCode)}`,
-    ),
+    );
+    return {
+      collection: normalizeCollection(
+        response.collection,
+        fieldsFrom(response, response.collection),
+      ),
+    };
+  },
 
-  update: (id: string, data: Partial<Collection>) =>
-    apiFetch<{ collection: Collection }>(`/api/collections/${id}`, {
-      method: "PATCH",
-      body: data,
-    }),
+  update: async (id: string, data: Partial<Collection>) => {
+    const response = await apiFetch<{ collection?: unknown }>(
+      `/api/collections/${id}`,
+      { method: "PATCH", body: data },
+    );
+    return { collection: normalizeCollection(response.collection) };
+  },
 
   delete: (id: string) =>
     apiFetch<{ success: boolean }>(`/api/collections/${id}`, {
@@ -663,22 +783,24 @@ export const collectionsAPI = {
     }),
 
   /**
-   * No GET /:id/fields route on the backend. Read the fields from the
-   * collection itself. Assumes GET /api/collections/:id returns `fields`.
+   * The backend has no GET /:id/fields route, so the fields come back with the
+   * collection — beside it on the real API, nested inside it in demo mode.
    */
   fields: async (id: string) => {
-    const { collection } = await apiFetch<{ collection: Collection }>(
+    const response = await apiFetch<{ collection?: unknown; fields?: unknown[] }>(
       `/api/collections/${id}`,
     );
-    return { fields: collection.fields ?? [] };
+    return { fields: fieldsFrom(response, response.collection) };
   },
 
   /** Replace the whole field list. POST is the method the backend accepts. */
-  setFields: (id: string, fields: CollectionField[]) =>
-    apiFetch<{ collection: Collection }>(`/api/collections/${id}/fields`, {
-      method: "POST",
-      body: { fields: cleanFields(fields) },
-    }),
+  setFields: async (id: string, fields: CollectionField[]) => {
+    const response = await apiFetch<{ fields?: unknown[] }>(
+      `/api/collections/${id}/fields`,
+      { method: "POST", body: { fields: cleanFields(fields) } },
+    );
+    return { fields: readFields(response.fields) };
+  },
 
   addField: (id: string, field: Omit<CollectionField, "id">) =>
     apiFetch<{ field: CollectionField }>(`/api/collections/${id}/fields`, {
@@ -931,35 +1053,78 @@ export const paymentsAPI = {
 /* ----------------------------------------------------------------- templates */
 
 export const templatesAPI = {
-  list: (scope: "all" | "mine" = "all") =>
-    apiFetch<{ templates: Template[] }>("/api/templates", { query: { scope } }),
+  list: async (scope: "all" | "mine" = "all") => {
+    const response = await apiFetch<{ templates?: unknown[] }>("/api/templates", {
+      query: { scope },
+    });
+    const templates = (response.templates ?? []).map((item) =>
+      normalizeTemplate(item),
+    );
 
-  get: (id: string) => apiFetch<{ template: Template }>(`/api/templates/${id}`),
+    // Some backends return the list without payer fields. Fill the gaps so the
+    // list shows what each template asks for and the editor never opens empty,
+    // which would silently overwrite the saved fields.
+    await Promise.all(
+      templates.map(async (template) => {
+        if (template.fields && template.fields.length > 0) return;
+        try {
+          const result = await templatesAPI.getFields(template.id);
+          template.fields = result.fields;
+        } catch {
+          /* keep the template listed even if its fields cannot be read */
+        }
+      }),
+    );
 
-  create: (name: string, description?: string) =>
-    apiFetch<{ template: Template }>("/api/templates", {
+    return { templates };
+  },
+
+  get: async (id: string) => {
+    const response = await apiFetch<{ template?: unknown; fields?: unknown[] }>(
+      `/api/templates/${id}`,
+    );
+    return {
+      template: normalizeTemplate(
+        response.template,
+        fieldsFrom(response, response.template),
+      ),
+    };
+  },
+
+  create: async (name: string, description?: string) => {
+    const response = await apiFetch<{ template?: unknown }>("/api/templates", {
       method: "POST",
       body: { name, description },
-    }),
+    });
+    return { template: normalizeTemplate(response.template) };
+  },
 
-  update: (id: string, data: Partial<Template>) =>
-    apiFetch<{ template: Template }>(`/api/templates/${id}`, {
-      method: "PATCH",
-      body: data,
-    }),
+  update: async (id: string, data: Partial<Template>) => {
+    const response = await apiFetch<{ template?: unknown }>(
+      `/api/templates/${id}`,
+      { method: "PATCH", body: data },
+    );
+    return { template: normalizeTemplate(response.template) };
+  },
 
   delete: (id: string) =>
     apiFetch<{ success: boolean }>(`/api/templates/${id}`, { method: "DELETE" }),
 
-  getFields: (id: string) =>
-    apiFetch<{ fields: CollectionField[] }>(`/api/templates/${id}/fields`),
+  getFields: async (id: string) => {
+    const response = await apiFetch<{ fields?: unknown[] }>(
+      `/api/templates/${id}/fields`,
+    );
+    return { fields: readFields(response.fields) };
+  },
 
   /** Replace the whole field list. POST is the method the backend accepts. */
-  setFields: (id: string, fields: CollectionField[]) =>
-    apiFetch<{ template: Template }>(`/api/templates/${id}/fields`, {
-      method: "POST",
-      body: { fields: cleanFields(fields) },
-    }),
+  setFields: async (id: string, fields: CollectionField[]) => {
+    const response = await apiFetch<{ fields?: unknown[] }>(
+      `/api/templates/${id}/fields`,
+      { method: "POST", body: { fields: cleanFields(fields) } },
+    );
+    return { fields: readFields(response.fields) };
+  },
 
   addField: (id: string, field: Omit<CollectionField, "id">) =>
     apiFetch<{ field: CollectionField }>(`/api/templates/${id}/fields`, {

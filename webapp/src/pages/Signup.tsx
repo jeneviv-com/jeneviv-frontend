@@ -1,11 +1,57 @@
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, ReactNode, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Check } from "lucide-react";
+import { ArrowRight, Check, CheckCircle2, TriangleAlert } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/context/ToastContext";
 import { errorMessage } from "@/hooks/useApi";
 import AuthLayout from "@/components/AuthLayout";
-import { Button, Field, InlineNote, Input } from "@/components/ui";
+import { Button, Field, Input } from "@/components/ui";
+
+/**
+ * The two outcomes of this form get a card of their own: an account that was
+ * created, or one that was refused. Both carry a light black outline and a
+ * round mark, so the state is readable at a glance without reading the copy.
+ */
+function FeedbackCard({
+  kind,
+  title,
+  children,
+  action,
+}: {
+  kind: "error" | "success";
+  title: string;
+  children: ReactNode;
+  action?: ReactNode;
+}) {
+  const styles = {
+    success: {
+      wrap: "border-ink/20 bg-[#f1fbf6]",
+      mark: "bg-[#c9ecdb] text-success",
+      icon: <CheckCircle2 size={16} />,
+    },
+    error: {
+      wrap: "border-ink/20 bg-[#fdf2f1]",
+      mark: "bg-[#f4cecb] text-danger",
+      icon: <TriangleAlert size={16} />,
+    },
+  } as const;
+  const style = styles[kind];
+
+  return (
+    <div
+      role={kind === "error" ? "alert" : "status"}
+      className={`flex items-start gap-3 rounded-[14px] border px-4 py-4 ${style.wrap}`}
+    >
+      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full ${style.mark}`}>
+        {style.icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[13.5px] font-bold tracking-tight text-ink">{title}</p>
+        <div className="mt-1 text-[12.5px] leading-relaxed text-ink-soft">{children}</div>
+        {action ? <div className="mt-3">{action}</div> : null}
+      </div>
+    </div>
+  );
+}
 
 function strength(password: string) {
   let score = 0;
@@ -18,9 +64,13 @@ function strength(password: string) {
 
 const STRENGTH_LABEL = ["weak", "weak", "fair", "good", "strong"];
 
+type Outcome = { kind: "error" | "success"; title: string; message: string };
+
+/** How long the success card stays up before the dashboard loads. */
+const REDIRECT_DELAY_MS = 1500;
+
 export default function Signup() {
   const { signup } = useAuth();
-  const { success, error: toastError } = useToast();
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
@@ -28,28 +78,46 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [accepted, setAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
 
   const score = useMemo(() => strength(password), [password]);
   const canSubmit = name.trim().length > 1 && email.includes("@") && password.length >= 8 && accepted;
+  const created = outcome?.kind === "success";
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    setFormError(null);
+    setOutcome(null);
 
     if (!accepted) {
-      setFormError("Please accept the terms to continue.");
+      setOutcome({
+        kind: "error",
+        title: "One thing is missing",
+        message: "Please accept the terms of service to continue.",
+      });
       return;
     }
 
     setSubmitting(true);
     try {
       await signup(name.trim(), email.trim(), password);
-      success("Account created", "Tell us what you collect so we can approve your workspace.");
-      navigate("/dashboard", { replace: true });
+      setOutcome({
+        kind: "success",
+        title: "Your workspace is ready",
+        message: `${name.trim()}, you are signed in as ${email.trim()}. Tell us what you collect and we will approve your workspace.`,
+      });
+      window.setTimeout(
+        () => navigate("/dashboard", { replace: true }),
+        REDIRECT_DELAY_MS,
+      );
     } catch (err) {
-      setFormError(errorMessage(err));
-      toastError("We could not create your account", errorMessage(err));
+      const message = errorMessage(err);
+      setOutcome({
+        kind: "error",
+        title: "We could not create your account",
+        message: /already exists|already registered/i.test(message)
+          ? `${message} Sign in instead if this is your account.`
+          : message,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -72,6 +140,26 @@ export default function Signup() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-5">
+        {outcome ? (
+          <FeedbackCard
+            kind={outcome.kind}
+            title={outcome.title}
+            action={
+              outcome.kind === "success" ? (
+                <Button
+                  size="sm"
+                  icon={<ArrowRight size={14} />}
+                  onClick={() => navigate("/dashboard", { replace: true })}
+                >
+                  Open my dashboard
+                </Button>
+              ) : null
+            }
+          >
+            {outcome.message}
+          </FeedbackCard>
+        ) : null}
+
         <Field label="Full name" htmlFor="name">
           <Input
             id="name"
@@ -126,7 +214,7 @@ export default function Signup() {
           ) : null}
         </Field>
 
-        <label className="flex items-start gap-3 rounded-[12px] bg-white px-4 py-3.5 text-[12.5px] leading-relaxed text-ink-soft">
+        <label className="flex items-start gap-3 rounded-[12px] border border-ink/20 bg-white px-4 py-3.5 text-[12.5px] leading-relaxed text-ink-soft">
           <input
             type="checkbox"
             checked={accepted}
@@ -152,16 +240,14 @@ export default function Signup() {
           </span>
         </label>
 
-        {formError ? <InlineNote tone="error">{formError}</InlineNote> : null}
-
         <Button
           type="submit"
           size="lg"
           className="h-[50px] w-full rounded-[12px] text-[15px]"
           loading={submitting}
-          disabled={!canSubmit}
+          disabled={!canSubmit || created}
         >
-          Create account
+          {created ? "Account created" : "Create account"}
         </Button>
       </form>
 

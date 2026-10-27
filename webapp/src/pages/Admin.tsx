@@ -55,7 +55,7 @@ function SummaryTile({
   return (
     <div className="dash-rise relative -mt-6 first:mt-0" style={{ zIndex: index + 1, animationDelay: `${index * 80}ms` }}>
       <div
-        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 ${TONE_MEANING[tone]}`}
+        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink/20 px-5 py-4 ${TONE_MEANING[tone]}`}
       >
         <div className="min-w-0">
           <p className="text-[16px] font-semibold tracking-tight">{label}</p>
