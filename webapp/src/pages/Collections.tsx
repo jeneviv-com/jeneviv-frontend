@@ -437,7 +437,7 @@ export default function Collections() {
           />
         </Card>
       ) : (
-        <ul className="lg:grid lg:grid-cols-2 lg:gap-4 xl:grid-cols-3">
+        <ul className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {rows.map((collection, index) => {
             const active =
               overrides[collection.id] ?? collection.is_active;
@@ -462,9 +462,8 @@ export default function Collections() {
             return (
               <li
                 key={collection.id}
-                className="dash-rise relative -mt-5 first:mt-0 lg:mt-0"
+                className="dash-rise"
                 style={{
-                  zIndex: index + 1,
                   animationDelay: `${Math.min(index, 6) * 60}ms`,
                 }}
               >
