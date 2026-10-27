@@ -148,7 +148,7 @@ export default function Admin() {
           tone="people"
           label="Merchants"
           value={formatNumber(stats.data?.total_merchants ?? 0)}
-          hint={`${stats.data?.pending_merchants ?? 0} awaiting review`}
+          hint={`${merchantStatus === "pending" ? merchants.data?.length : stats.data?.pending_merchants ?? 0} awaiting review`}
         />
         <SummaryTile
           index={1}

@@ -43,6 +43,7 @@ import {
   TableSkeleton,
   Textarea,
   Toggle,
+  StackedCard,
   TONE_CARD,
 } from "@/components/ui";
 
@@ -211,8 +212,8 @@ export default function Collections() {
         }
       />
 
-      {/* summary: the same stacked pastel cards as the dashboard */}
-      <div className="mb-6 lg:grid lg:grid-cols-3 lg:gap-4">
+      {/* summary: stacked pastel cards matching the dashboard */}
+      <div className="mb-6 lg:grid lg:grid-cols-2 lg:gap-4">\n        {[\r\n          { tone: \"lavender\" as const, label: \"Collections\", value: String(totals.count), hint: \"Active and paused\" },\r\n          { tone: \"mint\" as const, label: \"Collected\", value: formatMoney(totals.collected), hint: \"Across all collections\" },\r\n          { tone: \"peach\" as const, label: \"Payers\", value: String(totals.payers), hint: \"Successful payments\" },\r\n          { tone: \"aqua\" as const, label: \"Workspace\", value: merchant ? statusLabel(merchant.status) : \"—\" },\r\n        ].map((item, index) => ({\r\n          <StackedCard\r\n            index={index}\r\n            tone={item.tone}\r\n            title={item.label}\r\n            subtitle={item.hint}\r\n            value={item.value}\r\n            to=\"/collections\"\r\n          />\r\n        ))}\r\n      }
         {[
           { tone: "lavender" as const, label: "Collections", value: String(totals.count), hint: "Active and paused" },
           { tone: "mint" as const, label: "Collected", value: formatMoney(totals.collected), hint: "Across all collections" },
