@@ -5,6 +5,7 @@ import {
   apiFetch,
   banksAPI,
   collectionsAPI,
+  groupsAPI,
   merchantsAPI,
   payoutsAPI,
   refundsAPI,
@@ -17,6 +18,7 @@ import {
   type BankAccount,
   type Collection,
   type CollectionField,
+  type CollectionGroup,
   type Merchant,
   type MerchantStatus,
   type Payout,
@@ -126,6 +128,16 @@ export function useResource<T>(
   const refetch = useCallback(() => setNonce((value) => value + 1), []);
 
   return { data, error, loading, refreshing, refetch, setData };
+}
+
+/* ------------------------------------------------------------------- groups */
+
+/** The entities a merchant files collections under. */
+export function useGroups() {
+  return useResource<CollectionGroup[]>(
+    () => groupsAPI.list().then((r) => r.groups),
+    [],
+  );
 }
 
 /* -------------------------------------------------------------- collections */

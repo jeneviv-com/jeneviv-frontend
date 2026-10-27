@@ -337,10 +337,12 @@ export default function Dashboard() {
             </section>
           </Reveal>
 
-          {/* Grid of metric cards - stacked on mobile, 2x2 grid on laptop */}
+          {/* Grid of metric cards - stacked on mobile, 2x2 grid on laptop.
+              The gap and the tuck both live on `lg:` so that on a phone all
+              four cards sit in one continuous stack, like the other pages. */}
           <div className="lg:grid lg:grid-cols-2 lg:gap-4">
             {/* stacked colour cards */}
-            <div className="mt-3 lg:mt-0">
+            <div className="lg:mt-0">
               <StackedCard
                 index={0}
                 tone="lavender"
@@ -368,7 +370,7 @@ export default function Dashboard() {
                 to="/transactions"
               />
             </div>
-            <div className="lg:mt-0">
+            <div className="-mt-6 lg:mt-0">
               <StackedCard
                 index={2}
                 tone="peach"

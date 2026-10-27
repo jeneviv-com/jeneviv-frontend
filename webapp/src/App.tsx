@@ -6,6 +6,7 @@ import Admin from "@/pages/Admin";
 import ApproveWithdrawal from "@/pages/ApproveWithdrawal";
 import CollectionDetail from "@/pages/CollectionDetail";
 import Collections from "@/pages/Collections";
+import Groups from "@/pages/Groups";
 import Dashboard from "@/pages/Dashboard";
 import Login from "@/pages/Login";
 import Notifications from "@/pages/Notifications";
@@ -39,6 +40,7 @@ export default function App() {
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/collections" element={<Collections />} />
+              <Route path="/groups" element={<Groups />} />
               <Route path="/collections/:id" element={<CollectionDetail />} />
               <Route path="/payment-links" element={<PaymentLinks />} />
               <Route path="/payers" element={<Payers />} />

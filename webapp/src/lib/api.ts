@@ -288,9 +288,25 @@ export interface CollectionField {
 
 export type CollectionStatus = "active" | "paused" | "closed";
 
+/**
+ * An entity a merchant files collections under — a school, a branch, a
+ * department — with one logo used on its payer pages and receipts.
+ */
+export interface CollectionGroup {
+  id: string;
+  name: string;
+  description?: string | null;
+  logo_url?: string | null;
+  collection_count?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Collection {
   id: string;
   merchant_id?: string;
+  group_id?: string | null;
+  group?: CollectionGroup | null;
   short_code: string;
   name: string;
   description?: string;
@@ -396,6 +412,8 @@ export interface Merchant {
   display_name?: string;
   status: MerchantStatus;
   application_note?: string;
+  /** The admin's note recorded with an approve / reject / suspend decision. */
+  admin_review_note?: string;
   wallet_balance_ngn?: number;
   payouts_balance_ngn?: number;
   settings?: MerchantSettings;
@@ -691,6 +709,47 @@ function normalizeCollection(
   return normalized;
 }
 
+/**
+ * The API emits snake_case keys, so a merchant row arrives with `created_at`
+ * and `admin_review_note` rather than the camelCase the pages read.
+ */
+function normalizeMerchant(raw: unknown): Merchant {
+  const row = asRecord(raw);
+  return {
+    ...(row as unknown as Merchant),
+    display_name: pickKey<string>(row, "display_name", "displayName"),
+    application_note: pickKey<string>(row, "application_note", "applicationNote"),
+    admin_review_note: pickKey<string>(row, "admin_review_note", "adminReviewNote"),
+    createdAt: pickKey<string>(row, "created_at", "createdAt"),
+    updatedAt: pickKey<string>(row, "updated_at", "updatedAt"),
+  };
+}
+
+function normalizeGroup(raw: unknown): CollectionGroup | null {
+  if (!raw || typeof raw !== "object") return null;
+  const row = asRecord(raw);
+  const id = pickKey<string>(row, "id");
+  if (!id) return null;
+  return {
+    id,
+    name: pickKey<string>(row, "name") ?? "",
+    description: pickKey<string>(row, "description") ?? null,
+    logo_url: pickKey<string>(row, "logo_url", "logoUrl") ?? null,
+    collection_count: pickKey<number>(row, "collection_count", "collectionCount"),
+  };
+}
+
+/** Attaches the group that arrives beside the collection on the real API. */
+function withGroup(
+  collection: Collection,
+  payload: unknown,
+): Collection {
+  const group =
+    normalizeGroup(pickKey<unknown>(asRecord(payload), "group")) ??
+    normalizeGroup(pickKey<unknown>(asRecord(collection), "group"));
+  return group ? { ...collection, group } : collection;
+}
+
 function normalizeTemplate(
   raw: unknown,
   fields?: CollectionField[],
@@ -717,6 +776,7 @@ export interface CreateCollectionInput {
   currency?: string;
   template_id?: string;
   is_active?: boolean;
+  group_id?: string | null;
 }
 
 export const collectionsAPI = {
@@ -750,9 +810,12 @@ export const collectionsAPI = {
       `/api/collections/${id}`,
     );
     return {
-      collection: normalizeCollection(
-        response.collection,
-        fieldsFrom(response, response.collection),
+      collection: withGroup(
+        normalizeCollection(
+          response.collection,
+          fieldsFrom(response, response.collection),
+        ),
+        response,
       ),
     };
   },
@@ -762,9 +825,12 @@ export const collectionsAPI = {
       `/api/collections/by-code/${encodeURIComponent(shortCode)}`,
     );
     return {
-      collection: normalizeCollection(
-        response.collection,
-        fieldsFrom(response, response.collection),
+      collection: withGroup(
+        normalizeCollection(
+          response.collection,
+          fieldsFrom(response, response.collection),
+        ),
+        response,
       ),
     };
   },
@@ -841,6 +907,39 @@ export const collectionsAPI = {
     ),
 };
 
+/* ------------------------------------------------------------------- groups */
+
+export const groupsAPI = {
+  list: () =>
+    apiFetch<{ groups: CollectionGroup[] }>("/api/collection-groups").then((r) => ({
+      groups: r.groups ?? [],
+    })),
+
+  create: (data: {
+    name: string;
+    description?: string;
+    logo_url?: string | null;
+  }) =>
+    apiFetch<{ group: CollectionGroup }>("/api/collection-groups", {
+      method: "POST",
+      body: data,
+    }),
+
+  update: (
+    id: string,
+    data: Partial<{ name: string; description: string | null; logo_url: string | null }>,
+  ) =>
+    apiFetch<{ group: CollectionGroup }>(`/api/collection-groups/${id}`, {
+      method: "PATCH",
+      body: data,
+    }),
+
+  delete: (id: string) =>
+    apiFetch<{ success: boolean }>(`/api/collection-groups/${id}`, {
+      method: "DELETE",
+    }),
+};
+
 /* -------------------------------------------------------------- transactions */
 
 export const transactionsAPI = {
@@ -913,7 +1012,14 @@ export const refundsAPI = {
 /* ------------------------------------------------------------------ merchants */
 
 export const merchantsAPI = {
-  getMe: () => apiFetch<{ merchant: Merchant | null }>("/api/merchants/me"),
+  getMe: async () => {
+    const response = await apiFetch<{ merchant?: unknown }>("/api/merchants/me");
+    return {
+      merchant: response.merchant
+        ? normalizeMerchant(response.merchant)
+        : null,
+    };
+  },
 
   apply: (displayName: string, applicationNote: string) =>
     apiFetch<{ merchant: Merchant }>("/api/merchants/apply", {
@@ -1167,12 +1273,49 @@ export interface UploadSignature {
   timestamp: number;
   cloud_name: string;
   api_key: string;
-  folder: string;
+  folder?: string;
+  resource_type: "image" | "raw" | "video" | "auto";
+  upload_url: string;
 }
 
 export const uploadsAPI = {
-  sign: () => apiFetch<UploadSignature>("/api/uploads/sign", { method: "POST" }),
+  sign: (folder?: string, resourceType: "image" | "raw" | "video" | "auto" = "image") =>
+    apiFetch<UploadSignature>("/api/uploads/sign", {
+      method: "POST",
+      body: { folder, resource_type: resourceType },
+    }),
 };
+
+/**
+ * Uploads a picked file straight to Cloudinary using a short-lived signature
+ * from our API. Merchants choose an image instead of pasting a URL, and the
+ * signed folder keeps every asset on our own cloud.
+ */
+export async function uploadImage(file: File, folder = "jeneviv/groups"): Promise<string> {
+  const signed = await uploadsAPI.sign(folder, "image");
+
+  const body = new FormData();
+  body.append("file", file);
+  body.append("api_key", signed.api_key);
+  body.append("timestamp", String(signed.timestamp));
+  body.append("signature", signed.signature);
+  if (signed.folder) body.append("folder", signed.folder);
+
+  const response = await fetch(signed.upload_url, { method: "POST", body });
+  const payload = (await response.json().catch(() => ({}))) as {
+    secure_url?: string;
+    error?: { message?: string };
+  };
+  if (!response.ok || !payload.secure_url) {
+    throw new APIError(
+      response.status,
+      payload.error?.message || "The image could not be uploaded. Try a smaller file.",
+      payload,
+      "/uploads",
+    );
+  }
+  return payload.secure_url;
+}
 
 /* --------------------------------------------------------------------- admin */
 
@@ -1184,10 +1327,13 @@ export const adminAPI = {
   getStats: () => apiFetch<AdminStats>("/api/admin/stats"),
 
   /** Exists on the backend: GET /api/admin/merchants. */
-  listMerchants: (status?: MerchantStatus) =>
-    apiFetch<{ merchants: Merchant[] }>("/api/admin/merchants", {
-      query: { status },
-    }),
+  listMerchants: async (status?: MerchantStatus) => {
+    const response = await apiFetch<{ merchants?: unknown[] }>(
+      "/api/admin/merchants",
+      { query: { status } },
+    );
+    return { merchants: (response.merchants ?? []).map(normalizeMerchant) };
+  },
 
   approveMerchant: (merchantId: string, note?: string) =>
     apiFetch<{ merchant: Merchant }>(

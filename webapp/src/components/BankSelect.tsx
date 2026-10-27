@@ -174,9 +174,12 @@ export default function BankSelect({
           autoComplete="off"
           value={query}
           placeholder="Type a bank name, e.g. GTBank"
+          enterKeyHint="search"
+          autoCapitalize="none"
+          autoCorrect="off"
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={onSearchKeyDown}
-          className="w-full bg-transparent py-3 pl-10 pr-3.5 text-[14px] text-ink placeholder:text-ink-faint focus:outline-none"
+          className="w-full bg-transparent py-3 pl-10 pr-3.5 text-[16px] text-ink placeholder:text-ink-faint focus:outline-none sm:text-[14px]"
         />
       </div>
 
@@ -185,7 +188,7 @@ export default function BankSelect({
         id={listId}
         role="listbox"
         aria-label="Banks"
-        className="max-h-[236px] overflow-y-auto overscroll-contain py-1"
+        className="max-h-[min(52vh,420px)] overflow-y-auto overscroll-contain py-1 sm:max-h-[236px]"
       >
         {loading ? (
           <li className="px-3.5 py-3 text-[12.5px] text-ink-muted">{loadingLabel}</li>
@@ -237,7 +240,7 @@ export default function BankSelect({
             ? "Bank list"
             : `${banks.length} banks`}
         </span>
-        <span>Type to filter</span>
+        <span>Type to search</span>
       </p>
     </div>
   );

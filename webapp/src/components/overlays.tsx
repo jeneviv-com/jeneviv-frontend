@@ -10,7 +10,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { Loader2, ShieldCheck, TriangleAlert, X } from "lucide-react";
+import { ChevronLeft, Loader2, ShieldCheck, TriangleAlert, X } from "lucide-react";
 
 /**
  * Dialogs render through a portal on `document.body`. Without the portal a
@@ -18,6 +18,12 @@ import { Loader2, ShieldCheck, TriangleAlert, X } from "lucide-react";
  * containing block (transform, filter, will-change) — which is exactly what
  * the animated page wrapper does, so modals used to appear clipped and
  * unclickable inside the dashboard.
+ *
+ * On phones a dialog is presented as its own full-screen page instead of a
+ * bottom sheet: a sheet fights the on-screen keyboard, the address bar collapse
+ * and the safe areas, which is where the layout kept breaking. As a page it has
+ * a normal header, a scrolling body and a pinned footer, and the hardware back
+ * gesture closes it (we push a history entry while it is open).
  *
  * Scroll locking is reference-counted because a confirm dialog can open on top
  * of a drawer.
@@ -36,6 +42,73 @@ function lockBodyScroll() {
 function unlockBodyScroll() {
   scrollLocks = Math.max(0, scrollLocks - 1);
   if (scrollLocks === 0) document.body.style.overflow = previousBodyOverflow;
+}
+
+/** True while the viewport is phone-sized (Tailwind's `sm` breakpoint is 640px). */
+export function useIsPhone() {
+  const [phone, setPhone] = useState(false);
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 639px)");
+    const update = () => setPhone(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  return phone;
+}
+
+/**
+ * Back button support for page-style dialogs. Opening pushes one history entry;
+ * the browser's back gesture then closes the dialog instead of leaving the page
+ * it was opened from.
+ */
+function useDialogHistory({
+  open,
+  page,
+  onClose,
+}: {
+  open: boolean;
+  page: boolean;
+  onClose: () => void;
+}) {
+  const pushedRef = useRef(false);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+
+  useEffect(() => {
+    if (!open || !page) return;
+
+    pushedRef.current = false;
+    const onPop = () => {
+      pushedRef.current = false;
+      closeRef.current();
+    };
+
+    try {
+      window.history.pushState(
+        { ...(window.history.state ?? {}), jenevivDialog: true },
+        "",
+      );
+      pushedRef.current = true;
+    } catch {
+      pushedRef.current = false;
+    }
+
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      if (pushedRef.current) {
+        pushedRef.current = false;
+        try {
+          window.history.back();
+        } catch {
+          /* history is not going anywhere we can control — ignore */
+        }
+      }
+    };
+  }, [open, page]);
 }
 
 function useDialogBehaviour({
@@ -179,6 +252,20 @@ function DialogMark({ tone, children }: { tone: "money" | "attention" | "danger"
   );
 }
 
+/** The back control that replaces the close button in page presentation. */
+function PageBackButton({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="grid h-10 w-10 shrink-0 place-items-center rounded-[12px] border border-line bg-white text-ink transition-colors hover:border-ink/25"
+      aria-label={label}
+    >
+      <ChevronLeft size={18} />
+    </button>
+  );
+}
+
 export function Modal({
   open,
   onClose,
@@ -189,6 +276,7 @@ export function Modal({
   width = 520,
   icon,
   tone = "neutral",
+  pageTitle,
 }: {
   open: boolean;
   onClose: () => void;
@@ -199,8 +287,12 @@ export function Modal({
   width?: number;
   icon?: ReactNode;
   tone?: "money" | "attention" | "danger" | "neutral";
+  /** Heading used when the dialog is presented as a full page on phones. */
+  pageTitle?: string;
 }) {
+  const page = useIsPhone();
   const { mounted, visible, panelRef, onBackdropPointerDown } = useDialogBehaviour({ open, onClose });
+  useDialogHistory({ open, page, onClose });
   const area = useVisualViewport();
   const titleId = useId();
   const descriptionId = useId();
@@ -220,18 +312,26 @@ export function Modal({
 
   if (!mounted || typeof document === "undefined") return null;
 
+  // The on-screen keyboard shrinks the visual viewport; tracking it keeps the
+  // pinned footer above the keyboard instead of behind it.
+  const viewportStyle = area ? { top: area.top, height: area.height, bottom: "auto" } : undefined;
+
   return createPortal(
     <div
-      className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-6"
-      style={area ? { top: area.top, height: area.height, bottom: "auto" } : undefined}
+      className={`fixed inset-0 z-[80] flex ${
+        page ? "flex-col" : "items-end justify-center sm:items-center sm:p-6"
+      }`}
+      style={viewportStyle}
     >
-      <div
-        aria-hidden="true"
-        onPointerDown={onBackdropPointerDown}
-        className={`absolute inset-0 bg-ink/40 backdrop-blur-[4px] transition-opacity duration-200 ${
-          visible ? "opacity-100" : "opacity-0"
-        }`}
-      />
+      {page ? null : (
+        <div
+          aria-hidden="true"
+          onPointerDown={onBackdropPointerDown}
+          className={`absolute inset-0 bg-ink/40 backdrop-blur-[4px] transition-opacity duration-200 ${
+            visible ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      )}
 
       <div
         ref={panelRef}
@@ -242,43 +342,80 @@ export function Modal({
         tabIndex={-1}
         onKeyDown={onPanelKeyDown}
         onFocus={keepFieldVisible}
-        style={{ maxWidth: width }}
-        className={`relative z-10 flex max-h-[92%] w-full flex-col overflow-hidden rounded-t-[28px] bg-white shadow-pop outline-none transition-[opacity,transform] duration-300 ${PANEL_EASE} sm:max-h-[min(88dvh,860px)] sm:rounded-[24px] ${
-          visible ? "translate-y-0 opacity-100 sm:scale-100" : "translate-y-8 opacity-0 sm:translate-y-3 sm:scale-[0.985]"
-        }`}
+        style={page ? undefined : { maxWidth: width }}
+        className={
+          page
+            ? `relative z-10 flex h-full w-full flex-col overflow-hidden bg-cream outline-none transition-[opacity,transform] duration-300 ${PANEL_EASE} ${
+                visible ? "translate-x-0 opacity-100" : "translate-x-6 opacity-0"
+              }`
+            : `relative z-10 flex max-h-[92%] w-full flex-col overflow-hidden rounded-t-[28px] bg-white shadow-pop outline-none transition-[opacity,transform] duration-300 ${PANEL_EASE} sm:max-h-[min(88dvh,860px)] sm:rounded-[24px] ${
+                visible ? "translate-y-0 opacity-100 sm:scale-100" : "translate-y-8 opacity-0 sm:translate-y-3 sm:scale-[0.985]"
+              }`
+        }
       >
-        <div aria-hidden="true" className="mx-auto mt-3 h-1.5 w-11 shrink-0 rounded-full bg-line sm:hidden" />
+        {page ? (
+          <header className="flex shrink-0 items-center gap-3 border-b border-line bg-white px-4 pb-4 pt-[max(0.75rem,env(safe-area-inset-top))]">
+            <PageBackButton onClick={onClose} label={`Back from ${title}`} />
+            <div className="min-w-0 flex-1">
+              <h2 id={titleId} className="truncate text-[17px] font-bold leading-tight tracking-[-0.02em] text-ink">
+                {pageTitle ?? title}
+              </h2>
+              {description ? (
+                <p id={descriptionId} className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-ink-muted">
+                  {description}
+                </p>
+              ) : null}
+            </div>
+          </header>
+        ) : (
+          <>
+            <div aria-hidden="true" className="mx-auto mt-3 h-1.5 w-11 shrink-0 rounded-full bg-line sm:hidden" />
+            <header className="flex shrink-0 items-start gap-4 px-6 pb-5 pt-6 sm:pt-7">
+              {icon ? <DialogMark tone={tone}>{icon}</DialogMark> : null}
+              <div className="min-w-0 flex-1 pt-0.5">
+                <h2 id={titleId} className="text-[19px] font-bold leading-tight tracking-[-0.02em] text-ink">
+                  {title}
+                </h2>
+                {description ? (
+                  <p id={descriptionId} className="muted mt-1.5">
+                    {description}
+                  </p>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cream text-ink-muted transition-colors hover:bg-cream-deep hover:text-ink focus-visible:ring-2 focus-visible:ring-ink"
+                aria-label="Close dialog"
+              >
+                <X size={15} />
+              </button>
+            </header>
+          </>
+        )}
 
-        <header className="flex shrink-0 items-start gap-4 px-6 pb-5 pt-6 sm:pt-7">
-          {icon ? <DialogMark tone={tone}>{icon}</DialogMark> : null}
-          <div className="min-w-0 flex-1 pt-0.5">
-            <h2 id={titleId} className="text-[19px] font-bold leading-tight tracking-[-0.02em] text-ink">
-              {title}
-            </h2>
-            {description ? (
-              <p id={descriptionId} className="muted mt-1.5">
-                {description}
-              </p>
-            ) : null}
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cream text-ink-muted transition-colors hover:bg-cream-deep hover:text-ink focus-visible:ring-2 focus-visible:ring-ink"
-            aria-label="Close dialog"
-          >
-            <X size={15} />
-          </button>
-        </header>
-
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-6">{children}</div>
+        <div
+          className={
+            page
+              ? "min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 pb-8 pt-5"
+              : "min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-6"
+          }
+        >
+          {children}
+        </div>
 
         {footer ? (
-          <footer className="flex shrink-0 flex-col-reverse gap-2.5 border-t border-line bg-cream/60 px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 sm:flex-row sm:justify-end [&>*]:w-full sm:[&>*]:w-auto">
+          <footer
+            className={
+              page
+                ? "flex shrink-0 flex-col-reverse gap-2.5 border-t border-line bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 [&>*]:w-full"
+                : "flex shrink-0 flex-col-reverse gap-2.5 border-t border-line bg-cream/60 px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 sm:flex-row sm:justify-end [&>*]:w-full sm:[&>*]:w-auto"
+            }
+          >
             {footer}
           </footer>
         ) : (
-          <div className="pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6" />
+          <div className={page ? "pb-[env(safe-area-inset-bottom)]" : "pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:pb-6"} />
         )}
       </div>
     </div>,
@@ -301,24 +438,27 @@ export function Drawer({
   children: ReactNode;
   footer?: ReactNode;
 }) {
+  const page = useIsPhone();
   const { mounted, visible, panelRef, onBackdropPointerDown } = useDialogBehaviour({ open, onClose });
+  useDialogHistory({ open, page, onClose });
   const area = useVisualViewport();
   const titleId = useId();
 
   if (!mounted || typeof document === "undefined") return null;
 
+  const viewportStyle = area ? { top: area.top, height: area.height, bottom: "auto" } : undefined;
+
   return createPortal(
-    <div
-      className="fixed inset-0 z-[80] flex justify-end"
-      style={area ? { top: area.top, height: area.height, bottom: "auto" } : undefined}
-    >
-      <div
-        aria-hidden="true"
-        onPointerDown={onBackdropPointerDown}
-        className={`absolute inset-0 bg-ink/40 backdrop-blur-[4px] transition-opacity duration-200 ${
-          visible ? "opacity-100" : "opacity-0"
-        }`}
-      />
+    <div className="fixed inset-0 z-[80] flex justify-end" style={viewportStyle}>
+      {page ? null : (
+        <div
+          aria-hidden="true"
+          onPointerDown={onBackdropPointerDown}
+          className={`absolute inset-0 bg-ink/40 backdrop-blur-[4px] transition-opacity duration-200 ${
+            visible ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      )}
 
       <aside
         ref={panelRef}
@@ -326,32 +466,58 @@ export function Drawer({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`relative z-10 flex h-full w-full max-w-[580px] flex-col overflow-hidden bg-white shadow-pop outline-none transition-transform duration-300 sm:rounded-l-[28px] ${PANEL_EASE} ${
-          visible ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`relative z-10 flex h-full w-full max-w-[580px] flex-col overflow-hidden outline-none transition-transform duration-300 ${PANEL_EASE} ${
+          page ? "bg-cream" : "bg-white shadow-pop sm:rounded-l-[28px]"
+        } ${visible ? "translate-x-0" : "translate-x-full"}`}
       >
-        <header className="flex shrink-0 items-start justify-between gap-4 px-6 pb-5 pt-7">
-          <div className="min-w-0">
-            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">Details</p>
-            <h2 id={titleId} className="mt-1.5 truncate text-[20px] font-bold tracking-[-0.02em] text-ink">
-              {title}
-            </h2>
-            {subtitle ? <p className="muted mt-1 truncate font-mono text-[12px]">{subtitle}</p> : null}
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cream text-ink-muted transition-colors hover:bg-cream-deep hover:text-ink"
-            aria-label="Close panel"
-          >
-            <X size={15} />
-          </button>
-        </header>
+        {page ? (
+          <header className="flex shrink-0 items-center gap-3 border-b border-line bg-white px-4 pb-4 pt-[max(0.75rem,env(safe-area-inset-top))]">
+            <PageBackButton onClick={onClose} label={`Back from ${title}`} />
+            <div className="min-w-0 flex-1">
+              <h2 id={titleId} className="truncate text-[17px] font-bold tracking-[-0.02em] text-ink">
+                {title}
+              </h2>
+              {subtitle ? <p className="truncate font-mono text-[11.5px] text-ink-muted">{subtitle}</p> : null}
+            </div>
+          </header>
+        ) : (
+          <header className="flex shrink-0 items-start justify-between gap-4 px-6 pb-5 pt-7">
+            <div className="min-w-0">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">Details</p>
+              <h2 id={titleId} className="mt-1.5 truncate text-[20px] font-bold tracking-[-0.02em] text-ink">
+                {title}
+              </h2>
+              {subtitle ? <p className="muted mt-1 truncate font-mono text-[12px]">{subtitle}</p> : null}
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cream text-ink-muted transition-colors hover:bg-cream-deep hover:text-ink"
+              aria-label="Close panel"
+            >
+              <X size={15} />
+            </button>
+          </header>
+        )}
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-8">{children}</div>
+        <div
+          className={
+            page
+              ? "min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 pb-8 pt-5"
+              : "min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-8"
+          }
+        >
+          {children}
+        </div>
 
         {footer ? (
-          <footer className="shrink-0 border-t border-line bg-cream/60 px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5">
+          <footer
+            className={
+              page
+                ? "shrink-0 border-t border-line bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4"
+                : "shrink-0 border-t border-line bg-cream/60 px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5"
+            }
+          >
             {footer}
           </footer>
         ) : null}

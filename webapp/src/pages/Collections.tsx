@@ -5,6 +5,7 @@ import {
   CircleSlash,
   Copy,
   HandCoins,
+  Layers,
   Pause,
   Play,
   Plus,
@@ -18,6 +19,7 @@ import {
 import {
   useAction,
   useCollectionStats,
+  useGroups,
   useTemplates,
   type CollectionWithStats,
 } from "@/hooks/useApi";
@@ -58,6 +60,7 @@ export default function Collections() {
 
   const collections = useCollectionStats({ status: status === "all" ? undefined : status });
   const templates = useTemplates("all");
+  const groups = useGroups();
 
   const createCollection = useAction((input: CreateCollectionInput) =>
     collectionsAPI.create(input),
@@ -67,15 +70,17 @@ export default function Collections() {
     collectionsAPI.update(id, data),
   );
 
-  const [form, setForm] = useState({
+  const emptyForm = {
     name: "",
     description: "",
     amount: "",
     currency: "NGN",
     target_payers: "",
     template_id: "",
+    group_id: "",
     is_active: true,
-  });
+  };
+  const [form, setForm] = useState(emptyForm);
   const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -146,6 +151,7 @@ export default function Collections() {
         amount,
         currency: form.currency,
         template_id: form.template_id || undefined,
+        group_id: form.group_id || null,
         is_active: form.is_active,
       });
       success(
@@ -153,15 +159,7 @@ export default function Collections() {
         `${result.collection.name} is ready. Share its link with your group.`,
       );
       setShowCreate(false);
-      setForm({
-        name: "",
-        description: "",
-        amount: "",
-        currency: "NGN",
-        target_payers: "",
-        template_id: "",
-        is_active: true,
-      });
+      setForm(emptyForm);
       navigate(`/collections/${result.collection.id}`);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Could not create the collection.");
@@ -366,9 +364,23 @@ export default function Collections() {
                     <div className="mt-2.5">
                       <ProgressBar value={progress} tone="ink" />
                     </div>
-                    <p className="mt-3 font-mono text-[11px] text-ink-muted">
-                      {collection.short_code}
-                      {pending ? ` · ${pending} pending` : ""}
+                    <p className="mt-3 flex flex-wrap items-center gap-1.5 font-mono text-[11px] text-ink-muted">
+                      {collection.group ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-cream px-2 py-0.5 text-ink-soft">
+                          {collection.group.logo_url ? (
+                            <img
+                              src={collection.group.logo_url}
+                              alt=""
+                              className="h-3.5 w-3.5 rounded-full object-contain"
+                            />
+                          ) : (
+                            <Layers size={11} aria-hidden="true" />
+                          )}
+                          {collection.group.name}
+                        </span>
+                      ) : null}
+                      <span>{collection.short_code}</span>
+                      {pending ? <span>· {pending} pending</span> : null}
                     </p>
                   </div>
 
@@ -496,6 +508,35 @@ export default function Collections() {
               />
             </Field>
           </div>
+
+          <Field
+            label="Group (entity)"
+            htmlFor="collection-group"
+            hint="Payer pages and receipts show this group's name and logo."
+          >
+            <Select
+              id="collection-group"
+              value={form.group_id}
+              onChange={(event) => setForm({ ...form, group_id: event.target.value })}
+            >
+              <option value="">No group — use my workspace details</option>
+              {(groups.data ?? []).map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+
+          {(groups.data ?? []).length === 0 ? (
+            <InlineNote tone="info">
+              Collecting for more than one school or organisation?{" "}
+              <Link to="/groups" className="font-semibold underline underline-offset-2">
+                Create a group
+              </Link>{" "}
+              first, then pick it here.
+            </InlineNote>
+          ) : null}
 
           <Field
             label="Start from a template"

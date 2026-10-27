@@ -205,8 +205,10 @@ export default function Settings() {
           <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">
             Platform fee
           </p>
-          <p className="tabular mt-1.5 text-[15px] font-bold tracking-tight">₦75</p>
-          <p className="mt-1 text-[12px] text-ink-muted">Per successful payment</p>
+          <p className="tabular mt-1.5 text-[15px] font-bold tracking-tight">₦75 / 1%</p>
+          <p className="mt-1 text-[12px] text-ink-muted">
+            ₦75 up to ₦7,500, then 1% capped at ₦1,000
+          </p>
         </div>
         <div className="pr-4 lg:border-l lg:border-line-soft lg:pl-6">
           <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">

@@ -10,6 +10,7 @@ import {
 } from "@/hooks/useApi";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
+import BankSelect from "@/components/BankSelect";
 import {
   formatDateTime,
   formatMoney,
@@ -28,7 +29,6 @@ import {
   Input,
   Modal,
   PageHeader,
-  Select,
   StatusPill,
   TableSkeleton,
   Textarea,
@@ -399,19 +399,18 @@ export default function Refunds() {
         }
       >
         <div className="space-y-4">
-          <Field label="Payer's bank" htmlFor="refund-bank">
-            <Select
+          <Field
+            label="Payer's bank"
+            htmlFor="refund-bank"
+            hint="Search by name — the list is long, so type a few letters."
+          >
+            <BankSelect
               id="refund-bank"
+              banks={banks.data ?? []}
+              loading={banks.loading}
               value={bankForm.bank_code}
-              onChange={(event) => setBankForm({ ...bankForm, bank_code: event.target.value })}
-            >
-              <option value="">Select a bank</option>
-              {(banks.data ?? []).map((bank) => (
-                <option key={bank.code} value={bank.code}>
-                  {bank.name}
-                </option>
-              ))}
-            </Select>
+              onChange={(code) => setBankForm({ ...bankForm, bank_code: code })}
+            />
           </Field>
           <Field
             label="Payer's account number"

@@ -8,6 +8,7 @@ import {
   HandCoins,
   LayoutDashboard,
   LayoutTemplate,
+  Layers,
   LifeBuoy,
   Link2,
   LogOut,
@@ -36,6 +37,7 @@ const NAV = [
     group: "Collect",
     items: [
       { to: "/collections", label: "Collections", icon: HandCoins },
+      { to: "/groups", label: "Groups", icon: Layers },
       { to: "/payment-links", label: "Payment links", icon: Link2 },
       { to: "/payers", label: "Payers", icon: Users },
       { to: "/templates", label: "Templates", icon: LayoutTemplate },
@@ -63,6 +65,7 @@ const NAV = [
 const TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/collections": "Collections",
+  "/groups": "Groups",
   "/payment-links": "Payment links",
   "/payers": "Payers",
   "/templates": "Templates",
@@ -232,8 +235,12 @@ export default function AppShell() {
   const status = statusKind(merchant?.status);
   const displayName = merchant?.display_name || user?.name || "Your workspace";
 
+  // Platform admins are not merchants: with no workspace row they would be
+  // parked on the onboarding form forever, with no way to reach /admin and
+  // approve anybody.
   const needsOnboarding =
     !loading &&
+    !isAdmin &&
     (!merchant || merchant.status === "pending" || merchant.status === "rejected");
 
   return (

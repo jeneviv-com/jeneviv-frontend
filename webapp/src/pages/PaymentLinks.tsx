@@ -64,21 +64,21 @@ export default function PaymentLinks() {
       />
 
       {/* summary: the same stacked pastel cards as the dashboard */}
-      <div className="mb-6">
+      <div className="mb-6 lg:grid lg:grid-cols-3 lg:gap-4">
         {summary.map((item, index) => (
           <div
             key={item.label}
-            className="dash-rise relative -mt-6 first:mt-0"
+            className="dash-rise relative -mt-6 first:mt-0 lg:mt-0"
             style={{ zIndex: index + 1, animationDelay: `${index * 90}ms` }}
           >
             <div
-              className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink/20 px-5 py-4 ${TONE_CARD[item.tone]}`}
+              className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD[item.tone]}`}
             >
-              <div className="min-w-0">
-                <p className="text-[16px] font-semibold tracking-tight">{item.label}</p>
-                <p className="mt-0.5 truncate text-[12.5px] opacity-70">{item.hint}</p>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[16px] font-semibold tracking-tight lg:text-[18px]">{item.label}</p>
+                <p className="mt-0.5 truncate text-[12.5px] opacity-70 lg:text-[13px]">{item.hint}</p>
               </div>
-              <p className="shrink-0 text-right text-[20px] font-bold tabular">{item.value}</p>
+              <p className="shrink-0 text-right text-[20px] font-bold tabular lg:mt-2 lg:w-full lg:text-left lg:text-[28px]">{item.value}</p>
             </div>
           </div>
         ))}
@@ -102,32 +102,38 @@ export default function PaymentLinks() {
         </span>
       </div>
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-4 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
         {collections.loading ? (
-          <Card>
-            <TableSkeleton rows={4} cols={3} />
-          </Card>
+          <div className="lg:col-span-2 xl:col-span-3">
+            <Card>
+              <TableSkeleton rows={4} cols={3} />
+            </Card>
+          </div>
         ) : collections.error ? (
-          <Card>
-            <ErrorState message={collections.error} onRetry={collections.refetch} />
-          </Card>
+          <div className="lg:col-span-2 xl:col-span-3">
+            <Card>
+              <ErrorState message={collections.error} onRetry={collections.refetch} />
+            </Card>
+          </div>
         ) : rows.length === 0 ? (
-          <Card>
-            <EmptyState
-              icon={<Link2 size={20} />}
-              title={search ? "No links match that search" : "No active collection links"}
-              description={
-                search
-                  ? "Try another name or code, or clear the search."
-                  : "Create a collection and its link is generated automatically. Paused collections are hidden here."
-              }
-              action={
-                <Link to="/collections?new=1" className="btn btn-primary btn-sm">
-                  <Plus size={14} /> Create a collection
-                </Link>
-              }
-            />
-          </Card>
+          <div className="lg:col-span-2 xl:col-span-3">
+            <Card>
+              <EmptyState
+                icon={<Link2 size={20} />}
+                title={search ? "No links match that search" : "No active collection links"}
+                description={
+                  search
+                    ? "Try another name or code, or clear the search."
+                    : "Create a collection and its link is generated automatically. Paused collections are hidden here."
+                }
+                action={
+                  <Link to="/collections?new=1" className="btn btn-primary btn-sm">
+                    <Plus size={14} /> Create a collection
+                  </Link>
+                }
+              />
+            </Card>
+          </div>
         ) : (
           rows.map((collection, index) => {
             const link = paymentLink(collection.short_code);

@@ -188,6 +188,27 @@ export default function PublicPay() {
     <Shell>
       {/* heading */}
       <header>
+        {/* The entity this collection belongs to, so payers recognise who is asking. */}
+        {data.group ? (
+          <div className="mb-6 flex items-center gap-3 border-b border-line pb-5">
+            {data.group.logo_url ? (
+              <img
+                src={data.group.logo_url}
+                alt=""
+                className="h-12 w-12 shrink-0 rounded-[12px] border border-line bg-white object-contain"
+              />
+            ) : null}
+            <div className="min-w-0">
+              <p className="truncate text-[15px] font-bold tracking-tight">{data.group.name}</p>
+              {data.group.description ? (
+                <p className="mt-0.5 truncate text-[12.5px] text-ink-muted">
+                  {data.group.description}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
         <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">Payment request</p>
         <h1 className="mt-3 text-[34px] font-bold leading-[1.02] tracking-[-0.045em] sm:text-[40px]">{data.name}</h1>
         {data.description ? <p className="muted mt-3">{data.description}</p> : null}

@@ -121,7 +121,7 @@ export default function VerifyReceipt() {
             <div className="mt-8 rounded-[20px] bg-ink px-6 py-6 text-cream">
               <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-cream/60">Amount paid</p>
               <p className="tabular mt-2 text-[40px] font-bold leading-none tracking-[-0.03em]">
-                {formatMoney(state.receipt.amount / 100, state.receipt.currency)}
+                {formatMoney(state.receipt.amount, state.receipt.currency)}
               </p>
             </div>
 

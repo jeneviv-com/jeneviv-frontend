@@ -121,7 +121,7 @@ export default function ApproveWithdrawal() {
             <div className="mt-8 rounded-[20px] bg-ink px-6 py-6 text-cream">
               <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-cream/60">Amount to release</p>
               <p className="tabular mt-2 text-[40px] font-bold leading-none tracking-[-0.03em]">
-                {formatMoney((approval?.amount ?? 0) / 100, approval?.currency ?? "NGN")}
+                {formatMoney(approval?.amount ?? 0, approval?.currency ?? "NGN")}
               </p>
               <p className="mt-3 flex items-center gap-1.5 text-[12.5px] text-cream/70">
                 <Clock3 size={12} /> Requested {formatDateTime(approval?.requested_at)}

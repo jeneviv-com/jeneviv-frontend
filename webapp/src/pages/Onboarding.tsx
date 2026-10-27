@@ -21,6 +21,18 @@ const WHAT_NEXT = [
   },
 ];
 
+const STATUS_COPY: Record<string, string> = {
+  pending: "in review",
+  approved: "approved",
+  rejected: "not approved",
+  suspended: "suspended",
+};
+
+function statusCopyFor(status: string | null | undefined) {
+  if (!status) return "no application yet";
+  return STATUS_COPY[status] ?? status;
+}
+
 /** Round icon well used for each state's headline mark. */
 function Mark({ tone, children }: { tone: "money" | "attention" | "danger" | "ink"; children: ReactNode }) {
   const styles = {
@@ -47,15 +59,57 @@ function Block({ label, children }: { label: string; children: ReactNode }) {
 }
 
 export default function Onboarding() {
-  const { merchant, user, refreshMerchant } = useAuth();
-  const { success, error: toastError } = useToast();
+  const { merchant, user, refreshMerchant, setMerchant } = useAuth();
+  const { success, error: toastError, info } = useToast();
 
   const [displayName, setDisplayName] = useState(merchant?.display_name || user?.name || "");
   const [note, setNote] = useState(merchant?.application_note || "");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [checkedAt, setCheckedAt] = useState<Date | null>(null);
 
   const status = merchant?.status ?? null;
+
+  /**
+   * Asks the server for the current review state and says what it found, so
+   * the button answers the question it is named after instead of silently
+   * re-rendering the same screen. When the workspace has been approved, the
+   * new status flows into the shell and this page is replaced by the
+   * dashboard on the next render.
+   */
+  const checkStatus = async () => {
+    setChecking(true);
+    try {
+      const { merchant: fresh } = await merchantsAPI.getMe();
+      setMerchant(fresh ?? null);
+      setCheckedAt(new Date());
+
+      switch (fresh?.status) {
+        case "approved":
+          success("Your workspace is approved", "You can collect and settle payments now.");
+          break;
+        case "rejected":
+          toastError(
+            "Your application was not approved",
+            fresh.admin_review_note || fresh.application_note || "Update your details and apply again.",
+          );
+          break;
+        case "suspended":
+          toastError("This workspace is suspended", "Email myjeneviv@gmail.com to resolve it.");
+          break;
+        default:
+          info(
+            "Still in review",
+            "Your application has not been decided yet. We usually reply within one business day.",
+          );
+      }
+    } catch (err) {
+      toastError("Could not check your status", errorMessage(err));
+    } finally {
+      setChecking(false);
+    }
+  };
 
   const submit = async () => {
     setSubmitting(true);
@@ -180,10 +234,16 @@ export default function Onboarding() {
               <Button loading={submitting} onClick={submit}>
                 Save changes
               </Button>
-              <Button variant="secondary" onClick={() => refreshMerchant()}>
+              <Button variant="secondary" loading={checking} onClick={checkStatus}>
                 Check approval status
               </Button>
             </div>
+            {checkedAt ? (
+              <p className="hint">
+                Last checked {checkedAt.toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" })} ·
+                current status: {statusCopyFor(status)}
+              </p>
+            ) : null}
           </div>
         </Block>
       </div>
@@ -209,10 +269,11 @@ export default function Onboarding() {
             : "One short form. You can create collections immediately — approved workspaces collect and settle without limits."}
         </p>
 
-        {status === "rejected" && merchant?.application_note ? (
+        {status === "rejected" ? (
           <div className="mt-6">
-            <InlineNote tone="warning" title="Reviewer note">
-              {merchant.application_note}
+            <InlineNote tone="warning" title="Why it was not approved">
+              {merchant?.admin_review_note ||
+                "No reason was recorded. Update your details below and apply again, or email myjeneviv@gmail.com."}
             </InlineNote>
           </div>
         ) : null}
