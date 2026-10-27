@@ -324,7 +324,7 @@ export default function Collections() {
       />
 
       {/* Summary cards */}
-      <div className="mb-6 grid gap-4 lg:grid-cols-3">
+      <div className="mb-6 lg:grid lg:grid-cols-3 lg:gap-4">
         {[
           {
             tone: "lavender" as const,
@@ -347,7 +347,7 @@ export default function Collections() {
         ].map((item, index) => (
           <div
             key={item.label}
-            className="dash-rise relative"
+            className="dash-rise relative -mt-5 first:mt-0 lg:mt-0"
             style={{
               zIndex: index + 1,
               animationDelay: `${index * 90}ms`,
@@ -437,7 +437,7 @@ export default function Collections() {
           />
         </Card>
       ) : (
-        <ul className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <ul className="lg:grid lg:grid-cols-2 lg:gap-4 xl:grid-cols-3">
           {rows.map((collection, index) => {
             const active =
               overrides[collection.id] ?? collection.is_active;
@@ -462,8 +462,9 @@ export default function Collections() {
             return (
               <li
                 key={collection.id}
-                className="dash-rise"
+                className="dash-rise relative -mt-5 first:mt-0 lg:mt-0"
                 style={{
+                  zIndex: index + 1,
                   animationDelay: `${Math.min(index, 6) * 60}ms`,
                 }}
               >
