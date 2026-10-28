@@ -72,7 +72,7 @@ export default function PaymentLinks() {
             style={{ zIndex: index + 1, animationDelay: `${index * 90}ms` }}
           >
             <div
-              className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD[item.tone]}`}
+              className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/20 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD[item.tone]}`}
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[16px] font-semibold tracking-tight lg:text-[18px]">{item.label}</p>
@@ -142,7 +142,7 @@ export default function PaymentLinks() {
             return (
               <article
                 key={collection.id}
-                className="dash-rise rounded-[20px] border border-ink bg-white p-4 sm:p-5"
+                className="dash-rise rounded-[18px] border border-ink/20 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5"
                 style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
               >
                 {/* title and state */}

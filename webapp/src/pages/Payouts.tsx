@@ -50,22 +50,22 @@ function SummaryTile({
 }) {
   return (
     <div
-      className="dash-rise relative -mt-6 first:mt-0 lg:mt-0"
+      className="dash-rise relative -mt-6 first:mt-0"
       style={{ zIndex: index + 1, animationDelay: `${index * 80}ms` }}
     >
       <div
-        className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/20 px-5 py-5 shadow-sm lg:min-h-[92px] lg:px-6 lg:py-5 ${TONE_MEANING[tone]}`}
+        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 ${TONE_MEANING[tone]}`}
       >
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/70">
             {icon}
           </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[16px] font-semibold tracking-tight lg:text-[18px]">{label}</p>
-            <p className="mt-0.5 truncate text-[12.5px] opacity-70 lg:text-[13px]">{hint}</p>
+          <div className="min-w-0">
+            <p className="text-[15px] font-semibold tracking-tight">{label}</p>
+            <p className="mt-0.5 truncate text-[12px] opacity-70">{hint}</p>
           </div>
         </div>
-        <p className="shrink-0 text-right text-[20px] font-bold tabular lg:text-[28px]">{value}</p>
+        <p className="shrink-0 text-right text-[19px] font-bold tabular">{value}</p>
       </div>
     </div>
   );
@@ -155,7 +155,7 @@ export default function Payouts() {
       />
 
       {/* summary: meaning-based tiles */}
-      <div className="mb-6 lg:grid lg:grid-cols-3 lg:gap-4">
+      <div className="mb-6">
         <SummaryTile
           index={0}
           tone={defaultAccount ? "money" : "attention"}
@@ -220,7 +220,7 @@ export default function Payouts() {
               {(accounts.data ?? []).map((account) => {
                 const details = accountDetails(account);
                 return (
-                  <li key={account.id} className="rounded-[18px] border border-ink/20 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+                  <li key={account.id} className="card card-interactive rounded-[18px] border-ink/20 p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="flex flex-wrap items-center gap-2 text-[14px] font-semibold">

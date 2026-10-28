@@ -439,16 +439,13 @@ export default function PublicPay() {
         {/* done */}
         {step === "done" && result ? (
           <div className="py-4">
-            <span className="grid h-14 w-14 place-items-center rounded-full bg-[#c8f58e] text-ink">
+            <span className="grid h-14 w-14 place-items-center rounded-full bg-[#d5e8c4] text-ink">
               <BadgeCheck size={24} />
             </span>
             <h2 className="mt-6 text-[32px] font-bold leading-[1.05] tracking-[-0.04em]">Payment confirmed</h2>
             <p className="muted mt-3 max-w-md">
-              {formatMoney(result.transaction.amount, result.transaction.currency)} for {data.name} has been received
-              {result.transaction.payer_email
-                ? `, and a receipt is on its way to ${result.transaction.payer_email}`
-                : ", and a receipt will be emailed to you"}
-              .
+              {formatMoney(result.transaction.amount, result.transaction.currency)} for {data.name} has been received.
+              A copy of your receipt has been emailed to you.
             </p>
 
             <div className="mt-8 border-t border-line">
@@ -463,23 +460,30 @@ export default function PublicPay() {
               <Line label="Collection">{data.name}</Line>
             </div>
 
-            <Button
-              size="lg"
-              className="mt-6 h-[52px] w-full rounded-[12px] text-[15px]"
-              icon={<Download size={15} />}
-              onClick={() =>
-                window.open(
-                  verifyAPI.receiptUrl(result.transaction.reference),
-                  "_blank",
-                  "noopener,noreferrer",
-                )
-              }
-            >
-              Download your receipt
-            </Button>
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              <Link
+                to={`/verify/${encodeURIComponent(result.transaction.reference)}`}
+                className="inline-flex h-[52px] items-center justify-center gap-2 rounded-[12px] bg-ink text-[15px] font-semibold text-cream transition-transform duration-150 active:scale-[0.98]"
+              >
+                <BadgeCheck size={15} /> View receipt
+              </Link>
+              <button
+                type="button"
+                onClick={() =>
+                  window.open(
+                    verifyAPI.receiptUrl(result.transaction.reference),
+                    "_blank",
+                    "noopener,noreferrer",
+                  )
+                }
+                className="inline-flex h-[52px] items-center justify-center gap-2 rounded-[12px] border border-ink/20 bg-white text-[15px] font-semibold text-ink transition-colors hover:border-ink/40"
+              >
+                <Download size={15} /> Download PDF
+              </button>
+            </div>
 
-            <p className="mt-5 flex items-center gap-2 text-[12px] text-ink-muted">
-              <ShieldCheck size={14} /> Verified by the payment gateway — no screenshot needed.
+            <p className="mt-8 flex items-center gap-2 text-[12px] text-ink-muted">
+              <ShieldCheck size={14} /> Verified by the payment gateway. No screenshot needed.
             </p>
           </div>
         ) : null}
