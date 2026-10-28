@@ -284,6 +284,7 @@ export interface CollectionField {
   type: FieldType;
   required: boolean;
   options?: string[];
+  isSystemField?: boolean; // Marks system-required fields like email
 }
 
 export type CollectionStatus = "active" | "paused" | "closed";

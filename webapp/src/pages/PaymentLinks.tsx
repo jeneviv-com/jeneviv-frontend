@@ -72,7 +72,7 @@ export default function PaymentLinks() {
             style={{ zIndex: index + 1, animationDelay: `${index * 90}ms` }}
           >
             <div
-              className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/20 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD[item.tone]}`}
+              className={`flex min-h-[138px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD[item.tone]}`}
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[16px] font-semibold tracking-tight lg:text-[18px]">{item.label}</p>
@@ -142,7 +142,7 @@ export default function PaymentLinks() {
             return (
               <article
                 key={collection.id}
-                className="dash-rise rounded-[18px] border border-ink/20 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5"
+                className="dash-rise flex h-full flex-col rounded-[18px] border border-ink/20 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
                 style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
               >
                 {/* title and state */}
@@ -150,7 +150,7 @@ export default function PaymentLinks() {
                   <div className="min-w-0">
                     <Link
                       to={`/collections/${collection.id}`}
-                      className="block truncate text-[16px] font-semibold tracking-tight hover:text-brand-dark"
+                      className="block truncate text-[15.5px] font-semibold tracking-tight hover:text-brand-dark"
                     >
                       {collection.name}
                     </Link>
@@ -158,87 +158,99 @@ export default function PaymentLinks() {
                       {collection.short_code}
                     </p>
                   </div>
-                  <span className="shrink-0 rounded-full bg-[#c8f58e] px-2.5 py-1 font-mono text-[10.5px] font-semibold uppercase tracking-[0.1em] text-ink">
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-ink px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-cream">
+                    <span className="h-1.5 w-1.5 rounded-full bg-cream" />
                     Accepting
                   </span>
                 </div>
 
-                {/* figures */}
-                <div className="mt-4 grid grid-cols-3 gap-2 rounded-[14px] bg-cream p-3">
+                {/* figures: match groups collection card styling */}
+                <div className="mt-5 flex items-end justify-between gap-4 border-b border-line-soft pb-4">
                   <div className="min-w-0">
                     <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
                       Per payer
                     </p>
-                    <p className="tabular mt-0.5 truncate text-[13.5px] font-bold">
+                    <p className="tabular mt-1.5 truncate text-[25px] font-bold leading-none tracking-[-0.03em]">
                       {formatMoney(collection.amount, collection.currency)}
                     </p>
                   </div>
-                  <div className="min-w-0">
+                  <div className="shrink-0 text-right">
                     <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
                       Collected
                     </p>
-                    <p className="tabular mt-0.5 truncate text-[13.5px] font-bold">
+                    <p className="tabular mt-1.5 text-[15px] font-bold">
                       {formatMoney(collected, collection.currency)}
                     </p>
                   </div>
-                  <div className="min-w-0">
+                </div>
+
+                {/* the link itself - updated to match spacing */}
+                <div className="mt-4 flex-1">
+                  <div className="rounded-[14px] border border-dashed border-ink/25 bg-cream/20 px-3.5 py-2.5">
                     <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">
-                      Payments
+                      Payment link
                     </p>
-                    <p className="tabular mt-0.5 truncate text-[13.5px] font-bold">
-                      {formatNumber(paid)}
+                    <p className="mt-1 break-all font-mono text-[12px] text-ink-soft">
+                      {link}
                     </p>
                   </div>
                 </div>
 
-                {/* the link itself */}
-                <div className="mt-3 rounded-[14px] border border-dashed border-ink/25 bg-white px-3.5 py-2.5 font-mono text-[12px] text-ink-soft">
-                  <span className="break-all">{link}</span>
+                {/* payments count - positioned like groups collection card */}
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-[12.5px] text-ink-muted">
+                    {paid} {paid === 1 ? "payment" : "payments"}
+                  </p>
                 </div>
 
-                {/* actions */}
-                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    icon={<Link2 size={13} />}
-                    onClick={async () => {
-                      const ok = await copyText(link);
-                      if (ok) success("Link copied", link);
-                    }}
-                  >
-                    Copy link
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    icon={<Share2 size={13} />}
-                    onClick={async () => {
-                      const ok = await copyText(
-                        buildMessage(
-                          collection.name,
-                          collection.amount,
-                          collection.currency,
-                          collection.short_code,
-                        ),
-                      );
-                      if (ok)
-                        success(
-                          "Message copied",
-                          "Paste it into WhatsApp to share with payers.",
+                {/* actions: match groups layout */}
+                <div className="mt-4 flex items-center justify-between gap-2 border-t border-line-soft pt-4">
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      icon={<Link2 size={13} />}
+                      onClick={async () => {
+                        const ok = await copyText(link);
+                        if (ok) success("Link copied", link);
+                      }}
+                    >
+                      Copy link
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={<Share2 size={13} />}
+                      onClick={async () => {
+                        const ok = await copyText(
+                          buildMessage(
+                            collection.name,
+                            collection.amount,
+                            collection.currency,
+                            collection.short_code,
+                          ),
                         );
-                    }}
-                  >
-                    Copy message
-                  </Button>
-                  <a
-                    href={link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn btn-ghost btn-sm"
-                  >
-                    <ExternalLink size={13} /> Open page
-                  </a>
+                        if (ok)
+                          success(
+                            "Message copied",
+                            "Paste it into WhatsApp to share with payers.",
+                          );
+                      }}
+                    >
+                      Share
+                    </Button>
+                    <a
+                      href={link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn btn-primary btn-sm"
+                    >
+                      <ExternalLink size={13} /> Open
+                    </a>
+                  </div>
                 </div>
               </article>
             );

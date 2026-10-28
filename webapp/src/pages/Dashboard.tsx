@@ -161,7 +161,7 @@ function StackedCard({
     >
       <Link
         to={to}
-        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-card active:scale-[0.985] focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 ${TONES[tone]}`}
+        className={`flex min-h-[138px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-card active:scale-[0.985] focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 lg:min-h-[92px] lg:px-6 lg:py-5 ${TONES[tone]}`}
       >
         <div className="min-w-0">
           <p className="text-[16px] font-semibold tracking-tight">{title}</p>

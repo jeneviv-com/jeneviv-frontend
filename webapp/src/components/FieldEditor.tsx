@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import type { CollectionField, FieldType } from "@/lib/api";
 import { slugifyFieldId } from "@/lib/format";
-import { Button, Field, Input, InlineNote, Select, Toggle } from "@/components/ui";
+import { Button, Field, InlineNote, Input, Select, Toggle } from "@/components/ui";
 
 const TYPES: Array<{ value: FieldType; label: string }> = [
   { value: "short_text", label: "Short text" },
@@ -17,7 +17,7 @@ const TYPES: Array<{ value: FieldType; label: string }> = [
   { value: "file", label: "File upload" },
 ];
 
-export type DraftField = CollectionField & { id: string };
+export type DraftField = CollectionField & { id: string; isSystemField?: boolean };
 
 function newField(position: number): DraftField {
   return {
@@ -29,6 +29,17 @@ function newField(position: number): DraftField {
     required: true,
   };
 }
+
+/** System email field that must always be present and first */
+const EMAIL_FIELD: DraftField = {
+  id: "system_email",
+  position: 0,
+  display_name: "Email address",
+  field_id: "email",
+  type: "email",
+  required: true,
+  isSystemField: true,
+};
 
 export default function FieldEditor({
   fields,
@@ -43,31 +54,44 @@ export default function FieldEditor({
   onSave?: (fields: DraftField[]) => void;
   saveLabel?: string;
 }) {
-  const [drafts, setDrafts] = useState<DraftField[]>(() =>
-    fields.map((field, index) => ({
-      ...field,
-      id: field.id || `draft_${index}`,
-      position: index,
-    })),
-  );
+  const [drafts, setDrafts] = useState<DraftField[]>(() => {
+    const emailField = fields.find((f) => f.field_id === "email" && f.type === "email");
+    const otherFields = fields.filter((f) => !(f.field_id === "email" && f.type === "email"));
+    
+    return [
+      emailField ? { ...emailField, id: "system_email", position: 0, isSystemField: true, required: true } : EMAIL_FIELD,
+      ...otherFields.map((field, index) => ({
+        ...field,
+        id: field.id || `draft_${index}`,
+        position: index + 1,
+      })),
+    ];
+  });
 
   // Sync from the parent only when the saved content really changes. Callers
   // often pass `x ?? []`, which is a new array on every render. Keying on the
   // content stops those re-renders from wiping fields the user just added.
   const fieldsKey = JSON.stringify(fields);
   useEffect(() => {
-    setDrafts(
-      fields.map((field, index) => ({
+    const emailField = fields.find((f) => f.field_id === "email" && f.type === "email");
+    const otherFields = fields.filter((f) => !(f.field_id === "email" && f.type === "email"));
+    
+    setDrafts([
+      emailField ? { ...emailField, id: "system_email", position: 0, isSystemField: true, required: true } : EMAIL_FIELD,
+      ...otherFields.map((field, index) => ({
         ...field,
         id: field.id || `draft_${index}`,
-        position: index,
+        position: index + 1,
       })),
-    );
+    ]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fieldsKey]);
 
   const update = (next: DraftField[]) => {
-    const normalised = next.map((field, index) => ({ ...field, position: index }));
+    // Ensure email field is always first and present
+    const emailField = next.find((f) => f.isSystemField) || EMAIL_FIELD;
+    const otherFields = next.filter((f) => !f.isSystemField);
+    const normalised = [emailField, ...otherFields].map((field, index) => ({ ...field, position: index }));
     setDrafts(normalised);
     onChange(normalised);
   };
@@ -77,8 +101,11 @@ export default function FieldEditor({
   };
 
   const move = (index: number, direction: -1 | 1) => {
+    // Cannot move the email field (index 0)
+    if (index === 0 || drafts[index].isSystemField) return;
     const target = index + direction;
-    if (target < 0 || target >= drafts.length) return;
+    // Cannot move any field to position 0 (reserved for email)
+    if (target < 1 || target >= drafts.length) return;
     const next = drafts.slice();
     [next[index], next[target]] = [next[target], next[index]];
     update(next);
@@ -94,6 +121,10 @@ export default function FieldEditor({
 
   return (
     <div className="space-y-6">
+      <InlineNote tone="info" title="Email is always required">
+        Every collection requires an email field for receipts and payment confirmations. This field cannot be removed or reordered.
+      </InlineNote>
+      
       <div className="flex flex-wrap items-end justify-between gap-4">
         <p className="muted max-w-xl">
           These are the questions a payer answers on the payment page. Keep it
@@ -116,19 +147,18 @@ export default function FieldEditor({
         </InlineNote>
       ) : null}
 
-      {drafts.length === 0 ? (
+      {drafts.length === 1 && drafts[0].isSystemField ? (
         <div className="border-y border-dashed border-line py-10 text-center">
-          <p className="text-[14px] font-bold tracking-tight">No payer fields yet</p>
+          <p className="text-[14px] font-bold tracking-tight">Email field is required</p>
           <p className="muted mx-auto mt-1.5 max-w-sm">
-            Add at least a name and one identifier (matric number, member ID,
-            phone) so every payment can be matched to the right person.
+            Every collection must collect email addresses for receipts. Add more fields like name, matric number, or phone to identify payers.
           </p>
         </div>
       ) : null}
 
       <ol className="divide-y divide-line">
         {drafts.map((field, index) => (
-          <li key={field.id} className="grid gap-4 py-6 sm:grid-cols-[auto_1fr_auto] sm:gap-5">
+          <li key={field.id} className={`grid gap-4 py-6 sm:grid-cols-[auto_1fr_auto] sm:gap-5 ${field.isSystemField ? "bg-cream/30" : ""}`}>
             <span className="font-mono text-[12px] text-ink-muted sm:pt-2.5">
               {String(index + 1).padStart(2, "0")}
             </span>
@@ -139,6 +169,7 @@ export default function FieldEditor({
                   id={`label-${field.id}`}
                   value={field.display_name}
                   placeholder="e.g. Matric number"
+                  disabled={field.isSystemField}
                   onChange={(event) =>
                     patch(field.id, {
                       display_name: event.target.value,
@@ -148,12 +179,13 @@ export default function FieldEditor({
                 />
               </Field>
 
-              <Field label="Key" htmlFor={`key-${field.id}`} hint="Used in reports and API payloads.">
+              <Field label="Key" htmlFor={`key-${field.id}`} hint={field.isSystemField ? "System field - cannot be changed" : "Used in reports and API payloads."}>
                 <Input
                   id={`key-${field.id}`}
                   value={field.field_id}
                   placeholder="matric_number"
                   className="font-mono text-[12.5px]"
+                  disabled={field.isSystemField}
                   onChange={(event) =>
                     patch(field.id, { field_id: slugifyFieldId(event.target.value) })
                   }
@@ -164,6 +196,7 @@ export default function FieldEditor({
                 <Select
                   id={`type-${field.id}`}
                   value={field.type}
+                  disabled={field.isSystemField}
                   onChange={(event) => patch(field.id, { type: event.target.value as FieldType })}
                 >
                   {TYPES.map((type) => (
@@ -199,42 +232,51 @@ export default function FieldEditor({
               <div className="sm:col-span-2">
                 <Toggle
                   checked={field.required}
+                  disabled={field.isSystemField}
                   onChange={(value) => patch(field.id, { required: value })}
                   label="Required"
-                  description="Payers must answer this before they can continue."
+                  description={field.isSystemField ? "Email is always required for receipts." : "Payers must answer this before they can continue."}
                 />
               </div>
             </div>
 
             {/* quiet controls, grouped */}
-            <div className="flex items-start gap-1 sm:flex-col">
-              <button
-                type="button"
-                onClick={() => move(index, -1)}
-                disabled={index === 0}
-                className="grid h-8 w-8 place-items-center rounded-[10px] text-ink-muted transition-colors hover:bg-cream hover:text-ink disabled:opacity-35"
-                aria-label="Move up"
-              >
-                <ArrowUp size={14} />
-              </button>
-              <button
-                type="button"
-                onClick={() => move(index, 1)}
-                disabled={index === drafts.length - 1}
-                className="grid h-8 w-8 place-items-center rounded-[10px] text-ink-muted transition-colors hover:bg-cream hover:text-ink disabled:opacity-35"
-                aria-label="Move down"
-              >
-                <ArrowDown size={14} />
-              </button>
-              <button
-                type="button"
-                onClick={() => update(drafts.filter((item) => item.id !== field.id))}
-                className="grid h-8 w-8 place-items-center rounded-[10px] text-danger transition-colors hover:bg-[#fdecea]"
-                aria-label="Remove field"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
+            {field.isSystemField ? (
+              <div className="flex items-start gap-1 sm:flex-col">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-ink px-2.5 py-1 font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-cream">
+                  Required
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-start gap-1 sm:flex-col">
+                <button
+                  type="button"
+                  onClick={() => move(index, -1)}
+                  disabled={index === 1}
+                  className="grid h-8 w-8 place-items-center rounded-[10px] text-ink-muted transition-colors hover:bg-cream hover:text-ink disabled:opacity-35"
+                  aria-label="Move up"
+                >
+                  <ArrowUp size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(index, 1)}
+                  disabled={index === drafts.length - 1}
+                  className="grid h-8 w-8 place-items-center rounded-[10px] text-ink-muted transition-colors hover:bg-cream hover:text-ink disabled:opacity-35"
+                  aria-label="Move down"
+                >
+                  <ArrowDown size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => update(drafts.filter((item) => item.id !== field.id))}
+                  className="grid h-8 w-8 place-items-center rounded-[10px] text-danger transition-colors hover:bg-[#fdecea]"
+                  aria-label="Remove field"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            )}
           </li>
         ))}
       </ol>

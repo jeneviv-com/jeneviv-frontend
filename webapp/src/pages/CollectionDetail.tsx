@@ -88,7 +88,7 @@ function SummaryTile({
       style={{ zIndex: index + 1, animationDelay: `${index * 80}ms` }}
     >
       <div
-        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink/20 px-5 py-4 ${TONE_CARD[tone]}`}
+        className={`flex min-h-[138px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] ${TONE_CARD[tone]}`}
       >
         <div className="flex min-w-0 items-center gap-3">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/70">
