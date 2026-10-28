@@ -255,7 +255,7 @@ export default function GroupDetail() {
             {/* Summary tiles */}
             <div className="pt-1 lg:grid lg:grid-cols-2 lg:gap-4">
               <div className="dash-rise relative -mt-6 first:mt-0 lg:mt-0">
-                <div className={`flex min-h-[138px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD.lavender}`}>
+                <div className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD.lavender}`}>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[16px] font-semibold tracking-tight lg:text-[18px]">
                       Collections
@@ -271,7 +271,7 @@ export default function GroupDetail() {
               </div>
               
               <div className="dash-rise relative -mt-6 first:mt-0 lg:mt-0">
-                <div className={`flex min-h-[138px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD.mint}`}>
+                <div className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD.mint}`}>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[16px] font-semibold tracking-tight lg:text-[18px]">
                       Collected
@@ -287,7 +287,7 @@ export default function GroupDetail() {
               </div>
 
               <div className="dash-rise relative -mt-6 first:mt-0 lg:mt-0">
-                <div className={`flex min-h-[138px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD.peach}`}>
+                <div className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD.peach}`}>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[16px] font-semibold tracking-tight lg:text-[18px]">
                       Payers
@@ -303,7 +303,7 @@ export default function GroupDetail() {
               </div>
 
               <div className="dash-rise relative -mt-6 first:mt-0 lg:mt-0">
-                <div className={`flex min-h-[138px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD.aqua}`}>
+                <div className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD.aqua}`}>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[16px] font-semibold tracking-tight lg:text-[18px]">
                       Completion
@@ -363,7 +363,7 @@ export default function GroupDetail() {
                       >
                         <Link
                           to={`/collections/${collection.id}`}
-                          className="card card-interactive flex h-full flex-col rounded-[18px] border-ink/20 p-5 no-underline hover:shadow-md"
+                          className="card card-interactive flex h-full flex-col rounded-[18px] border border-ink/15 p-5 no-underline hover:shadow-md"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
@@ -518,7 +518,7 @@ export default function GroupDetail() {
                     >
                       <Link
                         to={`/collections/${collection.id}`}
-                        className="card card-interactive flex h-full flex-col rounded-[18px] border-ink/20 p-5 no-underline hover:shadow-md"
+                        className="card card-interactive flex h-full flex-col rounded-[18px] border border-ink/15 p-5 no-underline hover:shadow-md"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">

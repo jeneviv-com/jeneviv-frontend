@@ -149,7 +149,7 @@ export default function Groups() {
             style={{ zIndex: index + 1, animationDelay: `${index * 90}ms` }}
           >
             <div
-              className={`flex min-h-[138px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD[item.tone]}`}
+              className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD[item.tone]}`}
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[16px] font-semibold tracking-tight lg:text-[18px]">
@@ -218,7 +218,7 @@ export default function Groups() {
               >
                 <Link
                   to={`/groups/${group.id}`}
-                  className="card card-interactive flex h-full flex-col rounded-[18px] border-ink/20 p-5 no-underline hover:shadow-md"
+                  className="card card-interactive flex h-full flex-col rounded-[18px] border border-ink/15 p-5 no-underline hover:shadow-md"
                 >
                   {/* Identity and logo status */}
                   <div className="flex items-start justify-between gap-3">
