@@ -213,7 +213,7 @@ export default function Collections() {
       />
 
       {/* summary: stacked pastel cards matching the dashboard */}
-      <div className="mb-6 lg:grid lg:grid-cols-2 lg:gap-4">\n        {[\r\n          { tone: \"lavender\" as const, label: \"Collections\", value: String(totals.count), hint: \"Active and paused\" },\r\n          { tone: \"mint\" as const, label: \"Collected\", value: formatMoney(totals.collected), hint: \"Across all collections\" },\r\n          { tone: \"peach\" as const, label: \"Payers\", value: String(totals.payers), hint: \"Successful payments\" },\r\n          { tone: \"aqua\" as const, label: \"Workspace\", value: merchant ? statusLabel(merchant.status) : \"—\" },\r\n        ].map((item, index) => ({\r\n          <StackedCard\r\n            index={index}\r\n            tone={item.tone}\r\n            title={item.label}\r\n            subtitle={item.hint}\r\n            value={item.value}\r\n            to=\"/collections\"\r\n          />\r\n        ))}\r\n      }
+      <div className="mb-6 lg:grid lg:grid-cols-3 lg:gap-4">
         {[
           { tone: "lavender" as const, label: "Collections", value: String(totals.count), hint: "Active and paused" },
           { tone: "mint" as const, label: "Collected", value: formatMoney(totals.collected), hint: "Across all collections" },
@@ -224,8 +224,7 @@ export default function Collections() {
             className="dash-rise relative -mt-6 first:mt-0 lg:mt-0"
             style={{ zIndex: index + 1, animationDelay: `${index * 90}ms` }}
           >
-            <div
-              className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/20 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD[item.tone]}`}
+            <div className={"flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/20 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 " + TONE_CARD[item.tone]}
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[16px] font-semibold tracking-tight lg:text-[18px]">{item.label}</p>
@@ -258,7 +257,6 @@ export default function Collections() {
           {rows.length} shown
         </span>
       </div>
-
       {/* collection list */}
       {collections.loading ? (
         <Card>

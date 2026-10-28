@@ -1217,7 +1217,7 @@ async function handleFetch(input: RequestInfo | URL, init?: RequestInit) {
   });
 }
 
-const CONFIGURED_MODE = String(import.meta.env.VITE_DEMO_MODE ?? "auto").toLowerCase();
+const CONFIGURED_MODE = String(import.meta.env.VITE_DEMO_MODE ?? "false").toLowerCase();
 let negotiation: Promise<ConnectionState> | null = null;
 
 /**
