@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, BadgeCheck, Check, Clock, Copy, Download, Loader2, Lock, ShieldCheck, TriangleAlert } from "lucide-react";
-import { APIError, paymentsAPI, transactionsAPI, verifyAPI, type Collection, type InitPaymentResult } from "@/lib/api";
+import { APIError, paymentsAPI, verifyAPI, type Collection, type InitPaymentResult } from "@/lib/api";
 import { useCollectionByCode, errorMessage } from "@/hooks/useApi";
 import { copyText, currencySymbol, formatMoney, formatTime } from "@/lib/format";
 import { Button, Field, InlineNote, Input, Select, Textarea } from "@/components/ui";
@@ -37,14 +37,35 @@ function Line({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
+/* Keep the open payment in this tab so a refresh resumes it instead of resetting. */
+const storageKey = (code?: string) => `jeneviv.pay.${code ?? ""}`;
+
+function restoreResult(code?: string): InitPaymentResult | null {
+  try {
+    const raw = sessionStorage.getItem(storageKey(code));
+    return raw ? (JSON.parse(raw) as InitPaymentResult) : null;
+  } catch {
+    return null;
+  }
+}
+
+function storeResult(code: string | undefined, value: InitPaymentResult | null) {
+  try {
+    if (value) sessionStorage.setItem(storageKey(code), JSON.stringify(value));
+    else sessionStorage.removeItem(storageKey(code));
+  } catch {
+    /* storage unavailable: the payment still works, it just won't survive a refresh */
+  }
+}
+
 export default function PublicPay() {
   const { code } = useParams<{ code: string }>();
   const collection = useCollectionByCode(code);
 
   const [values, setValues] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [step, setStep] = useState<Step>("details");
-  const [result, setResult] = useState<InitPaymentResult | null>(null);
+  const [step, setStep] = useState<Step>(() => (restoreResult(code) ? "pay" : "details"));
+  const [result, setResult] = useState<InitPaymentResult | null>(() => restoreResult(code));
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -59,13 +80,14 @@ export default function PublicPay() {
     const timer = setInterval(async () => {
       attempts += 1;
       try {
-        const response = await transactionsAPI.get(result.transaction.id);
+        const response = await paymentsAPI.status(result.transaction.reference);
         failures = 0;
-        if (response.transaction.status === "success") {
-          setResult({ ...result, transaction: response.transaction });
+        if (response.status === "success") {
+          setResult({ ...result, transaction: { ...result.transaction, status: response.status } });
           setStep("done");
+          storeResult(code, null);
           clearInterval(timer);
-        } else if (response.transaction.status === "failed") {
+        } else if (response.status === "failed") {
           setStatusNote("The gateway could not confirm this payment. Please check with your coordinator before sending again.");
           clearInterval(timer);
         }
@@ -123,6 +145,7 @@ export default function PublicPay() {
     try {
       const response = await paymentsAPI.init(data.short_code, values);
       setResult(response);
+      storeResult(code, response);
       setStep("pay");
     } catch (error) {
       setFormError(errorMessage(error));
@@ -403,6 +426,7 @@ export default function PublicPay() {
               onClick={() => {
                 setStep("details");
                 setResult(null);
+                storeResult(code, null);
                 setConfirming(false);
               }}
               className="mx-auto flex items-center gap-1.5 text-[12.5px] font-semibold text-ink-muted hover:text-ink"

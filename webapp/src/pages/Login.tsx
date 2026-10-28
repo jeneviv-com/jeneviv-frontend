@@ -40,11 +40,6 @@ export default function Login() {
 
   const demo = isDemoMode() || connection === "demo";
 
-  const fillDemo = () => {
-    setEmail("coordinator@jeneviv.test");
-    setPassword("jeneviv1234");
-  };
-
   return (
     <AuthLayout
       title="Sign in"
@@ -62,11 +57,7 @@ export default function Login() {
         <div className="mb-6 rounded-[14px] bg-[#fff3dd] px-4 py-3.5 text-[13px] text-ink">
           <p className="font-semibold">Demo workspace</p>
           <p className="mt-1 text-ink-soft">
-            The backend host is offline, so sign in with any credentials, or{" "}
-            <button type="button" onClick={fillDemo} className="font-semibold underline underline-offset-2">
-              use the seeded coordinator
-            </button>
-            .
+            The backend host is offline, so the dashboard is showing sample data.
           </p>
         </div>
       ) : null}

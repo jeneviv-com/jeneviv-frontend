@@ -1146,6 +1146,16 @@ export const verifyAPI = {
 /* ------------------------------------------------------------------ payments */
 
 export const paymentsAPI = {
+  /** Public status check for a payer's own payment. No sign-in needed. */
+  status: (reference: string) =>
+    apiFetch<{
+      reference: string;
+      status: TransactionStatus;
+      amount: number;
+      currency: string;
+      paid_at: string | null;
+    }>(`/api/payments/status/${encodeURIComponent(reference)}`, { anonymous: true }),
+
   init: (collectionShortCode: string, fieldValues: Record<string, unknown>) =>
     apiFetch<InitPaymentResult>("/api/payments/init", {
       method: "POST",
