@@ -5,10 +5,10 @@ import {
   Fingerprint,
   Image as ImageIcon,
   Loader2,
-  Save,
   Users,
 } from "lucide-react";
 import { APIError, merchantsAPI } from "@/lib/api";
+import LogoPicker from "@/components/LogoPicker";
 import { useAction, useBankAccounts, useBanks, useKyc } from "@/hooks/useApi";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
@@ -313,6 +313,7 @@ export default function KycCard() {
           )}
         </Step>
 
+        {data?.escrow_enabled ? (
         <Step
           number={3}
           done={treasurerDone}
@@ -355,9 +356,10 @@ export default function KycCard() {
             Save treasurer
           </Button>
         </Step>
+        ) : null}
       </ol>
 
-      {/* logo: a quiet add-on, not a step */}
+      {/* logo: a quiet add-on, not a step. Picked from the device and saved on upload. */}
       <div className="border-t border-line pt-7">
         <div className="mb-3 flex items-start gap-3">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[12px] bg-cream text-ink-soft">
@@ -368,24 +370,17 @@ export default function KycCard() {
             <p className="muted mt-0.5">Appears on the PDF receipt and the public verification page.</p>
           </div>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Input
-            value={logoUrl}
-            onChange={(event) => setLogoUrl(event.target.value)}
-            placeholder="https://res.cloudinary.com/…/logo.png"
-            aria-label="School logo URL"
-          />
-          <Button
-            variant="secondary"
-            icon={<Save size={14} />}
-            loading={saveLogo.loading}
-            onClick={() =>
-              run(() => saveLogo.run(logoUrl.trim()), "Logo saved", "New receipts will use it.")
-            }
-          >
-            Save logo
-          </Button>
-        </div>
+        <LogoPicker
+          value={logoUrl || null}
+          onChange={(url) => {
+            setLogoUrl(url ?? "");
+            run(
+              () => saveLogo.run(url ?? ""),
+              url ? "Logo saved" : "Logo removed",
+              url ? "New receipts will use it." : "Receipts will show the default mark.",
+            );
+          }}
+        />
       </div>
     </div>
   );

@@ -696,10 +696,10 @@ export function useDebounced<T>(value: T, delay = 300) {
 /** The pastel palette used by the dashboard summary cards. */
 export const TONE_CARD = {
   ink: "bg-[#101010] text-white",
-  lavender: "bg-[#c9c3f5] text-ink",
-  peach: "bg-[#ffc49a] text-ink",
-  mint: "bg-[#c8f58e] text-ink",
-  aqua: "bg-[#9ff0f5] text-ink",
+  lavender: "bg-[#dcd5f3] text-ink",
+  peach: "bg-[#f9d3b0] text-ink",
+  mint: "bg-[#d5e8c4] text-ink",
+  aqua: "bg-[#d3e9ee] text-ink",
 } as const;
 
 export type ToneCardTone = keyof typeof TONE_CARD;
