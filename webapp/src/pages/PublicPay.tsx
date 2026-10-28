@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, BadgeCheck, Check, Clock, Copy, Loader2, Lock, ShieldCheck, TriangleAlert } from "lucide-react";
-import { APIError, paymentsAPI, transactionsAPI, type Collection, type InitPaymentResult } from "@/lib/api";
+import { ArrowLeft, BadgeCheck, Check, Clock, Copy, Download, Loader2, Lock, ShieldCheck, TriangleAlert } from "lucide-react";
+import { APIError, paymentsAPI, transactionsAPI, verifyAPI, type Collection, type InitPaymentResult } from "@/lib/api";
 import { useCollectionByCode, errorMessage } from "@/hooks/useApi";
 import { copyText, currencySymbol, formatMoney, formatTime } from "@/lib/format";
 import { Button, Field, InlineNote, Input, Select, Textarea } from "@/components/ui";
@@ -439,7 +439,22 @@ export default function PublicPay() {
               <Line label="Collection">{data.name}</Line>
             </div>
 
-            <p className="mt-8 flex items-center gap-2 text-[12px] text-ink-muted">
+            <Button
+              size="lg"
+              className="mt-6 h-[52px] w-full rounded-[12px] text-[15px]"
+              icon={<Download size={15} />}
+              onClick={() =>
+                window.open(
+                  verifyAPI.receiptUrl(result.transaction.reference),
+                  "_blank",
+                  "noopener,noreferrer",
+                )
+              }
+            >
+              Download your receipt
+            </Button>
+
+            <p className="mt-5 flex items-center gap-2 text-[12px] text-ink-muted">
               <ShieldCheck size={14} /> Verified by the payment gateway — no screenshot needed.
             </p>
           </div>
