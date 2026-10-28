@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   Banknote,
   Building2,
@@ -11,10 +11,10 @@ import {
 } from "lucide-react";
 import { merchantsAPI, type BankAccount } from "@/lib/api";
 import { useAction, useBankAccounts, useBanks, useKyc } from "@/hooks/useApi";
-import BankSelect from "@/components/BankSelect";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { formatDate, pick } from "@/lib/format";
+import { PLATFORM_FEE_RANGE_LABEL, PLATFORM_FEE_SUMMARY } from "@/lib/platformFee";
 import {
   Button,
   Card,
@@ -26,6 +26,7 @@ import {
   Modal,
   PageHeader,
   Pill,
+  Select,
   TONE_MEANING,
   type ToneKind,
   Toggle,
@@ -49,22 +50,22 @@ function SummaryTile({
 }) {
   return (
     <div
-      className="dash-rise relative -mt-6 first:mt-0 lg:mt-0"
+      className="dash-rise relative -mt-6 first:mt-0"
       style={{ zIndex: index + 1, animationDelay: `${index * 80}ms` }}
     >
       <div
-        className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/20 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_MEANING[tone]}`}
+        className={`flex min-h-[92px] items-center justify-between gap-3 rounded-[20px] border border-ink px-5 py-4 ${TONE_MEANING[tone]}`}
       >
-        <div className="flex min-w-0 flex-1 items-center gap-3 lg:w-full lg:flex-row lg:items-start">
+        <div className="flex min-w-0 items-center gap-3">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/70">
             {icon}
           </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[15px] font-semibold tracking-tight lg:text-[16px]">{label}</p>
-            <p className="mt-0.5 truncate text-[12px] opacity-70 lg:text-[13px]">{hint}</p>
+          <div className="min-w-0">
+            <p className="text-[15px] font-semibold tracking-tight">{label}</p>
+            <p className="mt-0.5 truncate text-[12px] opacity-70">{hint}</p>
           </div>
         </div>
-        <p className="shrink-0 text-right text-[19px] font-bold tabular lg:mt-2 lg:w-full lg:text-left lg:text-[24px]">{value}</p>
+        <p className="shrink-0 text-right text-[19px] font-bold tabular">{value}</p>
       </div>
     </div>
   );
@@ -104,22 +105,11 @@ export default function Payouts() {
     merchantsAPI.bankAccounts.delete(id),
   );
 
-  /* Linked accounts come back with a bank code only, so the name is resolved
-     from the bank list the picker searches. */
-  const bankNames = useMemo(
-    () => new Map((banks.data ?? []).map((bank) => [bank.code, bank.name])),
-    [banks.data],
-  );
-
   const accountDetails = (account: BankAccount | undefined) => {
     const source = account as unknown as Record<string, unknown> | undefined;
-    const bankCode = pick<string>(source, "bank_code", "bankCode") ?? "";
     return {
-      bankCode,
-      bankName:
-        pick<string>(source, "bank_name", "bankName") ??
-        bankNames.get(bankCode) ??
-        "",
+      bankCode: pick<string>(source, "bank_code", "bankCode") ?? "",
+      bankName: pick<string>(source, "bank_name", "bankName") ?? "",
       accountNumber: pick<string>(source, "account_number", "accountNumber") ?? "",
       accountName: pick<string>(source, "account_name", "accountName") ?? "",
       isDefault: Boolean(pick<boolean>(source, "is_default", "isDefault")),
@@ -165,7 +155,7 @@ export default function Payouts() {
       />
 
       {/* summary: meaning-based tiles */}
-      <div className="mb-6 lg:grid lg:grid-cols-3 lg:gap-4">
+      <div className="mb-6">
         <SummaryTile
           index={0}
           tone={defaultAccount ? "money" : "attention"}
@@ -188,8 +178,8 @@ export default function Payouts() {
           index={2}
           tone="neutral"
           label="Platform fee"
-          value="₦75"
-          hint="Per successful payment, on top of the collection amount"
+          value={PLATFORM_FEE_RANGE_LABEL}
+          hint={PLATFORM_FEE_SUMMARY}
           icon={<Banknote size={16} />}
         />
       </div>
@@ -230,18 +220,13 @@ export default function Payouts() {
               {(accounts.data ?? []).map((account) => {
                 const details = accountDetails(account);
                 return (
-                  <li
-                    key={account.id}
-                    className={`rounded-[18px] border border-ink/20 p-4 ${
-                      details.isDefault ? TONE_MEANING.money : "bg-white"
-                    }`}
-                  >
+                  <li key={account.id} className="card card-interactive rounded-[18px] border-ink/20 p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="flex flex-wrap items-center gap-2 text-[14px] font-semibold">
                           <span className="truncate">{details.bankName || details.bankCode}</span>
                           {details.isDefault ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-white/75 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em]">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-ink px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-cream">
                               <Star size={10} /> Default
                             </span>
                           ) : null}
@@ -254,7 +239,7 @@ export default function Payouts() {
                         type="button"
                         aria-label={`Remove ${details.bankName}`}
                         onClick={() => setPendingDelete(account)}
-                        className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] bg-white/75 text-danger transition-colors hover:bg-white"
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] border border-ink/20 bg-white text-danger transition-colors hover:border-danger/40 hover:bg-danger/5"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -299,11 +284,11 @@ export default function Payouts() {
               {[
                 {
                   title: "Payer pays the collection link",
-                  body: "The amount plus the ₦75 platform fee is charged to the payer.",
+                  body: "The collection amount, Jeneviv's platform fee and Paystack's processing fee are charged to the payer. The total is shown before they pay.",
                 },
                 {
                   title: "Paystack splits it instantly",
-                  body: "Your collection amount, less Paystack's processing fee, goes to your bank account. Jeneviv's ₦75 goes to the platform.",
+                  body: "The full collection amount goes to your bank account. Jeneviv's platform fee goes to the platform.",
                 },
                 {
                   title: "Your dashboard records it",
@@ -378,20 +363,21 @@ export default function Payouts() {
         }
       >
         <div className="space-y-4">
-          <Field
-            label="Bank"
-            htmlFor="bank"
-            hint="Search by name — the list is long, so type a few letters."
-          >
-            <BankSelect
+          <Field label="Bank" htmlFor="bank">
+            <Select
               id="bank"
-              banks={banks.data ?? []}
-              loading={banks.loading}
               value={accountForm.bank_code}
-              onChange={(code) =>
-                setAccountForm({ ...accountForm, bank_code: code })
+              onChange={(event) =>
+                setAccountForm({ ...accountForm, bank_code: event.target.value })
               }
-            />
+            >
+              <option value="">Select your bank</option>
+              {(banks.data ?? []).map((bank) => (
+                <option key={bank.code} value={bank.code}>
+                  {bank.name}
+                </option>
+              ))}
+            </Select>
           </Field>
           <Field label="Account number" htmlFor="account-number" hint="10 digits (NUBAN).">
             <Input
