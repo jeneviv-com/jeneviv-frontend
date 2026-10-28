@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, CheckCircle2, Plus, Trash2 } from "lucide-react";
 import type { CollectionField, FieldType } from "@/lib/api";
 import { slugifyFieldId } from "@/lib/format";
 import { Button, Field, InlineNote, Input, Select, Toggle } from "@/components/ui";
@@ -230,13 +230,28 @@ export default function FieldEditor({
               ) : null}
 
               <div className="sm:col-span-2">
-                <Toggle
-                  checked={field.required}
-                  disabled={field.isSystemField}
-                  onChange={(value) => patch(field.id, { required: value })}
-                  label="Required"
-                  description={field.isSystemField ? "Email is always required for receipts." : "Payers must answer this before they can continue."}
-                />
+                {field.isSystemField ? (
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-[13.5px] font-semibold text-ink">Required</p>
+                      <p className="muted mt-0.5">Email is always required for receipts.</p>
+                    </div>
+                    <span
+                      className="grid h-6 w-11 shrink-0 place-items-center rounded-pill border border-ink bg-ink"
+                      aria-label="Email is required and cannot be changed"
+                      title="Email is required and cannot be changed"
+                    >
+                      <CheckCircle2 size={12} className="text-white" />
+                    </span>
+                  </div>
+                ) : (
+                  <Toggle
+                    checked={field.required}
+                    onChange={(value) => patch(field.id, { required: value })}
+                    label="Required"
+                    description="Payers must answer this before they can continue."
+                  />
+                )}
               </div>
             </div>
 
