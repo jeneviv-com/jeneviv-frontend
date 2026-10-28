@@ -143,7 +143,23 @@ export default function PublicPay() {
     if (!validate() || !data) return;
     setSubmitting(true);
     try {
-      const response = await paymentsAPI.init(data.short_code, values);
+      /* The API records guest payers under an email (the system email field),
+         and a name field gives receipts and the dashboard a payer to show. */
+      const emailField = fields.find(
+        (field) => field.type === "email" || field.field_id === "email",
+      );
+      const nameField = fields.find(
+        (field) =>
+          field.type !== "email" &&
+          /payer|full.?name|^name$|student.?name/i.test(field.field_id),
+      );
+
+      const response = await paymentsAPI.init(
+        data.short_code,
+        values,
+        emailField ? values[emailField.field_id]?.trim() : undefined,
+        nameField ? values[nameField.field_id]?.trim() : undefined,
+      );
       setResult(response);
       storeResult(code, response);
       setStep("pay");

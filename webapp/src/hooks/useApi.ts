@@ -140,6 +140,20 @@ export function useGroups() {
   );
 }
 
+/** One group, resolved from the list — the API has no GET /:id for groups. */
+export function useGroup(id?: string | null) {
+  return useResource<CollectionGroup>(
+    () =>
+      groupsAPI.list().then((r) => {
+        const group = (r.groups ?? []).find((item) => item.id === id);
+        if (!group) throw new Error("Group not found");
+        return group;
+      }),
+    [id ?? ""],
+    { enabled: Boolean(id) },
+  );
+}
+
 /* -------------------------------------------------------------- collections */
 
 export function useCollections(params?: { status?: string; search?: string }) {

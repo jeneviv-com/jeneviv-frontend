@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { ImagePlus, Layers, Pencil, Plus, Trash2 } from "lucide-react";
 import { groupsAPI, type CollectionGroup } from "@/lib/api";
 import { errorMessage, useAction, useGroups } from "@/hooks/useApi";
@@ -215,7 +216,10 @@ export default function Groups() {
                 className="dash-rise"
                 style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
               >
-                <article className="card card-interactive flex h-full flex-col rounded-[18px] border-ink/20 p-5">
+                <Link
+                  to={`/groups/${group.id}`}
+                  className="card card-interactive flex h-full flex-col rounded-[18px] border-ink/20 p-5 no-underline hover:shadow-md"
+                >
                   {/* Identity and logo status */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-start gap-3">
@@ -266,14 +270,16 @@ export default function Groups() {
                   <div className="mt-4 flex items-center justify-between gap-2 border-t border-line-soft pt-4">
                     <button
                       type="button"
-                      onClick={() =>
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         setDraft({
                           id: group.id,
                           name: group.name,
                           description: group.description ?? "",
                           logo_url: group.logo_url ?? null,
-                        })
-                      }
+                        });
+                      }}
                       className="btn btn-primary btn-sm"
                     >
                       <Pencil size={13} aria-hidden="true" /> Edit
@@ -283,13 +289,17 @@ export default function Groups() {
                       type="button"
                       title="Delete group"
                       aria-label={`Delete ${group.name}`}
-                      onClick={() => setPendingDelete(group)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setPendingDelete(group);
+                      }}
                       className="grid h-8 w-8 place-items-center rounded-[10px] border border-ink/20 bg-white text-danger transition-colors hover:border-danger/40 hover:bg-danger/5"
                     >
                       <Trash2 size={14} />
                     </button>
                   </div>
-                </article>
+                </Link>
               </li>
             );
           })}

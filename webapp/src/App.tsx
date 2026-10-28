@@ -7,6 +7,7 @@ import ApproveWithdrawal from "@/pages/ApproveWithdrawal";
 import CollectionDetail from "@/pages/CollectionDetail";
 import Collections from "@/pages/Collections";
 import Groups from "@/pages/Groups";
+import GroupDetail from "@/pages/GroupDetail";
 import Dashboard from "@/pages/Dashboard";
 import Login from "@/pages/Login";
 import Notifications from "@/pages/Notifications";
@@ -41,6 +42,7 @@ export default function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/collections" element={<Collections />} />
               <Route path="/groups" element={<Groups />} />
+              <Route path="/groups/:id" element={<GroupDetail />} />
               <Route path="/collections/:id" element={<CollectionDetail />} />
               <Route path="/payment-links" element={<PaymentLinks />} />
               <Route path="/payers" element={<Payers />} />

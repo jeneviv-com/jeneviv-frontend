@@ -1157,14 +1157,21 @@ export const paymentsAPI = {
       paid_at: string | null;
     }>(`/api/payments/status/${encodeURIComponent(reference)}`, { anonymous: true }),
 
-  /** No account needed: a payer is recorded from the form. */
-  init: (collectionShortCode: string, fieldValues: Record<string, unknown>, payerEmail?: string) =>
+  /** No account needed: a payer is recorded from the form. Guest payments
+      carry the form's email so the backend can record the payer. */
+  init: (
+    collectionShortCode: string,
+    fieldValues: Record<string, unknown>,
+    payerEmail?: string,
+    payerName?: string,
+  ) =>
     apiFetch<InitPaymentResult>("/api/payments/init", {
       method: "POST",
       body: {
         collection_short_code: collectionShortCode,
         field_values: fieldValues,
         ...(payerEmail ? { payer_email: payerEmail } : {}),
+        ...(payerName ? { payer_name: payerName } : {}),
       },
     }),
 };
