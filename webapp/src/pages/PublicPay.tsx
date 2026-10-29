@@ -75,40 +75,77 @@ export default function PublicPay() {
      so the payer always leaves one — even when the collection skips the field. */
   const [receiptEmail, setReceiptEmail] = useState("");
 
-  /* Poll for confirmation after the payer says they have sent the money. */
+  /* Poll for confirmation after the payer says they have sent the money. Bank transfers can
+     take a few minutes, so the checks slow down over time and run for up to 20 minutes. */
   useEffect(() => {
     if (step !== "pay" || !result || !confirming) return;
-    let attempts = 0;
+
+    const startedAt = Date.now();
+    const LIMIT_MS = 20 * 60_000;
     let failures = 0;
-    const timer = setInterval(async () => {
-      attempts += 1;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const delayFor = (elapsed: number) =>
+      elapsed < 60_000 ? 4_000 : elapsed < 5 * 60_000 ? 15_000 : 30_000;
+
+    const check = async () => {
+      if (stopped) return;
+      const elapsed = Date.now() - startedAt;
+
+      if (elapsed > LIMIT_MS) {
+        setStatusNote(
+          "We have not seen this transfer yet. Keep the reference above. Your receipt will be emailed once it is confirmed.",
+        );
+        return;
+      }
+
       try {
         const response = await paymentsAPI.status(result.transaction.reference);
         failures = 0;
+
         if (response.status === "success") {
           setResult({ ...result, transaction: { ...result.transaction, status: response.status } });
           setStep("done");
           storeResult(code, null);
-          clearInterval(timer);
-        } else if (response.status === "failed") {
-          setStatusNote("The gateway could not confirm this payment. Please check with your coordinator before sending again.");
-          clearInterval(timer);
+          stopped = true;
+          return;
+        }
+        if (response.status === "failed") {
+          setStatusNote(
+            "The gateway could not confirm this payment. Please check with your coordinator before sending again.",
+          );
+          stopped = true;
+          return;
+        }
+        if (elapsed > 60_000) {
+          setStatusNote(
+            "Your transfer can take a few minutes to confirm. You can close this page, and your receipt will be emailed.",
+          );
         }
       } catch (error) {
         failures += 1;
         if (error instanceof APIError && error.isAuthError) {
           setStatusNote("We will email your receipt as soon as the transfer is confirmed.");
-          clearInterval(timer);
+          stopped = true;
           return;
         }
-        if (failures >= 3 || attempts >= 40) {
-          setStatusNote("Still waiting for confirmation. You can safely close this page — your receipt will be emailed.");
-          clearInterval(timer);
+        if (failures >= 5) {
+          setStatusNote(
+            "We are having trouble reaching the server. You can close this page, and your receipt will be emailed.",
+          );
         }
       }
-    }, 4000);
 
-    return () => clearInterval(timer);
+      timer = setTimeout(check, delayFor(Date.now() - startedAt));
+    };
+
+    check();
+
+    return () => {
+      stopped = true;
+      if (timer) clearTimeout(timer);
+    };
   }, [step, result, confirming]);
 
   const data: Collection | null = collection.data;
