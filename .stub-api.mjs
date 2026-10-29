@@ -175,6 +175,26 @@ const server = http.createServer((req, res) => {
     if (path === "/api/collection-groups")
       return json(res, 200, { groups }, origin);
 
+    const groupById = /^\/api\/collection-groups\/(.+)$/.exec(path);
+    if (groupById) {
+      const group = groups.find((item) => item.id === groupById[1]);
+      if (!group)
+        return json(
+          res,
+          404,
+          { error: { code: "not_found", message: "Group not found" } },
+          origin,
+        );
+      if (req.method === "PATCH") {
+        Object.assign(group, body);
+        return json(res, 200, { group }, origin);
+      }
+      if (req.method === "DELETE") {
+        groups.splice(groups.indexOf(group), 1);
+        return json(res, 200, { success: true }, origin);
+      }
+    }
+
     if (path === "/api/collections")
       return json(res, 200, { collections }, origin);
 
@@ -190,7 +210,9 @@ const server = http.createServer((req, res) => {
           origin,
         );
       const { stats: _stats, group, ...collection } = found;
-      return json(res, 200, { collection, fields: payerFields, group }, origin);
+      // misc1 deliberately has no email field, to exercise the receipt-email input.
+      const fields = code === "misc1" ? payerFields.filter((f) => f.type !== "email") : payerFields;
+      return json(res, 200, { collection, fields, group }, origin);
     }
 
     if (path === "/api/payments/init" && req.method === "POST") {

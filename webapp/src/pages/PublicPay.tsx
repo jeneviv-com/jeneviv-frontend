@@ -71,6 +71,9 @@ export default function PublicPay() {
   const [copied, setCopied] = useState(false);
   const [statusNote, setStatusNote] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
+  /* Guest payments are recorded under an email and receipts are mailed to it,
+     so the payer always leaves one — even when the collection skips the field. */
+  const [receiptEmail, setReceiptEmail] = useState("");
 
   /* Poll for confirmation after the payer says they have sent the money. */
   useEffect(() => {
@@ -111,6 +114,21 @@ export default function PublicPay() {
   const data: Collection | null = collection.data;
   const fields = useMemo(() => data?.fields ?? [], [data]);
 
+  const emailField = useMemo(
+    () =>
+      fields.find(
+        (field) => field.type === "email" || field.field_id === "email",
+      ),
+    [fields],
+  );
+
+  /* The key the receipt-email error is stored under: the collection's own
+     email field when it has one, otherwise the extra input below. */
+  const emailKey = emailField ? emailField.field_id : "__receipt_email";
+  const payerEmail = (
+    (emailField ? values[emailField.field_id] : receiptEmail) ?? ""
+  ).trim();
+
   // The amount to transfer comes from the server's breakdown, once the payment
   // has been created. Fees are never estimated in the browser.
   const payAmount = result?.breakdown?.total_charged ?? result?.transaction.total_charged ?? data?.amount ?? 0;
@@ -134,6 +152,14 @@ export default function PublicPay() {
       if (field.type === "phone" && value.replace(/\D/g, "").length < 10)
         next[field.field_id] = "Enter a valid phone number.";
     });
+    // The API rejects a guest payment without an email, so it is required
+    // here whether the collection asked for it or not.
+    if (!payerEmail) {
+      next[emailKey] = "Enter your email so we can send your receipt.";
+    } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(payerEmail)) {
+      next[emailKey] = "Enter a valid email address.";
+    }
+
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -143,11 +169,7 @@ export default function PublicPay() {
     if (!validate() || !data) return;
     setSubmitting(true);
     try {
-      /* The API records guest payers under an email (the system email field),
-         and a name field gives receipts and the dashboard a payer to show. */
-      const emailField = fields.find(
-        (field) => field.type === "email" || field.field_id === "email",
-      );
+      /* A name field gives receipts and the dashboard a payer to show. */
       const nameField = fields.find(
         (field) =>
           field.type !== "email" &&
@@ -157,7 +179,7 @@ export default function PublicPay() {
       const response = await paymentsAPI.init(
         data.short_code,
         values,
-        emailField ? values[emailField.field_id]?.trim() : undefined,
+        payerEmail || undefined,
         nameField ? values[nameField.field_id]?.trim() : undefined,
       );
       setResult(response);
@@ -348,6 +370,28 @@ export default function PublicPay() {
                 )}
               </Field>
             ))}
+
+            {/* No email field in this collection: ask for one so the payment
+                can be recorded and the receipt delivered. */}
+            {emailField ? null : (
+              <Field
+                label="Email for receipt"
+                htmlFor="receipt-email"
+                error={errors.__receipt_email}
+              >
+                <Input
+                  id="receipt-email"
+                  type="email"
+                  className="h-[50px] rounded-[12px]"
+                  placeholder="you@example.com"
+                  value={receiptEmail}
+                  onChange={(event) => {
+                    setReceiptEmail(event.target.value);
+                    setErrors((current) => ({ ...current, __receipt_email: "" }));
+                  }}
+                />
+              </Field>
+            )}
 
             {formError ? <InlineNote tone="error">{formError}</InlineNote> : null}
 

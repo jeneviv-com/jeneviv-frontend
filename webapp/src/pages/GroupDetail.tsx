@@ -361,15 +361,16 @@ export default function GroupDetail() {
                         className="dash-rise"
                         style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
                       >
-                        <Link
-                          to={`/collections/${collection.id}`}
-                          className="card card-interactive flex h-full flex-col rounded-[18px] border border-ink/15 p-5 no-underline hover:shadow-md"
-                        >
+                        {/* An article, not a Link: the card already holds an Open link. */}
+                        <article className="card card-interactive flex h-full flex-col rounded-[18px] border border-ink/15 p-5">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <p className="truncate text-[15.5px] font-semibold tracking-tight">
+                              <Link
+                                to={`/collections/${collection.id}`}
+                                className="block truncate text-[15.5px] font-semibold tracking-tight underline-offset-2 hover:underline"
+                              >
                                 {collection.name}
-                              </p>
+                              </Link>
                               <p className="mt-1 line-clamp-2 text-[12.5px] leading-relaxed text-ink-muted">
                                 {collection.description || "No description added."}
                               </p>
@@ -436,7 +437,7 @@ export default function GroupDetail() {
                               {collection.short_code}
                             </p>
                           </div>
-                        </Link>
+                        </article>
                       </li>
                     );
                   })}
@@ -516,15 +517,16 @@ export default function GroupDetail() {
                       className="dash-rise"
                       style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
                     >
-                      <Link
-                        to={`/collections/${collection.id}`}
-                        className="card card-interactive flex h-full flex-col rounded-[18px] border border-ink/15 p-5 no-underline hover:shadow-md"
-                      >
+                      {/* An article, not a Link: the card already holds an Open link. */}
+                      <article className="card card-interactive flex h-full flex-col rounded-[18px] border border-ink/15 p-5">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="truncate text-[15.5px] font-semibold tracking-tight">
+                            <Link
+                              to={`/collections/${collection.id}`}
+                              className="block truncate text-[15.5px] font-semibold tracking-tight underline-offset-2 hover:underline"
+                            >
                               {collection.name}
-                            </p>
+                            </Link>
                             <p className="mt-1 line-clamp-2 text-[12.5px] leading-relaxed text-ink-muted">
                               {collection.description || "No description added."}
                             </p>
@@ -591,7 +593,7 @@ export default function GroupDetail() {
                             {collection.short_code}
                           </p>
                         </div>
-                      </Link>
+                      </article>
                     </li>
                   );
                 })}
