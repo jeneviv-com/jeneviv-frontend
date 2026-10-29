@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { BadgeCheck, Building2, CheckCircle2, Download, Loader2, ShieldCheck, TriangleAlert } from "lucide-react";
-import { APIError, verifyAPI, type PublicReceipt } from "@/lib/api";
+import { APIError, apiConfig, verifyAPI, type PublicReceipt } from "@/lib/api";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { Button, InlineNote } from "@/components/ui";
 
@@ -60,7 +60,18 @@ export default function VerifyReceipt() {
       <div className="mx-auto max-w-[580px]">
         <div className="mb-10 flex items-center justify-between">
           <Link to="/" className="text-[21px] font-extrabold tracking-[-0.05em] text-ink">
-            jeneviv<span className="text-brand">.</span>
+            <span className="flex items-center gap-2.5">
+              <img
+                src={apiConfig.withBase("/assets/images/jeneviv.png")}
+                alt="Jeneviv"
+                width={28}
+                height={28}
+                className="h-7 w-7 rounded-[9px] object-cover"
+              />
+              <span>
+                jeneviv<span className="text-brand">.</span>
+              </span>
+            </span>
           </Link>
           <span className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">receipt verification</span>
         </div>
@@ -175,6 +186,16 @@ export default function VerifyReceipt() {
             </div>
           </>
         )}
+        <footer className="mt-12 flex items-center justify-center gap-2 border-t border-line pt-6 text-[12px] text-ink-muted">
+          <img
+            src={apiConfig.withBase("/assets/images/jeneviv.png")}
+            alt=""
+            width={16}
+            height={16}
+            className="h-4 w-4 rounded-[4px] object-cover"
+          />
+          Powered by <span className="font-semibold text-ink">Jeneviv</span>
+        </footer>
       </div>
     </div>
   );
