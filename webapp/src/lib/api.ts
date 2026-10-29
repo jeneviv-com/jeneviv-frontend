@@ -1147,6 +1147,19 @@ export const verifyAPI = {
 /* ------------------------------------------------------------------ payments */
 
 export const paymentsAPI = {
+  /** Asks the gateway now whether the payer's transfer has arrived. */
+  confirm: (reference: string) =>
+    apiFetch<{
+      reference: string;
+      status: TransactionStatus;
+      amount: number;
+      currency: string;
+      paid_at: string | null;
+    }>(`/api/payments/status/${encodeURIComponent(reference)}/confirm`, {
+      method: "POST",
+      anonymous: true,
+    }),
+
   /** Public status check for a payer's own payment. No sign-in needed. */
   status: (reference: string) =>
     apiFetch<{
