@@ -205,9 +205,7 @@ export default function Dashboard() {
 
   const successful = rangedTransactions.filter((t) => t.status === "success");
   const collected = successful.reduce((sum, t) => sum + t.amount, 0);
-  const settled = successful
-    .filter((t) => t.settled_at)
-    .reduce((sum, t) => sum + t.amount, 0);
+  const settled = successful.reduce((sum, t) => sum + t.amount, 0);
   const pendingCount = allTransactions.filter((t) => t.status === "pending").length;
 
   // Payers are keyed by email when the API has it, otherwise by name. Two
@@ -364,7 +362,7 @@ export default function Dashboard() {
               <StackedCard
                 index={1}
                 tone="mint"
-                title="Settled"
+                title="Paid"
                 subtitle="Paid straight to your bank"
                 value={loading ? valueSkeleton : formatMoney(settled)}
                 to="/transactions"
