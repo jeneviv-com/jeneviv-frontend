@@ -473,7 +473,19 @@ export default function PublicPay() {
               size="lg"
               className="h-[52px] w-full rounded-[12px] text-[15px]"
               loading={confirming}
-              onClick={() => setConfirming(true)}
+              onClick={async () => {
+                setConfirming(true);
+                try {
+                  const checked = await paymentsAPI.confirm(result.transaction.reference);
+                  if (checked.status === "success") {
+                    setResult({ ...result, transaction: { ...result.transaction, status: "success" } });
+                    setStep("done");
+                    storeResult(code, null);
+                  }
+                } catch {
+                  // The status checks below keep going, so a failed call isn't a dead end.
+                }
+              }}
               disabled={confirming}
             >
               {confirming ? "Waiting for confirmation…" : "I have sent the money"}
