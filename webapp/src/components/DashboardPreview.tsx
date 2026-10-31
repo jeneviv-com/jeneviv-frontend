@@ -87,7 +87,7 @@ export default function DashboardPreview() {
           ))}
         </aside>
 
-        {/* main */}
+        {/* main - matching actual dashboard two-column layout */}
         <div className="flex min-h-0 min-w-0 flex-col gap-1.5 p-2.5">
           {/* top bar: title, bell and account, like the app */}
           <div className="flex shrink-0 items-center justify-between gap-2">
@@ -105,8 +105,8 @@ export default function DashboardPreview() {
             </div>
           </div>
 
-          {/* dark headline */}
-          <div className="shrink-0 rounded-[7px] bg-ink px-2.5 py-2 text-white">
+          {/* dark headline - matches actual dashboard */}
+          <div className="shrink-0 rounded-[7px] bg-ink px-2.5 py-2 text-white shadow-sm">
             <div className="flex items-start justify-between gap-2">
               <div>
                 <p className="text-[8px] font-semibold">Collected</p>
@@ -116,68 +116,117 @@ export default function DashboardPreview() {
             </div>
           </div>
 
-          {/* stacked summary cards, muted palette */}
-          <div className="shrink-0">
-            {SUMMARY.map((item, index) => (
-              <div
-                key={item.label}
-                className={`relative flex items-center justify-between gap-2 rounded-[8px] border border-ink/20 px-2 py-1.5 ${TONE[item.tone]} ${
-                  index === 0 ? "" : "-mt-1.5"
-                }`}
-                style={{ zIndex: index + 1 }}
-              >
-                <div className="min-w-0">
-                  <p className="text-[7px] font-semibold">{item.label}</p>
-                  <p className="truncate text-[5px] opacity-70">{item.hint}</p>
-                </div>
-                <p className="shrink-0 text-[9px] font-bold tabular">{item.value}</p>
+          {/* Main content grid - matching actual dashboard layout */}
+          <div className="grid grid-cols-1 gap-1.5 md:grid-cols-[1fr_120px]">
+            {/* Left column - main metrics */}
+            <div className="space-y-1.5">
+              {/* harmonized summary cards in a 2x2 grid, matching actual dashboard layout */}
+              <div className="grid grid-cols-2 gap-1">
+                {SUMMARY.map((item) => (
+                  <div
+                    key={item.label}
+                    className={`flex items-center justify-between gap-2 rounded-[8px] border border-ink/20 px-2 py-1.5 ${TONE[item.tone]}`}
+                  >
+                    <div className="min-w-0">
+                      <p className="text-[7px] font-semibold">{item.label}</p>
+                      <p className="truncate text-[5px] opacity-70">{item.hint}</p>
+                    </div>
+                    <p className="shrink-0 text-[9px] font-bold tabular">{item.value}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {/* new collection, full width */}
-          <div className="flex shrink-0 items-center justify-center gap-1 rounded-[6px] bg-ink py-1.5 text-[6.5px] font-semibold text-cream">
-            <Plus size={6} /> New collection
-          </div>
+              {/* new collection button, matching actual dashboard */}
+              <div className="flex shrink-0 items-center justify-center gap-1 rounded-[6px] bg-ink py-1.5 text-[6.5px] font-semibold text-cream transition-transform duration-150 hover:-translate-y-0.5 active:scale-95">
+                <Plus size={6} /> New collection
+              </div>
 
-          {/* chart */}
-          <div className="flex min-h-0 flex-1 flex-col rounded-[7px] border border-line px-2 pb-1 pt-1.5">
-            <div className="flex shrink-0 items-center justify-between">
-              <p className="text-[6.5px] font-semibold">Collections over time</p>
-              <p className="text-[5.5px] text-ink-faint">Last 30 days</p>
+              {/* chart */}
+              <div className="flex min-h-0 flex-1 flex-col rounded-[7px] border border-line px-2 pb-1 pt-1.5">
+                <div className="flex shrink-0 items-center justify-between">
+                  <p className="text-[6.5px] font-semibold">Collections over time</p>
+                  <p className="text-[5.5px] text-ink-faint">Last 30 days</p>
+                </div>
+                <svg viewBox="0 0 320 80" preserveAspectRatio="none" className="min-h-0 w-full flex-1" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="previewFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stopColor="#101010" stopOpacity="0.14" />
+                      <stop offset="1" stopColor="#101010" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d="M0 64 C26 60 40 40 64 46 C92 52 106 24 134 32 C166 40 180 14 210 20 C240 26 266 10 320 6 L320 80 L0 80 Z"
+                    fill="url(#previewFill)"
+                  />
+                  <path
+                    d="M0 64 C26 60 40 40 64 46 C92 52 106 24 134 32 C166 40 180 14 210 20 C240 26 266 10 320 6"
+                    fill="none"
+                    stroke="#101010"
+                    strokeWidth="2"
+                  />
+                </svg>
+              </div>
             </div>
-            <svg viewBox="0 0 320 80" preserveAspectRatio="none" className="min-h-0 w-full flex-1" aria-hidden="true">
-              <defs>
-                <linearGradient id="previewFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stopColor="#101010" stopOpacity="0.14" />
-                  <stop offset="1" stopColor="#101010" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M0 64 C26 60 40 40 64 46 C92 52 106 24 134 32 C166 40 180 14 210 20 C240 26 266 10 320 6 L320 80 L0 80 Z"
-                fill="url(#previewFill)"
-              />
-              <path
-                d="M0 64 C26 60 40 40 64 46 C92 52 106 24 134 32 C166 40 180 14 210 20 C240 26 266 10 320 6"
-                fill="none"
-                stroke="#101010"
-                strokeWidth="2"
-              />
-            </svg>
-          </div>
 
-          {/* recent payments */}
-          <div className="shrink-0 rounded-[7px] border border-line px-2 py-1.5">
-            <p className="mb-1 text-[6.5px] font-semibold">Recent payments</p>
-            {RECENT.map((row) => (
-              <div key={row.name} className="flex items-center justify-between gap-2 border-t border-line-soft py-1 first:border-t-0">
-                <div className="min-w-0">
-                  <p className="truncate text-[6px] font-semibold">{row.name}</p>
-                  <p className="truncate text-[5px] text-ink-muted">{row.detail}</p>
+            {/* Right column - sidebar content matching actual dashboard */}
+            <div className="space-y-1.5">
+              {/* recent payments - matches actual dashboard sidebar */}
+              <div className="shrink-0 rounded-[7px] border border-line px-2 py-1.5">
+                <div className="flex items-baseline justify-between gap-1 mb-1">
+                  <p className="text-[6.5px] font-semibold">Recent payments</p>
+                  <span className="text-[5px] font-semibold text-brand">View all</span>
                 </div>
-                <p className="shrink-0 text-[6px] font-bold tabular">{row.amount}</p>
+                {RECENT.map((row) => (
+                  <div key={row.name} className="flex items-center justify-between gap-2 border-t border-line-soft py-1 first:border-t-0">
+                    <div className="min-w-0">
+                      <p className="truncate text-[6px] font-semibold">{row.name}</p>
+                      <p className="truncate text-[5px] text-ink-muted">{row.detail}</p>
+                    </div>
+                    <p className="shrink-0 text-[6px] font-bold tabular">{row.amount}</p>
+                  </div>
+                ))}
               </div>
-            ))}
+
+              {/* collections progress - matching actual dashboard */}
+              <div className="shrink-0 rounded-[7px] border border-line px-2 py-1.5">
+                <div className="flex items-baseline justify-between gap-1 mb-1">
+                  <p className="text-[6.5px] font-semibold">Collections</p>
+                  <span className="text-[5px] font-semibold text-brand">All</span>
+                </div>
+                <div className="space-y-1.5">
+                  <div>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="truncate text-[5.5px] font-semibold">CSC 311 handout</span>
+                      <span className="tabular text-[5px] font-semibold">₦7,725</span>
+                    </div>
+                    <div className="mt-1 h-[3px] w-full rounded-full bg-line">
+                      <div className="h-full w-3/4 rounded-full bg-brand" />
+                    </div>
+                    <div className="mt-0.5 flex items-center justify-between">
+                      <p className="font-mono text-[4px] text-ink-muted">3/4 payers</p>
+                      <span className="inline-flex items-center gap-0.5 rounded-full bg-[#d5e8c4] px-1 py-[1px] text-[4px] font-semibold">
+                        Accepting
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="truncate text-[5.5px] font-semibold">Dept levy</span>
+                      <span className="tabular text-[5px] font-semibold">₦23,376</span>
+                    </div>
+                    <div className="mt-1 h-[3px] w-full rounded-full bg-line">
+                      <div className="h-full w-5/6 rounded-full bg-brand" />
+                    </div>
+                    <div className="mt-0.5 flex items-center justify-between">
+                      <p className="font-mono text-[4px] text-ink-muted">5/6 payers</p>
+                      <span className="inline-flex items-center gap-0.5 rounded-full bg-[#d5e8c4] px-1 py-[1px] text-[4px] font-semibold">
+                        Accepting
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* settlement note, like the app */}
