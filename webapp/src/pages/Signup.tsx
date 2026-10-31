@@ -255,7 +255,7 @@ export default function Signup() {
         {["No card required to start", "Create collections before approval", "Settle to your own bank account"].map(
           (item) => (
             <li key={item} className="flex items-center gap-2.5 text-[13px] text-ink-muted">
-              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#c8f58e]">
+              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#d5e8c4]">
                 <Check size={11} className="text-ink" />
               </span>
               {item}

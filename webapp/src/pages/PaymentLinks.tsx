@@ -260,7 +260,7 @@ export default function PaymentLinks() {
 
       <Card className="mt-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#9ff0f5] text-ink">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#d3e9ee] text-ink">
             <QrCode size={19} />
           </span>
           <div>

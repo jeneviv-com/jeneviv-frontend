@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { apiConfig } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
 import { resetDemoData } from "@/lib/demo";
 import { initials } from "@/lib/format";
@@ -254,7 +255,7 @@ export default function AppShell() {
         <div className="flex items-center justify-between px-5 pb-3 pt-5">
           <a href={landingUrl} className="flex items-center gap-2.5" aria-label="Jeneviv — back to the website">
             <img
-              src="/assets/images/jeneviv.png"
+              src={apiConfig.withBase("/assets/images/jeneviv.png")}
               alt=""
               width={28}
               height={28}

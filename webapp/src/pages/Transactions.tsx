@@ -479,7 +479,7 @@ export default function Transactions() {
       >
         {open ? (
           <div className="space-y-5">
-            <div className="flex items-center justify-between gap-4 rounded-[18px] border border-ink bg-[#c8f58e] px-4 py-3.5">
+            <div className="flex items-center justify-between gap-4 rounded-[18px] border border-ink bg-[#d5e8c4] px-4 py-3.5">
               <div>
                 <p className="font-mono text-[10.5px] uppercase tracking-[0.12em]">Amount</p>
                 <p className="tabular mt-1 text-[22px] font-extrabold">

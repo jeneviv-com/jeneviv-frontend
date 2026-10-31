@@ -242,10 +242,10 @@ export function useVisualViewport() {
 /** Round icon well shown in a dialog header. Tones match the app's meanings. */
 function DialogMark({ tone, children }: { tone: "money" | "attention" | "danger" | "neutral"; children: ReactNode }) {
   const styles = {
-    money: "bg-[#c8f58e] text-ink",
-    attention: "bg-[#ffc49a] text-ink",
+    money: "bg-[#d5e8c4] text-ink",
+    attention: "bg-[#f9d3b0] text-ink",
     danger: "bg-[#ffd6cf] text-ink",
-    neutral: "bg-[#9ff0f5] text-ink",
+    neutral: "bg-[#d3e9ee] text-ink",
   } as const;
   return (
     <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full ${styles[tone]}`}>{children}</span>

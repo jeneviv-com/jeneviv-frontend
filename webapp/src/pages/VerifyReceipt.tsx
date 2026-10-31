@@ -23,7 +23,7 @@ function Line({ label, children }: { label: string; children: ReactNode }) {
 /** A small chip with a round icon well, matching the rest of the app. */
 function Verified({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full bg-[#c8f58e] py-1 pl-1 pr-3 text-[12px] font-semibold text-ink">
+    <span className="inline-flex items-center gap-2 rounded-full bg-[#d5e8c4] py-1 pl-1 pr-3 text-[12px] font-semibold text-ink">
       <span className="grid h-5 w-5 place-items-center rounded-full bg-white/85">{icon}</span>
       {children}
     </span>
@@ -100,7 +100,7 @@ export default function VerifyReceipt() {
             {/* verdict */}
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <span className="grid h-12 w-12 place-items-center rounded-full bg-[#c8f58e] text-ink">
+                <span className="grid h-12 w-12 place-items-center rounded-full bg-[#d5e8c4] text-ink">
                   <CheckCircle2 size={22} />
                 </span>
                 <h1 className="mt-6 text-[32px] font-bold leading-[1.05] tracking-[-0.04em]">This receipt is valid</h1>

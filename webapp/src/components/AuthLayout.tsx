@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { ArrowLeft, Check, ShieldCheck } from "lucide-react";
 import LaptopMockup from "@/components/LaptopMockup";
+import { apiConfig } from "@/lib/api";
 
 const PROOF = [
   "Every naira tied to a name and a reference",
@@ -33,7 +34,7 @@ export default function AuthLayout({
         <div className="relative flex items-center justify-between">
           <a href={landing} className="flex items-center gap-2.5" aria-label="Jeneviv — back to the website">
             <img
-              src="/assets/images/jeneviv.png"
+              src={apiConfig.withBase("/assets/images/jeneviv.png")}
               alt=""
               width={30}
               height={30}
@@ -66,7 +67,7 @@ export default function AuthLayout({
             <ul className="mt-5 space-y-2.5">
               {PROOF.map((item) => (
                 <li key={item} className="flex items-center gap-2.5 text-[13px] text-ink-soft">
-                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#c8f58e]">
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#d5e8c4]">
                     <Check size={11} className="text-ink" />
                   </span>
                   {item}
@@ -89,7 +90,7 @@ export default function AuthLayout({
             className="flex items-center gap-2 text-[21px] font-extrabold tracking-[-0.05em]"
             aria-label="Jeneviv — back to the website"
           >
-            <img src="/assets/images/jeneviv.png" alt="" width={28} height={28} className="h-7 w-7 rounded-[9px] object-cover" />
+            <img src={apiConfig.withBase("/assets/images/jeneviv.png")} alt="" width={28} height={28} className="h-7 w-7 rounded-[9px] object-cover" />
             jeneviv<span className="text-brand">.</span>
           </a>
           <a href={landing} className="flex items-center gap-1.5 text-[12.5px] text-ink-muted">

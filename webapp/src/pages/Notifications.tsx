@@ -93,7 +93,7 @@ export default function Notifications() {
           </p>
           <p className="mt-1.5 text-[12px] text-ink-muted">Kept on this device</p>
         </div>
-        <div className="ml-auto flex items-center gap-2 rounded-full bg-[#c8f58e] px-3.5 py-2 text-[12px] font-semibold text-ink">
+        <div className="ml-auto flex items-center gap-2 rounded-full bg-[#d5e8c4] px-3.5 py-2 text-[12px] font-semibold text-ink">
           <span className="h-2 w-2 rounded-full bg-ink" />
           Live · payments arrive as the gateway confirms them
         </div>

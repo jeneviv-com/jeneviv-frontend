@@ -118,7 +118,14 @@ export default function PublicPay() {
           stopped = true;
           return;
         }
-        if (elapsed > 60_000) {
+        if (response.shortfall && response.shortfall > 0) {
+          const currency = result.transaction.currency;
+          setStatusNote(
+            `We have received ${formatMoney(response.amount_received, currency)}. ` +
+              `Please transfer the remaining ${formatMoney(response.shortfall, currency)} to the same account. ` +
+              "We will confirm it automatically.",
+          );
+        } else if (elapsed > 60_000) {
           setStatusNote(
             "Your transfer can take a few minutes to confirm. You can close this page, and your receipt will be emailed.",
           );

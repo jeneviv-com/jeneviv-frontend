@@ -1168,6 +1168,9 @@ export const paymentsAPI = {
       amount: number;
       currency: string;
       paid_at: string | null;
+      amount_received: number;
+      /** Set while a payment is short. The amount still to transfer. */
+      shortfall: number | null;
     }>(`/api/payments/status/${encodeURIComponent(reference)}`, { anonymous: true }),
 
   /** No account needed: a payer is recorded from the form. Guest payments
