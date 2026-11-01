@@ -1227,7 +1227,10 @@ let negotiation: Promise<ConnectionState> | null = null;
 function negotiate(): Promise<ConnectionState> {
   if (!negotiation) {
     negotiation = (async () => {
-      if (CONFIGURED_MODE === "true") {
+      const previewPage =
+        window.location.pathname.startsWith("/preview") ||
+        new URLSearchParams(window.location.search).get("preview") === "1";
+      if (CONFIGURED_MODE === "true" || previewPage) {
         setState("demo");
         return state;
       }
