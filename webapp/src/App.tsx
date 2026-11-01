@@ -30,6 +30,9 @@ export default function App() {
         <Routes>
           {/* Public pages — no account needed */}
           <Route path="/pay/:code" element={<PublicPay />} />
+          <Route path="/preview" element={<AppShell />}>
+            <Route path="dashboard" element={<Dashboard />} />
+          </Route>
           <Route path="/verify/:reference" element={<VerifyReceipt />} />
           <Route path="/approve/:token" element={<ApproveWithdrawal />} />
 
