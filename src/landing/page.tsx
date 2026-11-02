@@ -1017,6 +1017,13 @@ export default function LandingPage() {
           <div className="m-footer-top">
             <div className="m-footer-brand">
               <Link href="/" className="m-logo">
+                <img
+                  src="/assets/images/jeneviv.png"
+                  alt=""
+                  width={28}
+                  height={28}
+                  className="m-logo-mark"
+                />
                 jeneviv<em>.</em>
               </Link>
               <p>
