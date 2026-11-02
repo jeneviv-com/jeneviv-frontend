@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SiteNav from "@/components/marketing/SiteNav";
 import Reveal from "@/components/marketing/Reveal";
+import ScaledFrame from "@/components/marketing/ScaledFrame";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173";
 
@@ -204,129 +205,7 @@ export default function LandingPage() {
               <div className="m-laptop">
                 <div className="m-laptop-lid">
                   <div className="m-laptop-screen">
-                    <div className="m-lap-bar">
-                      <b>jeneviv.</b>
-                      <span />
-                      <span />
-                      <span />
-                    </div>
-                    <div className="m-lap-body">
-                      <aside className="m-lap-side">
-                        <small>Overview</small>
-                        <span className="on">
-                          <i /> Dashboard
-                        </span>
-                        <small>Collect</small>
-                        <span>
-                          <i /> Collections
-                        </span>
-                        <span>
-                          <i /> Payers
-                        </span>
-                        <span>
-                          <i /> Templates
-                        </span>
-                        <small>Money</small>
-                        <span>
-                          <i /> Transactions
-                        </span>
-                        <span>
-                          <i /> Refunds
-                        </span>
-                        <span>
-                          <i /> Bank &amp; settlement
-                        </span>
-                        <small>Workspace</small>
-                        <span>
-                          <i /> Settings
-                        </span>
-                      </aside>
-                      <div className="m-lap-main">
-                        <div className="m-lap-promo">
-                          <div>
-                            <h5>Start a collection today</h5>
-                            <p>
-                              One link. Verified payments. No chasing receipts.
-                            </p>
-                          </div>
-                          <span>New collection</span>
-                        </div>
-                        <div className="m-lap-kpis">
-                          <div className="m-lap-kpi">
-                            <small>Collected</small>
-                            <b>₦412,500</b>
-                            <em>+18% this week</em>
-                          </div>
-                          <div className="m-lap-kpi">
-                            <small>Payers</small>
-                            <b>136 / 200</b>
-                            <em>68% complete</em>
-                          </div>
-                          <div className="m-lap-kpi">
-                            <small>Settled</small>
-                            <b>₦389,000</b>
-                            <em>settled direct</em>
-                          </div>
-                        </div>
-                        <div className="m-lap-chart">
-                          <div className="m-lap-chart-top">
-                            <span>Mon</span>
-                            <span>Tue</span>
-                            <span>Wed</span>
-                            <span>Thu</span>
-                            <span>Fri</span>
-                            <span>Sat</span>
-                          </div>
-                          <svg viewBox="0 0 320 110" preserveAspectRatio="none">
-                            <defs>
-                              <linearGradient
-                                id="heroFill"
-                                x1="0"
-                                y1="0"
-                                x2="0"
-                                y2="1"
-                              >
-                                <stop
-                                  offset="0"
-                                  stopColor="#101010"
-                                  stopOpacity="0.16"
-                                />
-                                <stop
-                                  offset="1"
-                                  stopColor="#101010"
-                                  stopOpacity="0"
-                                />
-                              </linearGradient>
-                            </defs>
-                            <path
-                              d="M0 88 C28 84 40 60 66 64 C96 69 112 38 142 46 C176 55 190 22 222 30 C252 38 276 18 320 14 L320 110 L0 110 Z"
-                              fill="url(#heroFill)"
-                            />
-                            <path
-                              d="M0 88 C28 84 40 60 66 64 C96 69 112 38 142 46 C176 55 190 22 222 30 C252 38 276 18 320 14"
-                              fill="none"
-                              stroke="#101010"
-                              strokeWidth="2"
-                            />
-                            <path
-                              d="M0 96 C34 94 54 82 84 86 C118 90 142 70 172 74 C204 78 232 58 262 62 C288 65 304 54 320 52"
-                              fill="none"
-                              stroke="#e8d9cd"
-                              strokeWidth="1.5"
-                              strokeDasharray="4 4"
-                            />
-                          </svg>
-                        </div>
-                        <div className="m-lap-people">
-                          <span>AO</span>
-                          <span>EN</span>
-                          <span>FM</span>
-                          <span>IK</span>
-                          <span>TJ</span>
-                          <span>+131</span>
-                        </div>
-                      </div>
-                    </div>
+                    <ScaledFrame src={`${appUrl}/preview/dashboard`} width={1280} height={800} title="Jeneviv dashboard" />
                   </div>
                 </div>
                 <div className="m-laptop-base" />

@@ -39,7 +39,19 @@ const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:3001").repla
 
 export type ConnectionState = "checking" | "live" | "demo";
 
-let state: ConnectionState = "checking";
+// Preview pages (the landing page's live mockups) always use demo data. They start in
+// demo mode straight away and never switch to live, so the screens can't flicker or
+// show "not found" while a health check is still running.
+function isPreviewPage() {
+  return (
+    typeof window !== "undefined" &&
+    (window.location.pathname.startsWith("/preview") ||
+      new URLSearchParams(window.location.search).get("preview") === "1")
+  );
+}
+
+const previewPage = isPreviewPage();
+let state: ConnectionState = previewPage ? "demo" : "checking";
 let installed = false;
 let database: DemoDatabase | null = null;
 
@@ -55,6 +67,7 @@ export function subscribeConnection(listener: (state: ConnectionState) => void) 
 }
 
 function setState(next: ConnectionState) {
+  if (previewPage && next === "live") return;
   state = next;
   listeners.forEach((listener) => listener(next));
 }
@@ -1227,7 +1240,10 @@ let negotiation: Promise<ConnectionState> | null = null;
 function negotiate(): Promise<ConnectionState> {
   if (!negotiation) {
     negotiation = (async () => {
-      if (CONFIGURED_MODE === "true") {
+      const previewPage =
+        window.location.pathname.startsWith("/preview") ||
+        new URLSearchParams(window.location.search).get("preview") === "1";
+      if (CONFIGURED_MODE === "true" || previewPage) {
         setState("demo");
         return state;
       }
