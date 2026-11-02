@@ -1,7 +1,7 @@
 import Link from "next/link";
 import SiteNav from "@/components/marketing/SiteNav";
 import Reveal from "@/components/marketing/Reveal";
-import ScaledFrame from "@/components/marketing/ScaledFrame";
+import LaptopMockup from "@/components/marketing/LaptopMockup";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173";
 
@@ -202,14 +202,7 @@ export default function LandingPage() {
             </div>
 
             <div className="m-hero-visual" aria-hidden="true">
-              <div className="m-laptop">
-                <div className="m-laptop-lid">
-                  <div className="m-laptop-screen">
-                    <ScaledFrame src={`${appUrl}/preview/dashboard`} width={1280} height={800} title="Jeneviv dashboard" />
-                  </div>
-                </div>
-                <div className="m-laptop-base" />
-              </div>
+              <LaptopMockup />
             </div>
           </div>
         </div>
