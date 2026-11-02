@@ -469,7 +469,7 @@ body {
   width: 118%;
   min-width: 560px;
   margin-left: 2%;
-  transform: perspective(1800px) rotateY(-9deg) rotateX(3deg) rotateZ(-1deg);
+  transform: none;
   transform-origin: left center;
   filter: drop-shadow(0 40px 60px rgba(35, 18, 10, 0.22));
   z-index: 2;
@@ -2315,6 +2315,7 @@ body {
   .m-laptop {
     width: 128%;
     min-width: 520px;
+    transform: none;
   }
 
 
@@ -2369,7 +2370,7 @@ body {
     width: 100%;
     min-width: 0;
     margin-left: 0;
-    transform: perspective(1600px) rotateY(-5deg) rotateX(2deg);
+    transform: none;
   }
 
   .m-ledger-band {
