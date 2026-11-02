@@ -175,7 +175,7 @@ function FootLink({
 }
 
 export default function AppShell() {
-  const landingUrl = import.meta.env.NEXT_PUBLIC_APP_URL || "/";
+  const landingUrl = import.meta.env.NEXT_PUBLIC_URL || "/";
   const { user, merchant, connection, logout, isAdmin, loading } = useAuth();
   const { toasts, dismiss, unreadCount, push } = useToast();
   const location = useLocation();
