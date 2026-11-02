@@ -175,7 +175,7 @@ function FootLink({
 }
 
 export default function AppShell() {
-  const landingUrl = import.meta.env.VITE_PUBLIC_APP_URL || "/";
+  const landingUrl = import.meta.env.NEXT_PUBLIC_APP_URL || "/";
   const { user, merchant, connection, logout, isAdmin, loading } = useAuth();
   const { toasts, dismiss, unreadCount, push } = useToast();
   const location = useLocation();
@@ -253,7 +253,7 @@ export default function AppShell() {
       >
         {/* brand */}
         <div className="flex items-center justify-between px-5 pb-3 pt-5">
-          <a href={landingUrl} className="flex items-center gap-2.5" aria-label="Jeneviv — back to the website">
+          <a href={landingUrl} className="flex items-center gap-2.5" aria-label="Jeneviv... back to the website">
             <img
               src={apiConfig.withBase("/assets/images/jeneviv.png")}
               alt=""

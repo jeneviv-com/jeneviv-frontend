@@ -9,6 +9,7 @@ import Collections from "@/pages/Collections";
 import Groups from "@/pages/Groups";
 import GroupDetail from "@/pages/GroupDetail";
 import Dashboard from "@/pages/Dashboard";
+import DashboardPreviewPage from "@/pages/DashboardPreview";
 import Login from "@/pages/Login";
 import Notifications from "@/pages/Notifications";
 import Payers from "@/pages/Payers";
@@ -30,7 +31,7 @@ export default function App() {
         <Routes>
           {/* Public pages — no account needed */}
           <Route path="/pay/:code" element={<PublicPay />} />
-          <Route path="/preview/dashboard" element={<Dashboard />} />
+          <Route path="/preview/dashboard" element={<DashboardPreviewPage />} />
           <Route path="/verify/:reference" element={<VerifyReceipt />} />
           <Route path="/approve/:token" element={<ApproveWithdrawal />} />
 
