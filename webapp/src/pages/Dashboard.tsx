@@ -335,57 +335,50 @@ export default function Dashboard() {
             </section>
           </Reveal>
 
-          {/* Grid of metric cards - stacked on mobile, 2x2 grid on laptop.
-              The gap and the tuck both live on `lg:` so that on a phone all
-              four cards sit in one continuous stack, like the other pages. */}
+          {/* Metric cards - single stacked column on mobile (like LemFi), 2x2 grid on laptop */}
           <div className="lg:grid lg:grid-cols-2 lg:gap-4">
-            {/* stacked colour cards */}
-            <div className="lg:mt-0">
-              <StackedCard
-                index={0}
-                tone="lavender"
-                title="Payers"
-                subtitle={
-                  payerTarget
-                    ? `${percent(uniquePayers, payerTarget)}% of your target`
-                    : `Across ${formatNumber(stats.length)} collection${stats.length === 1 ? "" : "s"}`
-                }
-                value={
-                  loading
-                    ? valueSkeleton
-                    : payerTarget
-                      ? `${formatNumber(uniquePayers)} / ${formatNumber(payerTarget)}`
-                      : formatNumber(uniquePayers)
-                }
-                to="/transactions"
-              />
-              <StackedCard
-                index={1}
-                tone="mint"
-                title="Paid"
-                subtitle="Paid straight to your bank"
-                value={loading ? valueSkeleton : formatMoney(settled)}
-                to="/transactions"
-              />
-            </div>
-            <div className="-mt-6 lg:mt-0">
-              <StackedCard
-                index={2}
-                tone="peach"
-                title="Payments"
-                subtitle={`${formatNumber(pendingCount)} awaiting confirmation`}
-                value={loading ? valueSkeleton : formatNumber(successful.length)}
-                to="/transactions"
-              />
-              <StackedCard
-                index={3}
-                tone="aqua"
-                title="Workspace"
-                subtitle={merchant?.display_name || user?.name || "Your workspace"}
-                value={merchant ? statusLabel(merchant.status) : "—"}
-                to="/settings"
-              />
-            </div>
+            <StackedCard
+              index={0}
+              tone="lavender"
+              title="Payers"
+              subtitle={
+                payerTarget
+                  ? `${percent(uniquePayers, payerTarget)}% of your target`
+                  : `Across ${formatNumber(stats.length)} collection${stats.length === 1 ? "" : "s"}`
+              }
+              value={
+                loading
+                  ? valueSkeleton
+                  : payerTarget
+                    ? `${formatNumber(uniquePayers)} / ${formatNumber(payerTarget)}`
+                    : formatNumber(uniquePayers)
+              }
+              to="/transactions"
+            />
+            <StackedCard
+              index={1}
+              tone="mint"
+              title="Paid"
+              subtitle="Paid straight to your bank"
+              value={loading ? valueSkeleton : formatMoney(settled)}
+              to="/transactions"
+            />
+            <StackedCard
+              index={2}
+              tone="peach"
+              title="Payments"
+              subtitle={`${formatNumber(pendingCount)} awaiting confirmation`}
+              value={loading ? valueSkeleton : formatNumber(successful.length)}
+              to="/transactions"
+            />
+            <StackedCard
+              index={3}
+              tone="aqua"
+              title="Workspace"
+              subtitle={merchant?.display_name || user?.name || "Your workspace"}
+              value={merchant ? statusLabel(merchant.status) : "—"}
+              to="/settings"
+            />
           </div>
 
           <Reveal delay={520} className="lg:hidden">

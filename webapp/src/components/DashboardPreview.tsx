@@ -116,8 +116,8 @@ export default function DashboardPreview() {
             </div>
           </div>
 
-          {/* Main content grid - matching actual dashboard layout */}
-          <div className="grid grid-cols-1 gap-1.5 md:grid-cols-[1fr_120px]">
+          {/* Main content grid - always two columns, matching actual dashboard layout */}
+          <div className="grid grid-cols-[1fr_120px] gap-1.5">
             {/* Left column - main metrics */}
             <div className="space-y-1.5">
               {/* harmonized summary cards in a 2x2 grid, matching actual dashboard layout */}

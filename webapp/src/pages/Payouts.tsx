@@ -35,7 +35,7 @@ import {
   Toggle,
 } from "@/components/ui";
 
-/** One stacked summary tile, coloured by meaning. Matches the dashboard. */
+/** One summary tile, coloured by meaning. Matches the dashboard. */
 function SummaryTile({
   index,
   tone,
@@ -53,8 +53,8 @@ function SummaryTile({
 }) {
   return (
     <div
-      className="dash-rise relative -mt-6 first:mt-0 lg:mt-0"
-      style={{ zIndex: index + 1, animationDelay: `${index * 80}ms` }}
+      className="dash-rise"
+      style={{ animationDelay: `${index * 80}ms` }}
     >
       <div
         className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:px-6 lg:py-5 ${TONE_MEANING[tone]}`}
@@ -159,7 +159,7 @@ export default function Payouts() {
       />
 
       {/* summary: meaning-based tiles */}
-      <div className="mb-6">
+      <div className="mb-6 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
         <SummaryTile
           index={0}
           tone={defaultAccount ? "money" : "attention"}
