@@ -463,7 +463,7 @@ export default function Dashboard() {
           </Reveal>
         </div>
 
-        {/* Right column - sidebar with quick actions and lists */}
+        {/* Right column - full width blocks on mobile, cards on desktop */}
         <div className="space-y-5">
           {/* Quick action button - only on laptop */}
           <Reveal delay={520} className="hidden lg:block">
@@ -475,143 +475,157 @@ export default function Dashboard() {
             </Link>
           </Reveal>
 
-          {/* recent payments */}
-          <section aria-labelledby="recent-payments">
-            <div className="flex items-baseline justify-between gap-3">
-              <h2 id="recent-payments" className="section-title">
-                Recent payments
-              </h2>
-              <Link
-                to="/transactions"
-                className="text-[12.5px] font-semibold text-brand hover:underline"
-              >
-                View all
-              </Link>
-            </div>
+          {/* recent payments - no card wrapper on mobile */}
+          <Reveal delay={640}>
+            <section aria-labelledby="recent-payments">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 id="recent-payments" className="section-title">
+                  Recent payments
+                </h2>
+                <Link
+                  to="/transactions"
+                  className="text-[12.5px] font-semibold text-brand hover:underline"
+                >
+                  View all
+                </Link>
+              </div>
 
-            <Card padded={false} className="mt-3">
-              {transactions.loading ? (
-                <TableSkeleton rows={4} cols={2} />
-              ) : transactions.error ? (
-                <ErrorState message={transactions.error} onRetry={transactions.refetch} />
-              ) : recent.length === 0 ? (
-                <EmptyState
-                  icon={<ReceiptText size={20} />}
-                  title="No payments yet"
-                  description="Payments into your collection links appear here within seconds of confirmation."
-                  action={
-                    <Link to="/collections?new=1" className="btn btn-primary btn-sm">
-                      <Plus size={14} aria-hidden="true" /> Create a collection
-                    </Link>
-                  }
-                />
-              ) : (
-                <ul className="divide-y divide-line-soft">
-                  {recent.map((t, index) => (
-                    <li
-                      key={t.id}
-                      className="dash-rise flex items-center justify-between gap-3 px-4 py-3.5 transition-colors duration-150 hover:bg-cream/60 lg:px-5"
-                      style={{ animationDelay: `${index * 70}ms` }}
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-[13.5px] font-semibold">
-                          {transactionPayer(t)}
-                        </p>
-                        <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">
-                          {t.collection_name || "—"} · {timeAgo(t.created_at)}
-                        </p>
-                      </div>
-                      <div className="shrink-0 text-right">
-                        <p className="tabular text-[13.5px] font-bold">
-                          {formatMoney(t.amount, t.currency)}
-                        </p>
-                        <div className="mt-1 flex justify-end">
-                          <StatusPill status={t.status} />
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Card>
-          </section>
-
-          {/* collection progress */}
-          <section aria-labelledby="collection-progress">
-            <div className="flex items-baseline justify-between gap-3">
-              <h2 id="collection-progress" className="section-title">
-                Collections
-              </h2>
-              <Link
-                to="/collections"
-                className="text-[12.5px] font-semibold text-brand hover:underline"
-              >
-                All
-              </Link>
-            </div>
-
-            <Card className="mt-3">
-              {collections.loading ? (
-                <TableSkeleton rows={3} cols={2} />
-              ) : collections.error ? (
-                <ErrorState message={collections.error} onRetry={collections.refetch} />
-              ) : stats.length === 0 ? (
-                <p className="muted py-6 text-center">No collections yet.</p>
-              ) : (
-                <ul className="space-y-4">
-                  {stats.slice(0, 5).map((collection, index) => {
-                    const paid = collection.stats?.paid ?? 0;
-                    const target = collection.target_payers;
-                    const collectedSum = collection.stats?.collected ?? 0;
-                    const progress = target ? percent(paid, target) : Math.min(100, paid);
-                    return (
+              <div className="mt-3 rounded-[20px] border border-line bg-white lg:shadow-sm">
+                {transactions.loading ? (
+                  <div className="p-5">
+                    <TableSkeleton rows={4} cols={2} />
+                  </div>
+                ) : transactions.error ? (
+                  <div className="p-5">
+                    <ErrorState message={transactions.error} onRetry={transactions.refetch} />
+                  </div>
+                ) : recent.length === 0 ? (
+                  <div className="p-5">
+                    <EmptyState
+                      icon={<ReceiptText size={20} />}
+                      title="No payments yet"
+                      description="Payments into your collection links appear here within seconds of confirmation."
+                      action={
+                        <Link to="/collections?new=1" className="btn btn-primary btn-sm">
+                          <Plus size={14} aria-hidden="true" /> Create a collection
+                        </Link>
+                      }
+                    />
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-line-soft">
+                    {recent.map((t, index) => (
                       <li
-                        key={collection.id}
-                        className="dash-rise"
-                        style={{ animationDelay: `${index * 80}ms` }}
+                        key={t.id}
+                        className="dash-rise flex items-center justify-between gap-3 px-4 py-3.5 transition-colors duration-150 hover:bg-cream/60 lg:px-5"
+                        style={{ animationDelay: `${index * 70}ms` }}
                       >
-                        <div className="flex items-center justify-between gap-3">
-                          <Link
-                            to={`/collections/${collection.id}`}
-                            className="truncate text-[13.5px] font-semibold hover:text-brand"
-                          >
-                            {collection.name}
-                          </Link>
-                          <span className="tabular text-[12.5px] font-semibold">
-                            {formatCompact(collectedSum, collection.currency)}
-                          </span>
-                        </div>
-                        <div className="mt-2">
-                          <ProgressBar
-                            value={progress}
-                            tone={collection.is_active ? "brand" : "ink"}
-                          />
-                        </div>
-                        <div className="mt-1.5 flex items-center justify-between">
-                          <p className="font-mono text-3xs text-ink-muted">
-                            {paid}
-                            {target ? ` / ${target}` : ""} payers
+                        <div className="min-w-0">
+                          <p className="truncate text-[13.5px] font-semibold">
+                            {transactionPayer(t)}
                           </p>
-                          <Pill tone={statusTone(collection.is_active ? "active" : "paused")}>
-                            {collection.is_active ? "Accepting" : "Paused"}
-                          </Pill>
+                          <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">
+                            {t.collection_name || "—"} · {timeAgo(t.created_at)}
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="tabular text-[13.5px] font-bold">
+                            {formatMoney(t.amount, t.currency)}
+                          </p>
+                          <div className="mt-1 flex justify-end">
+                            <StatusPill status={t.status} />
+                          </div>
                         </div>
                       </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </Card>
-          </section>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </section>
+          </Reveal>
+
+          {/* collection progress - no card wrapper on mobile */}
+          <Reveal delay={720}>
+            <section aria-labelledby="collection-progress">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 id="collection-progress" className="section-title">
+                  Collections
+                </h2>
+                <Link
+                  to="/collections"
+                  className="text-[12.5px] font-semibold text-brand hover:underline"
+                >
+                  All
+                </Link>
+              </div>
+
+              <div className="mt-3 rounded-[20px] border border-line bg-white p-5 lg:shadow-sm">
+                {collections.loading ? (
+                  <TableSkeleton rows={3} cols={2} />
+                ) : collections.error ? (
+                  <ErrorState message={collections.error} onRetry={collections.refetch} />
+                ) : stats.length === 0 ? (
+                  <p className="muted py-6 text-center">No collections yet.</p>
+                ) : (
+                  <ul className="space-y-4">
+                    {stats.slice(0, 5).map((collection, index) => {
+                      const paid = collection.stats?.paid ?? 0;
+                      const target = collection.target_payers;
+                      const collectedSum = collection.stats?.collected ?? 0;
+                      const progress = target ? percent(paid, target) : Math.min(100, paid);
+                      return (
+                        <li
+                          key={collection.id}
+                          className="dash-rise"
+                          style={{ animationDelay: `${index * 80}ms` }}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <Link
+                              to={`/collections/${collection.id}`}
+                              className="truncate text-[13.5px] font-semibold hover:text-brand"
+                            >
+                              {collection.name}
+                            </Link>
+                            <span className="tabular text-[12.5px] font-semibold">
+                              {formatCompact(collectedSum, collection.currency)}
+                            </span>
+                          </div>
+                          <div className="mt-2">
+                            <ProgressBar
+                              value={progress}
+                              tone={collection.is_active ? "brand" : "ink"}
+                            />
+                          </div>
+                          <div className="mt-1.5 flex items-center justify-between">
+                            <p className="font-mono text-3xs text-ink-muted">
+                              {paid}
+                              {target ? ` / ${target}` : ""} payers
+                            </p>
+                            <Pill tone={statusTone(collection.is_active ? "active" : "paused")}>
+                              {collection.is_active ? "Accepting" : "Paused"}
+                            </Pill>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            </section>
+          </Reveal>
 
           {/* settlement note - shown on mobile below collections */}
-          <Reveal delay={680} className="lg:hidden">
-            <Card>
-              <CardHeader
-                title="Direct settlement"
-                subtitle="Your money never sits with Jeneviv"
-                icon={<ShieldCheck size={16} />}
-              />
+          <Reveal delay={800} className="lg:hidden">
+            <div className="rounded-[20px] border border-line bg-white p-5">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-cream">
+                  <ShieldCheck size={16} />
+                </span>
+                <div>
+                  <h3 className="text-[14px] font-bold tracking-tight">Direct settlement</h3>
+                  <p className="text-[12px] text-ink-muted">Your money never sits with Jeneviv</p>
+                </div>
+              </div>
               <p className="muted">
                 Each successful payment is split by Paystack when it is captured. The
                 collection amount, less Paystack&apos;s processing fee, goes to your
@@ -621,7 +635,7 @@ export default function Dashboard() {
               <Link to="/payouts" className="btn btn-secondary btn-sm mt-4 w-full">
                 Manage bank account <ArrowUpRight size={14} />
               </Link>
-            </Card>
+            </div>
           </Reveal>
         </div>
       </div>
