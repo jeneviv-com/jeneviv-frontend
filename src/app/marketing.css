@@ -1459,7 +1459,7 @@ body {
 
 .m-payer .m-check.empty {
   background: #f3eee8;
-  color: #c2b8ab;
+  color: #8a7d6d;
 }
 
 /* phone */
@@ -2606,4 +2606,16 @@ body {
   .m-stat:nth-child(3) {
     border-bottom: 1px solid var(--line);
   }
+}
+
+
+.m-phone-btn-done {
+  margin-top: auto;
+  background: var(--green);
+  color: #fff;
+  border-radius: 8px;
+  text-align: center;
+  padding: 12px;
+  font-size: 12px;
+  font-weight: 600;
 }

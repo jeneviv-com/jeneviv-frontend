@@ -56,7 +56,7 @@ const USE_CASES = [
     title: "Course reps & departments",
     body: "Handouts, manuals, lab fees, departmental levies. Every student on a list, every payment matched to a matric number.",
     stat: "₦340,000",
-    detail: "collected · 136 of 200",
+    detail: "collected • 136 of 200",
     progress: 68,
   },
   {
@@ -64,7 +64,7 @@ const USE_CASES = [
     title: "Termly levies",
     body: "No more envelopes, no more tellers, no more “I paid Aunty Ngozi”. Parents pay by transfer and the school gets one clean report.",
     stat: "₦1.28M",
-    detail: "collected · 214 of 240",
+    detail: "collected • 214 of 240",
     progress: 89,
   },
   {
@@ -72,7 +72,7 @@ const USE_CASES = [
     title: "Monthly thrift",
     body: "Members pay from any bank. Contributions are matched to the member record automatically, month after month.",
     stat: "₦2.3M",
-    detail: "collected · 88% of target",
+    detail: "collected • 88% of target",
     progress: 88,
   },
   {
@@ -80,7 +80,7 @@ const USE_CASES = [
     title: "Dues & building funds",
     body: "Annual dues, event levies, project contributions — with an auditable list you can hand to any committee.",
     stat: "₦615,000",
-    detail: "collected · 52% of target",
+    detail: "collected • 52% of target",
     progress: 52,
   },
 ];
@@ -196,7 +196,7 @@ export default function LandingPage() {
               </div>
               <p className="m-hero-note">
                 <Check />
-                Free to start · No card required · Set up in under 3 minutes
+                Free to start • No card required • Set up in under 3 minutes
               </p>
             </div>
 
@@ -350,7 +350,7 @@ export default function LandingPage() {
                 <b>AO</b>
                 <div className="m-ledger-who">
                   <span>Adaeze Okonkwo</span>
-                  <em>JNV-4471 · CSC 311 handout</em>
+                  <em>JNV-4471 • CSC 311 handout</em>
                 </div>
                 <span className="m-ledger-amt">₦2,500</span>
                 <span className="m-ledger-state paid">Paid</span>
@@ -359,7 +359,7 @@ export default function LandingPage() {
                 <b>EN</b>
                 <div className="m-ledger-who">
                   <span>Emeka Nwosu</span>
-                  <em>JNV-4472 · CSC 311 handout</em>
+                  <em>JNV-4472 • CSC 311 handout</em>
                 </div>
                 <span className="m-ledger-amt">₦2,500</span>
                 <span className="m-ledger-state paid">Paid</span>
@@ -368,7 +368,7 @@ export default function LandingPage() {
                 <b>IK</b>
                 <div className="m-ledger-who">
                   <span>Ifeoma Kalu</span>
-                  <em>JNV-4473 · CSC 311 handout</em>
+                  <em>JNV-4473 • CSC 311 handout</em>
                 </div>
                 <span className="m-ledger-amt">₦1,500</span>
                 <span className="m-ledger-state partial">Part paid</span>
@@ -377,7 +377,7 @@ export default function LandingPage() {
                 <b>TJ</b>
                 <div className="m-ledger-who">
                   <span>Tunde Jaiyeola</span>
-                  <em>JNV-4474 · CSC 311 handout</em>
+                  <em>JNV-4474 • CSC 311 handout</em>
                 </div>
                 <span className="m-ledger-amt">₦2,500</span>
                 <span className="m-ledger-state">Awaiting</span>
@@ -423,7 +423,7 @@ export default function LandingPage() {
             </a>
           </div>
           <p className="m-note">
-            Works on every phone · No payer app · Funds settle to your bank
+            Works on every phone • No payer app • Funds settle to your bank
           </p>
         </div>
       </section>
@@ -540,15 +540,15 @@ export default function LandingPage() {
                   <div className="m-timeline">
                     <div className="m-timeline-item done">
                       <b>Transfer received</b>
-                      <small>12:04:02 · ₦2,500.00</small>
+                      <small>12:04:02 • ₦2,500.00</small>
                     </div>
                     <div className="m-timeline-item done">
                       <b>Payer matched</b>
-                      <small>12:04:05 · 20/ENG/001</small>
+                      <small>12:04:05 • 20/ENG/001</small>
                     </div>
                     <div className="m-timeline-item done">
                       <b>Receipt sent</b>
-                      <small>12:04:09 · adaeze@…</small>
+                      <small>12:04:09 • adaeze@…</small>
                     </div>
                     <div className="m-timeline-item">
                       <b>Included in 22:00 settlement</b>
@@ -619,7 +619,7 @@ export default function LandingPage() {
               </div>
               <div className="m-mini-ui">
                 <div className="m-mini-label">
-                  <span>CSC 311 · Handout</span>
+                  <span>CSC 311 • Handout</span>
                   <span>Export</span>
                 </div>
                 <div className="m-mini-rows">
@@ -685,7 +685,7 @@ export default function LandingPage() {
             <div className="m-row-visual">
               <div className="m-collection-card">
                 <div className="m-collection-top">
-                  <b>CSC 311 · Handout</b>
+                  <b>CSC 311 • Handout</b>
                   <span className="m-live">Live</span>
                 </div>
                 <div className="m-big-amount">
@@ -711,7 +711,7 @@ export default function LandingPage() {
                         className={`m-check${paid ? "" : " empty"}`}
                         aria-hidden="true"
                       >
-                        {paid ? <Check /> : "·"}
+                        {paid ? <Check /> : "•"}
                       </span>
                     </div>
                   ))}
@@ -750,7 +750,7 @@ export default function LandingPage() {
             <div className="m-row-visual">
               <div className="m-phone">
                 <div className="m-phone-screen">
-                  <span className="m-phone-label">CSC 311 · Handout</span>
+                  <span className="m-phone-label">CSC 311 • Handout</span>
                   <h4>Pay your levy</h4>
                   <div className="m-phone-field">
                     <small>Full name</small>
@@ -773,7 +773,7 @@ export default function LandingPage() {
                       <small>Receipt sent to your email</small>
                     </div>
                   </div>
-                  <div className="m-phone-btn">Continue to payment</div>
+                  <div className="m-phone-btn-done">Payment complete</div>
                 </div>
               </div>
             </div>
@@ -838,7 +838,7 @@ export default function LandingPage() {
                 <div className="m-settlement-row">
                   <span className="m-bank-mark">OUT</span>
                   <div>
-                    <b>Settlement · Wema ••2104</b>
+                    <b>Settlement • Wema ••2104</b>
                     <small>Evening payout</small>
                   </div>
                   <div className="amount">
@@ -922,7 +922,7 @@ export default function LandingPage() {
           </div>
           <p className="m-sec-foot">
             <Shield />
-            Payments powered by Flutterwave · PCI-DSS Level 1 · NDPA-aligned
+            Payments powered by Flutterwave • PCI-DSS Level 1 • NDPA-aligned
           </p>
         </div>
       </section>
@@ -1127,7 +1127,7 @@ export default function LandingPage() {
             <a href={`${appUrl}/login`} className="m-btn m-btn-outline" style={{ borderColor: "rgba(255,255,255,0.6)", color: "#fff" }}>
               I already have an account
             </a>
-            <p className="m-note">Free to start · No card required</p>
+            <p className="m-note">Free to start • No card required</p>
           </div>
         </div>
       </section>
