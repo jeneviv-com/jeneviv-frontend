@@ -343,6 +343,7 @@ export interface Transaction {
   platform_fee?: number;
   gateway_fee?: number;
   total_charged?: number;
+  amount_received?: number;
   currency: string;
   gateway?: string;
   gateway_ref?: string;
@@ -1086,6 +1087,9 @@ export const merchantsAPI = {
       method: "PATCH",
       body: { treasurer_name: name, treasurer_phone: phone },
     }),
+
+  settlementStatus: () =>
+    apiFetch<{ status: SettlementStatus }>("/api/merchants/me/settlement-status"),
 };
 
 /* -------------------------------------------------------------- withdrawals */
@@ -1351,6 +1355,26 @@ export async function uploadImage(file: File, folder = "jeneviv/groups"): Promis
     );
   }
   return payload.secure_url;
+}
+
+/* --------------------------------------------------------- settlement status */
+
+export interface SettlementStatus {
+  gateway: string;
+  direct_settlement_active: boolean;
+  has_subaccount: boolean;
+  subaccount_code: string | null;
+  last_payout_at: string | null;
+  pending_payouts: number;
+  total_settled: number;
+  can_withdraw: boolean;
+  kyc_status: string;
+  bank_account_verified: boolean;
+  default_bank_account: {
+    id: string | null;
+    bank_name: string | null;
+    account_number: string | null;
+  };
 }
 
 /* --------------------------------------------------------------------- admin */

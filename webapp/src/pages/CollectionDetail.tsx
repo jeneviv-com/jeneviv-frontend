@@ -111,7 +111,7 @@ export default function CollectionDetail() {
   const { success, error: toastError } = useToast();
 
   const [tab, setTab] = useState<Tab>("overview");
-  const [paymentFilter, setPaymentFilter] = useState<"all" | "success" | "pending" | "failed">(
+  const [paymentFilter, setPaymentFilter] = useState<"all" | "success" | "pending" | "failed" | "overpaid" | "underpaid">(
     "all",
   );
   const [selected, setSelected] = useState<string[]>([]);
@@ -140,8 +140,27 @@ export default function CollectionDetail() {
   );
 
   const data = collection.data;
-  const rows = transactions.data ?? [];
+  const allTransactions = transactions.data ?? [];
   const stats = data?.stats;
+
+  // Client-side filtering for special statuses (overpaid/underpaid)
+  const rows = useMemo(() => {
+    if (paymentFilter === "overpaid") {
+      return allTransactions.filter(t => {
+        // Overpaid: amount_received > total_charged (if we have that data)
+        // For now, we'll use a simpler heuristic based on status and amounts
+        return t.status === "success" && t.amount_received && t.total_charged && 
+               t.amount_received > t.total_charged;
+      });
+    } else if (paymentFilter === "underpaid") {
+      return allTransactions.filter(t => {
+        // Underpaid: amount_received < total_charged and still pending
+        return t.status === "pending" && t.amount_received && t.total_charged && 
+               t.amount_received > 0 && t.amount_received < t.total_charged;
+      });
+    }
+    return allTransactions;
+  }, [allTransactions, paymentFilter]);
 
   const [settings, setSettings] = useState({
     name: "",
@@ -510,6 +529,8 @@ export default function CollectionDetail() {
                   { value: "success", label: "Paid" },
                   { value: "pending", label: "Pending" },
                   { value: "failed", label: "Failed" },
+                  { value: "overpaid", label: "Overpaid" },
+                  { value: "underpaid", label: "Underpaid" },
                 ]}
               />
             </div>
