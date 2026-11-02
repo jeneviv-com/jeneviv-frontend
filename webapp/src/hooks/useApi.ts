@@ -19,11 +19,12 @@ import {
   type Collection,
   type CollectionField,
   type CollectionGroup,
+  type KycView,
   type Merchant,
   type MerchantStatus,
   type Payout,
   type Refund,
-  type KycView,
+  type SettlementStatus,
   type Template,
   type Transaction,
   type User,
@@ -292,6 +293,13 @@ export function useWithdrawals() {
 export function useBankAccounts() {
   return useResource<BankAccount[]>(
     () => merchantsAPI.bankAccounts.list().then((r) => r.bank_accounts),
+    [],
+  );
+}
+
+export function useSettlementStatus() {
+  return useResource<SettlementStatus>(
+    () => merchantsAPI.settlementStatus().then((r) => r.status),
     [],
   );
 }

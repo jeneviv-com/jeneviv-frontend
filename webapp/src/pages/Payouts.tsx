@@ -1,19 +1,22 @@
 import { useState } from "react";
 import {
+  AlertCircle,
   Banknote,
   Building2,
   CheckCircle2,
   Landmark,
   Plus,
+  RefreshCw,
   ShieldCheck,
   Star,
   Trash2,
+  XCircle,
 } from "lucide-react";
 import { merchantsAPI, type BankAccount } from "@/lib/api";
-import { useAction, useBankAccounts, useBanks, useKyc } from "@/hooks/useApi";
+import { useAction, useBankAccounts, useBanks, useKyc, useSettlementStatus } from "@/hooks/useApi";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
-import { formatDate, pick } from "@/lib/format";
+import { formatDate, formatMoney, pick, timeAgo } from "@/lib/format";
 import { PLATFORM_FEE_RANGE_LABEL, PLATFORM_FEE_SUMMARY } from "@/lib/platformFee";
 import {
   Button,
@@ -84,6 +87,7 @@ export default function Payouts() {
   const accounts = useBankAccounts();
   const banks = useBanks("NG");
   const kyc = useKyc();
+  const settlementStatus = useSettlementStatus();
 
   const [showAddAccount, setShowAddAccount] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<BankAccount | null>(null);
@@ -338,6 +342,65 @@ export default function Payouts() {
               Only a successful collection route needs this — you can build
               collections while the review is pending.
             </p>
+          </Card>
+
+          <Card>
+            <CardHeader
+              title="Settlement status"
+              subtitle="Direct settlement diagnostic"
+              icon={<AlertCircle size={16} />}
+            />
+            {settlementStatus.loading ? (
+              <div className="space-y-2">
+                <div className="skeleton h-8 w-full rounded-lg" />
+                <div className="skeleton h-8 w-full rounded-lg" />
+              </div>
+            ) : settlementStatus.error ? (
+              <InlineNote tone="warning" title="Could not check status">
+                {settlementStatus.error}
+              </InlineNote>
+            ) : settlementStatus.data ? (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3 border-b border-line-soft py-2.5 text-[12.5px]">
+                  <span className="text-ink-muted">Gateway</span>
+                  <Pill tone="neutral">
+                    {settlementStatus.data.gateway || "Not set"}
+                  </Pill>
+                </div>
+                <div className="flex items-center justify-between gap-3 border-b border-line-soft py-2.5 text-[12.5px]">
+                  <span className="text-ink-muted">Subaccount exists</span>
+                  <Pill tone={settlementStatus.data.has_subaccount ? "green" : "amber"}>
+                    {settlementStatus.data.has_subaccount ? "Yes" : "No"}
+                  </Pill>
+                </div>
+                <div className="flex items-center justify-between gap-3 border-b border-line-soft py-2.5 text-[12.5px]">
+                  <span className="text-ink-muted">Bank verified</span>
+                  <Pill tone={settlementStatus.data.bank_account_verified ? "green" : "amber"}>
+                    {settlementStatus.data.bank_account_verified ? "Yes" : "No"}
+                  </Pill>
+                </div>
+                <div className="flex items-center justify-between gap-3 py-2.5 text-[12.5px]">
+                  <span className="text-ink-muted">Direct settlement</span>
+                  <Pill tone={settlementStatus.data.direct_settlement_active ? "green" : "red"}>
+                    {settlementStatus.data.direct_settlement_active ? "Active" : "Inactive"}
+                  </Pill>
+                </div>
+                {!settlementStatus.data.direct_settlement_active && (
+                  <InlineNote tone="warning" title="Settlement not active">
+                    {!settlementStatus.data.has_subaccount 
+                      ? "A Paystack subaccount must be created. This happens automatically when you add a verified bank account."
+                      : !settlementStatus.data.bank_account_verified
+                      ? "Your bank account needs to be verified by Paystack before settlement can begin."
+                      : "Complete the setup steps to enable direct settlement."}
+                  </InlineNote>
+                )}
+                {settlementStatus.data.direct_settlement_active && (
+                  <InlineNote tone="success" title="Settlement active">
+                    Payments are being settled directly to your bank account: {settlementStatus.data.default_bank_account.bank_name || "—"} ••{settlementStatus.data.default_bank_account.account_number?.slice(-4) || "••••"}.
+                  </InlineNote>
+                )}
+              </div>
+            ) : null}
           </Card>
         </div>
       </div>
