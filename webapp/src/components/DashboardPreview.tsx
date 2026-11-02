@@ -24,9 +24,9 @@ const TONE = {
 } as const;
 
 const SUMMARY: Array<{ label: string; value: string; hint: string; tone: keyof typeof TONE }> = [
-  { label: "Payers", value: "136", hint: "Successful payments", tone: "lavender" },
-  { label: "Settled", value: "₦389,000", hint: "Paid straight to your bank", tone: "mint" },
-  { label: "Payments", value: "12", hint: "2 awaiting confirmation", tone: "peach" },
+  { label: "Payers", value: "128", hint: "Successful payments", tone: "lavender" },
+  { label: "Settled", value: "₦375,000", hint: "Paid straight to your bank", tone: "mint" },
+  { label: "Payments", value: "10", hint: "2 awaiting confirmation", tone: "peach" },
   { label: "Workspace", value: "Approved", hint: "Sample workspace", tone: "aqua" },
 ];
 
