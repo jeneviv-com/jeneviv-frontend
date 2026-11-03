@@ -2620,3 +2620,13 @@ body {
   font-size: 12px;
   font-weight: 600;
 }
+
+/* Phones: the laptop fits the screen instead of forcing a minimum width. */
+@media (max-width: 720px) {
+  .m-laptop {
+    width: 100%;
+    min-width: 0;
+    margin-left: 0;
+  }
+}
+
