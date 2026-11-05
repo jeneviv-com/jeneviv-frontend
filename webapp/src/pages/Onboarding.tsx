@@ -179,7 +179,7 @@ export default function Onboarding() {
           </div>
 
           {/* progress track */}
-          <ol className="mt-8 grid grid-cols-3 gap-3">
+          <ol className="mt-8 grid grid-cols-1 gap-4 min-[420px]:grid-cols-3 min-[420px]:gap-3">
             {steps.map((step, index) => (
               <li key={step.label} className="relative">
                 <div

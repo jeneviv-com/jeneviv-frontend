@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ArrowDown, ArrowUp, CheckCircle2, Plus, Trash2 } from "lucide-react";
 import type { CollectionField, FieldType } from "@/lib/api";
 import { slugifyFieldId } from "@/lib/format";
@@ -68,6 +68,10 @@ export default function FieldEditor({
     ];
   });
 
+  // Track the last added field ID for auto-scrolling
+  const [lastAddedFieldId, setLastAddedFieldId] = useState<string | null>(null);
+  const fieldRefs = useRef<Map<string, HTMLLIElement>>(new Map());
+
   // Sync from the parent only when the saved content really changes. Callers
   // often pass `x ?? []`, which is a new array on every render. Keying on the
   // content stops those re-renders from wiping fields the user just added.
@@ -87,13 +91,41 @@ export default function FieldEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fieldsKey]);
 
-  const update = (next: DraftField[]) => {
+  // Auto-scroll to the last added field
+  useEffect(() => {
+    if (lastAddedFieldId) {
+      const fieldElement = fieldRefs.current.get(lastAddedFieldId);
+      if (fieldElement) {
+        // Smooth scroll to the newly added field
+        fieldElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+        
+        // Focus on the label input of the new field
+        const labelInput = fieldElement.querySelector(`#label-${lastAddedFieldId}`) as HTMLInputElement;
+        if (labelInput) {
+          setTimeout(() => labelInput.focus(), 100);
+        }
+        
+        // Reset the last added field ID
+        setLastAddedFieldId(null);
+      }
+    }
+  }, [lastAddedFieldId]);
+
+  const update = (next: DraftField[], addedFieldId?: string) => {
     // Ensure email field is always first and present
     const emailField = next.find((f) => f.isSystemField) || EMAIL_FIELD;
     const otherFields = next.filter((f) => !f.isSystemField);
     const normalised = [emailField, ...otherFields].map((field, index) => ({ ...field, position: index }));
     setDrafts(normalised);
     onChange(normalised);
+    
+    // If a field was just added, track it for auto-scrolling
+    if (addedFieldId) {
+      setLastAddedFieldId(addedFieldId);
+    }
   };
 
   const patch = (id: string, changes: Partial<DraftField>) => {
@@ -134,7 +166,10 @@ export default function FieldEditor({
           variant="secondary"
           size="sm"
           icon={<Plus size={14} />}
-          onClick={() => update([...drafts, newField(drafts.length)])}
+          onClick={() => {
+            const newFieldItem = newField(drafts.length);
+            update([...drafts, newFieldItem], newFieldItem.id);
+          }}
         >
           Add field
         </Button>
@@ -158,7 +193,17 @@ export default function FieldEditor({
 
       <ol className="divide-y divide-line">
         {drafts.map((field, index) => (
-          <li key={field.id} className={`grid gap-4 py-6 sm:grid-cols-[auto_1fr_auto] sm:gap-5 ${field.isSystemField ? "bg-cream/30" : ""}`}>
+          <li 
+            key={field.id} 
+            ref={(el) => {
+              if (el) {
+                fieldRefs.current.set(field.id, el);
+              } else {
+                fieldRefs.current.delete(field.id);
+              }
+            }}
+            className={`grid gap-4 py-6 sm:grid-cols-[auto_1fr_auto] sm:gap-5 ${field.isSystemField ? "bg-cream/30" : ""}`}
+          >
             <span className="font-mono text-[12px] text-ink-muted sm:pt-2.5">
               {String(index + 1).padStart(2, "0")}
             </span>

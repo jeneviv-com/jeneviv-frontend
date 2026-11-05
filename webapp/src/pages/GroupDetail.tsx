@@ -31,6 +31,7 @@ import {
   Button,
   Card,
   ConfirmDialog,
+  DashboardMetricCard,
   EmptyState,
   ErrorState,
   Field,
@@ -41,6 +42,7 @@ import {
   ProgressBar,
   SearchInput,
   SegmentedControl,
+  StackedCards,
   TableSkeleton,
   Textarea,
   Tabs,
@@ -253,71 +255,40 @@ export default function GroupDetail() {
         {tab === "overview" ? (
           <div className="space-y-14">
             {/* Summary tiles */}
-            <div className="pt-1 lg:grid lg:grid-cols-2 lg:gap-4">
-              <div className="dash-rise relative -mt-6 first:mt-0 lg:mt-0">
-                <div className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD.lavender}`}>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[16px] font-semibold tracking-tight lg:text-[18px]">
-                      Collections
-                    </p>
-                    <p className="mt-0.5 truncate text-[12.5px] opacity-70 lg:text-[13px]">
-                      Filed under this group
-                    </p>
-                  </div>
-                  <p className="shrink-0 text-right text-[20px] font-bold tabular lg:mt-2 lg:w-full lg:text-left lg:text-[28px]">
-                    {formatNumber(totals.count)}
-                  </p>
-                </div>
+            <StackedCards gridLayout>
+              <div className="dash-rise">
+                <DashboardMetricCard
+                  title="Collections"
+                  subtitle="Filed under this group"
+                  value={formatNumber(totals.count)}
+                  tone="lavender"
+                />
               </div>
-              
-              <div className="dash-rise relative -mt-6 first:mt-0 lg:mt-0">
-                <div className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD.mint}`}>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[16px] font-semibold tracking-tight lg:text-[18px]">
-                      Collected
-                    </p>
-                    <p className="mt-0.5 truncate text-[12.5px] opacity-70 lg:text-[13px]">
-                      Across all collections
-                    </p>
-                  </div>
-                  <p className="shrink-0 text-right text-[20px] font-bold tabular lg:mt-2 lg:w-full lg:text-left lg:text-[28px]">
-                    {formatMoney(totals.collected)}
-                  </p>
-                </div>
+              <div className="dash-rise" style={{ animationDelay: "90ms" }}>
+                <DashboardMetricCard
+                  title="Collected"
+                  subtitle="Across all collections"
+                  value={formatMoney(totals.collected)}
+                  tone="mint"
+                />
               </div>
-
-              <div className="dash-rise relative -mt-6 first:mt-0 lg:mt-0">
-                <div className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD.peach}`}>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[16px] font-semibold tracking-tight lg:text-[18px]">
-                      Payers
-                    </p>
-                    <p className="mt-0.5 truncate text-[12.5px] opacity-70 lg:text-[13px]">
-                      Successful payments
-                    </p>
-                  </div>
-                  <p className="shrink-0 text-right text-[20px] font-bold tabular lg:mt-2 lg:w-full lg:text-left lg:text-[28px]">
-                    {formatNumber(totals.payers)}
-                  </p>
-                </div>
+              <div className="dash-rise" style={{ animationDelay: "180ms" }}>
+                <DashboardMetricCard
+                  title="Payers"
+                  subtitle="Successful payments"
+                  value={formatNumber(totals.payers)}
+                  tone="peach"
+                />
               </div>
-
-              <div className="dash-rise relative -mt-6 first:mt-0 lg:mt-0">
-                <div className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD.aqua}`}>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[16px] font-semibold tracking-tight lg:text-[18px]">
-                      Completion
-                    </p>
-                    <p className="mt-0.5 truncate text-[12.5px] opacity-70 lg:text-[13px]">
-                      {totals.pending} pending transfers
-                    </p>
-                  </div>
-                  <p className="shrink-0 text-right text-[20px] font-bold tabular lg:mt-2 lg:w-full lg:text-left lg:text-[28px]">
-                    {percent(totals.payers, Math.max(1, totals.payers + totals.pending))}%
-                  </p>
-                </div>
+              <div className="dash-rise" style={{ animationDelay: "270ms" }}>
+                <DashboardMetricCard
+                  title="Completion"
+                  subtitle={`${totals.pending} pending transfers`}
+                  value={`${percent(totals.payers, Math.max(1, totals.payers + totals.pending))}%`}
+                  tone="aqua"
+                />
               </div>
-            </div>
+            </StackedCards>
 
             {/* Recent collections */}
             <section>

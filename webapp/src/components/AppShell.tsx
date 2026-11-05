@@ -248,7 +248,7 @@ export default function AppShell() {
     <div className="min-h-screen bg-cream">
       {/* ------------------------------------------------------------ sidebar */}
       <aside
-        className="app-sidebar fixed inset-y-0 left-0 z-40 flex w-[256px] flex-col border-r border-line bg-white"
+        className="app-sidebar fixed inset-y-0 left-0 z-40 flex w-[min(256px,82vw)] flex-col border-r border-line bg-white"
         data-open={sidebarOpen}
       >
         {/* brand */}
@@ -422,7 +422,7 @@ export default function AppShell() {
                 {menuOpen ? (
                   <div
                     role="menu"
-                    className="absolute right-0 top-[calc(100%+8px)] w-64 animate-pop-in overflow-hidden rounded-[18px] border border-line bg-white shadow-pop"
+                    className="absolute right-0 top-[calc(100%+8px)] w-[min(16rem,calc(100vw-2rem))] animate-pop-in overflow-hidden rounded-[18px] border border-line bg-white shadow-pop"
                   >
                     <div className="flex items-center gap-3 bg-cream px-4 py-4">
                       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-[12px] font-bold text-cream">

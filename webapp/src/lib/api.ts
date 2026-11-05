@@ -503,6 +503,11 @@ export interface PublicReceipt {
   bank_verified: boolean;
   verify_url: string;
   receipt_url: string;
+  /** The merchant workspace the money settles to. */
+  workspace_name?: string;
+  /** The group the collection is filed under, when it has one. */
+  group_name?: string | null;
+  group_logo_url?: string | null;
   details: Array<{ label: string; value: string }>;
 }
 
@@ -907,6 +912,16 @@ export const collectionsAPI = {
       `/api/collections/${id}/export?status=${status}`,
       `collection-${status}.xlsx`,
     ),
+
+  /** PDF export with the same column selection the CSV export offers. */
+  exportPdf: (id: string, status: "paid" | "unpaid", columns: string[]) => {
+    const query = new URLSearchParams({ status });
+    if (columns.length) query.set("columns", columns.join(","));
+    return downloadFile(
+      `/api/collections/${id}/export.pdf?${query.toString()}`,
+      `collection-${status}.pdf`,
+    );
+  },
 };
 
 /* ------------------------------------------------------------------- groups */

@@ -30,11 +30,13 @@ import {
 import { useToast } from "@/context/ToastContext";
 import {
   copyText,
+  downloadCSV,
   formatDate,
   formatMoney,
   formatNumber,
   paymentLink,
   percent,
+  statusLabel,
   statusTone,
   timeAgo,
   transactionIdentifier,
@@ -51,6 +53,7 @@ import {
   ErrorState,
   Field,
   Input,
+  Modal,
   Pill,
   ProgressBar,
   SegmentedControl,
@@ -105,6 +108,9 @@ function SummaryTile({
   );
 }
 
+/** Columns offered in the export dialog, before the collection's own fields. */
+const DEFAULT_EXPORT_COLUMNS = ["reference", "payer", "amount", "status", "paid_at"];
+
 export default function CollectionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -135,9 +141,10 @@ export default function CollectionDetail() {
     collectionsAPI.delete(collectionId),
   );
   const reconcile = useAction((ids: string[]) => transactionsAPI.reconcile(ids, true));
-  const exportRows = useAction((kind: "paid" | "unpaid") =>
-    collectionsAPI.exportFile(id as string, kind),
-  );
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportScope, setExportScope] = useState<"paid" | "unpaid">("paid");
+  const [exportColumns, setExportColumns] = useState<string[]>(DEFAULT_EXPORT_COLUMNS);
+  const [exporting, setExporting] = useState<"csv" | "pdf" | null>(null);
 
   const data = collection.data;
   const allTransactions = transactions.data ?? [];
@@ -161,6 +168,95 @@ export default function CollectionDetail() {
     }
     return allTransactions;
   }, [allTransactions, paymentFilter]);
+
+  /* The dialog lists the standard columns first, then whatever fields this
+     collection actually collects. */
+  const exportOptions = useMemo(() => {
+    const standard = [
+      { key: "reference", label: "Reference", fieldId: "" },
+      { key: "payer", label: "Payer", fieldId: "" },
+      { key: "amount", label: "Amount", fieldId: "" },
+      { key: "fees", label: "Fees", fieldId: "" },
+      { key: "status", label: "Status", fieldId: "" },
+      { key: "paid_at", label: "Paid at", fieldId: "" },
+      { key: "created_at", label: "Created at", fieldId: "" },
+    ];
+    const extra = (fields.data ?? []).map((field) => ({
+      key: `field:${field.display_name}`,
+      label: field.display_name,
+      fieldId: field.field_id,
+    }));
+    return [...standard, ...extra];
+  }, [fields.data]);
+
+  const toggleExportColumn = (key: string) =>
+    setExportColumns((current) =>
+      current.includes(key) ? current.filter((value) => value !== key) : [...current, key],
+    );
+
+  const downloadCsv = () => {
+    const selected = exportOptions.filter((option) => exportColumns.includes(option.key));
+    const scope = allTransactions.filter((transaction) =>
+      exportScope === "paid" ? transaction.status === "success" : transaction.status !== "success",
+    );
+    const records = scope.map((transaction) => {
+      const record: Record<string, string | number> = {};
+      selected.forEach((option) => {
+        switch (option.key) {
+          case "reference":
+            record[option.label] = transaction.reference;
+            break;
+          case "payer":
+            record[option.label] = transactionPayer(transaction);
+            break;
+          case "amount":
+            record[option.label] = transaction.amount;
+            break;
+          case "fees":
+            record[option.label] =
+              (transaction.platform_fee ?? 0) + (transaction.gateway_fee ?? 0);
+            break;
+          case "status":
+            record[option.label] = statusLabel(transaction.status);
+            break;
+          case "paid_at":
+            record[option.label] = transaction.paid_at ?? "";
+            break;
+          case "created_at":
+            record[option.label] = transaction.created_at;
+            break;
+          default:
+            record[option.label] = String(
+              transaction.field_values?.[option.fieldId] ?? "",
+            );
+        }
+      });
+      return record;
+    });
+
+    if (records.length === 0) {
+      toastError("Nothing to export", "There are no payments in this view yet.");
+      return;
+    }
+    downloadCSV(
+      `jeneviv-${data?.name ?? "collection"}-${exportScope}-${new Date().toISOString().slice(0, 10)}.csv`,
+      records,
+    );
+    success("Export ready", `${records.length} rows downloaded as CSV.`);
+  };
+
+  const downloadPdf = async () => {
+    if (!id) return;
+    setExporting("pdf");
+    try {
+      await collectionsAPI.exportPdf(id, exportScope, exportColumns);
+      success("Export ready", "Your PDF was downloaded.");
+    } catch (err) {
+      toastError("Export failed", err instanceof Error ? err.message : "");
+    } finally {
+      setExporting(null);
+    }
+  };
 
   const [settings, setSettings] = useState({
     name: "",
@@ -541,31 +637,9 @@ export default function CollectionDetail() {
                 variant="secondary"
                 size="sm"
                 icon={<Download size={13} />}
-                loading={exportRows.loading}
-                onClick={async () => {
-                  try {
-                    await exportRows.run("paid");
-                  } catch (err) {
-                    toastError("Export failed", err instanceof Error ? err.message : "");
-                  }
-                }}
+                onClick={() => setExportOpen(true)}
               >
-                Paid Excel
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                icon={<Download size={13} />}
-                loading={exportRows.loading}
-                onClick={async () => {
-                  try {
-                    await exportRows.run("unpaid");
-                  } catch (err) {
-                    toastError("Export failed", err instanceof Error ? err.message : "");
-                  }
-                }}
-              >
-                Unpaid Excel
+                Export
               </Button>
               <Button
                 size="sm"
@@ -577,6 +651,98 @@ export default function CollectionDetail() {
                 Mark reconciled {selected.length ? `(${selected.length})` : ""}
               </Button>
             </div>
+
+            <Modal
+              open={exportOpen}
+              onClose={() => setExportOpen(false)}
+              title="Export payments"
+              description="Choose the columns to include, then download a CSV or a PDF."
+              pageTitle="Export payments"
+              icon={<Download size={16} />}
+              footer={
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    icon={<Download size={13} />}
+                    disabled={exportColumns.length === 0}
+                    onClick={downloadCsv}
+                  >
+                    Download CSV
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={<Download size={13} />}
+                    loading={exporting === "pdf"}
+                    disabled={exportColumns.length === 0}
+                    onClick={downloadPdf}
+                  >
+                    Download PDF
+                  </Button>
+                </div>
+              }
+            >
+              <div className="space-y-5">
+                <SegmentedControl
+                  value={exportScope}
+                  onChange={setExportScope}
+                  options={[
+                    { value: "paid", label: "Paid" },
+                    { value: "unpaid", label: "Unpaid" },
+                  ]}
+                />
+
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-ink-muted">
+                      Columns
+                    </p>
+                    <div className="flex gap-3 text-[12px] font-semibold">
+                      <button
+                        type="button"
+                        className="text-ink underline underline-offset-2"
+                        onClick={() => setExportColumns(exportOptions.map((option) => option.key))}
+                      >
+                        All
+                      </button>
+                      <button
+                        type="button"
+                        className="text-ink-muted underline underline-offset-2"
+                        onClick={() => setExportColumns(DEFAULT_EXPORT_COLUMNS)}
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                    {exportOptions.map((option) => {
+                      const checked = exportColumns.includes(option.key);
+                      return (
+                        <label
+                          key={option.key}
+                          className={`flex items-center gap-2.5 rounded-[10px] border px-3 py-2 text-[13px] ${
+                            checked ? "border-ink/30 bg-white" : "border-line bg-white/60"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleExportColumn(option.key)}
+                            className="h-4 w-4 rounded border-line"
+                          />
+                          <span className="truncate">{option.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <p className="text-[12px] leading-relaxed text-ink-muted">
+                  The PDF carries the Jeneviv mark, the collection name, its group and logo, and the
+                  workspace name.
+                </p>
+              </div>
+            </Modal>
 
             {transactions.loading ? (
               <TableSkeleton rows={6} cols={3} />

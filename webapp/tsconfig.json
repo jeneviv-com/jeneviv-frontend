@@ -13,7 +13,6 @@
     "jsx": "react-jsx",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }

@@ -641,14 +641,25 @@ export function Tabs<T extends string>({
   );
 }
 
+/**
+ * Unified StackedCard component that handles both mobile stacking and laptop grid layout.
+ * On mobile: cards stack with negative margin-top
+ * On laptop (lg): cards reset margin and display in grid
+ */
 export function StackedCard({
   children,
   className = "",
   tone = "default",
+  interactive = false,
+  href,
+  onClick,
 }: {
   children: ReactNode;
   className?: string;
-  tone?: "black" | "purple" | "orange" | "cyan" | "pink" | "green" | "default";
+  tone?: "black" | "purple" | "orange" | "cyan" | "pink" | "green" | "default" | "lavender" | "peach" | "mint" | "aqua" | "ink";
+  interactive?: boolean;
+  href?: string;
+  onClick?: () => void;
 }) {
   const tones = {
     black: "bg-[#000000] text-white border-black",
@@ -658,28 +669,102 @@ export function StackedCard({
     pink: "bg-[#F68C8B] text-ink border-black",
     green: "bg-[#B1F373] text-ink border-black",
     default: "bg-white text-ink border-line",
+    lavender: "bg-[#dcd5f3] text-ink border-ink/15",
+    peach: "bg-[#f9d3b0] text-ink border-ink/15",
+    mint: "bg-[#d5e8c4] text-ink border-ink/15",
+    aqua: "bg-[#d3e9ee] text-ink border-ink/15",
+    ink: "bg-[#101010] text-white border-ink",
   };
+
+  const baseClasses = `relative -mt-6 first:mt-0 lg:mt-0 rounded-[20px] border px-5 py-5 shadow-sm lg:min-h-[92px] lg:px-6 lg:py-5 ${tones[tone]}`;
+  const interactiveClasses = interactive 
+    ? "transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-card active:scale-[0.985] focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2" 
+    : "";
+
+  const content = (
+    <div className={`${baseClasses} ${interactiveClasses} ${className}`}>
+      {children}
+    </div>
+  );
+
+  if (href) {
+    return (
+      <a href={href} className="block">
+        {content}
+      </a>
+    );
+  }
+
+  if (onClick) {
+    return (
+      <button onClick={onClick} className="block w-full text-left">
+        {content}
+      </button>
+    );
+  }
+
+  return content;
+}
+
+/**
+ * Container for stacked cards that properly handles mobile stacking and laptop grid
+ */
+export function StackedCards({
+  children,
+  className = "",
+  gridLayout = false,
+}: {
+  children: ReactNode;
+  className?: string;
+  gridLayout?: boolean;
+}) {
+  const gridClasses = gridLayout ? "lg:grid lg:grid-cols-2 lg:gap-4" : "";
   return (
     <div
-      className={`relative -mt-2 first:mt-0 rounded-[18px] border ${tones[tone]} px-4 py-3 shadow-[0_1px_0_rgba(0,0,0,0.02)] ${className}`}
+      className={`relative space-y-0 ${gridClasses} ${className} [&>*:last-child]:min-h-[150px] [&>*:last-child>*]:h-full lg:[&>*:last-child]:min-h-0`}
     >
       {children}
     </div>
   );
 }
 
-export function StackedCards({
-  children,
-  className = "",
+/**
+ * Dashboard metric card - optimized for dashboard usage
+ */
+export function DashboardMetricCard({
+  title,
+  subtitle,
+  value,
+  tone = "lavender",
+  href,
+  loading = false,
 }: {
-  children: ReactNode;
-  className?: string;
+  title: string;
+  subtitle: string;
+  value: ReactNode;
+  tone?: "lavender" | "peach" | "mint" | "aqua" | "ink";
+  href?: string;
+  loading?: boolean;
 }) {
-  return (
-    <div className={`relative space-y-0 [filter:drop-shadow(0_1px_0_rgba(0,0,0,0.01))] ${className}`}>
-      {children}
-    </div>
+  const content = (
+    <StackedCard tone={tone} interactive={!!href} href={href}>
+      <div className="flex min-h-[108px] items-center justify-between gap-3 lg:min-h-[92px]">
+        <div className="min-w-0 flex-1">
+          <p className="text-[16px] font-semibold tracking-tight lg:text-[18px]">{title}</p>
+          <p className="mt-0.5 truncate text-[12.5px] opacity-70 lg:text-[13px]">{subtitle}</p>
+        </div>
+        <div className="shrink-0 text-right text-[20px] font-bold tabular lg:text-[22px]">
+          {loading ? (
+            <span aria-hidden="true" className="skeleton inline-block h-5 w-16 rounded-md" />
+          ) : (
+            value
+          )}
+        </div>
+      </div>
+    </StackedCard>
   );
+
+  return content;
 }
 
 export function useDebounced<T>(value: T, delay = 300) {

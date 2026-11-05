@@ -10,6 +10,9 @@
   body {
     @apply bg-cream text-ink font-sans antialiased;
     font-feature-settings: "cv11", "ss01";
+    /* A single wide child should never give the page a horizontal scrollbar. */
+    overflow-x: hidden;
+    overflow-wrap: break-word;
   }
 
   h1,
@@ -268,7 +271,7 @@
   }
 
   .stacked-card {
-    @apply relative -mt-2 first:mt-0 rounded-[18px] border border-black px-4 py-3 shadow-sm;
+    @apply relative -mt-6 first:mt-0 lg:mt-0 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:px-6 lg:py-5;
   }
 
   .stacked-card-black {
@@ -293,6 +296,68 @@
 
   .stacked-card-green {
     @apply bg-[#B1F373] text-ink;
+  }
+
+  .stacked-card-lavender {
+    @apply bg-[#dcd5f3] text-ink;
+  }
+
+  .stacked-card-peach {
+    @apply bg-[#f9d3b0] text-ink;
+  }
+
+  .stacked-card-mint {
+    @apply bg-[#d5e8c4] text-ink;
+  }
+
+  .stacked-card-aqua {
+    @apply bg-[#d3e9ee] text-ink;
+  }
+
+  .stacked-card-ink {
+    @apply bg-[#101010] text-white;
+  }
+
+  /* Fix for laptop view - ensure cards don't stack on lg screens */
+  @media (min-width: 1024px) {
+    .lg\:grid .dash-rise {
+      margin-top: 0 !important;
+    }
+  }
+}
+
+/* Phones down to 360px (Galaxy S10 and similar) -------------------------- */
+@media (max-width: 420px) {
+  .card-pad {
+    padding: 1rem;
+  }
+
+  /* 16px keeps phone browsers from zooming a field into view on focus. */
+  .input,
+  select.input,
+  textarea.input {
+    font-size: 16px;
+  }
+
+  .btn {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .btn-lg {
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
+    font-size: 13.5px;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .pill {
+    font-size: 11px;
   }
 }
 

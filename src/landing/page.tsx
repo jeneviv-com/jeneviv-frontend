@@ -92,10 +92,6 @@ const SECURITY = [
     body: "Collections are processed through Flutterwave, a CBN-licensed payment service provider — not a wallet we invented.",
   },
   {
-    title: "We never see card data",
-    body: "Jeneviv does not store or transmit card numbers. Card handling stays with PCI-DSS Level 1 certified infrastructure.",
-  },
-  {
     title: "Webhook-verified payments",
     body: "A payment is only marked paid when the gateway confirms it cryptographically. Not from a screenshot. Not from a narration.",
   },

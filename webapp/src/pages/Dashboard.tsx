@@ -22,11 +22,13 @@ import { AreaChart, type SeriesPoint } from "@/components/charts";
 import {
   Card,
   CardHeader,
+  DashboardMetricCard,
   EmptyState,
   ErrorState,
   Pill,
   ProgressBar,
   SegmentedControl,
+  StackedCards,
   StatusPill,
   TableSkeleton,
 } from "@/components/ui";
@@ -118,60 +120,6 @@ function Reveal({
   return (
     <div className={`dash-rise ${className}`} style={{ animationDelay: `${delay}ms` }}>
       {children}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------ stacked cards */
-
-const TONES = {
-  ink: "bg-[#101010] text-white",
-  lavender: "bg-[#dcd5f3] text-ink",
-  peach: "bg-[#f9d3b0] text-ink",
-  mint: "bg-[#d5e8c4] text-ink",
-  aqua: "bg-[#d3e9ee] text-ink",
-} as const;
-
-type Tone = keyof typeof TONES;
-
-/**
- * A full-width coloured card that tucks under the one above, like the LemFi
- * reference. It is a link, so it works with the keyboard and has a focus ring.
- * Each card rises in with a short delay so the stack builds from the top.
- * On desktop grid, the stacking is removed and cards align in 2x2.
- */
-function StackedCard({
-  index,
-  tone,
-  title,
-  subtitle,
-  value,
-  to,
-}: {
-  index: number;
-  tone: Tone;
-  title: string;
-  subtitle: string;
-  value: React.ReactNode;
-  to: string;
-}) {
-  return (
-    <div
-      className="dash-rise relative -mt-6 first:mt-0 lg:mt-0"
-      style={{ zIndex: index + 1, animationDelay: `${120 + index * 90}ms` }}
-    >
-      <Link
-        to={to}
-        className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-card active:scale-[0.985] focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 lg:min-h-[92px] lg:px-6 lg:py-5 ${TONES[tone]}`}
-      >
-        <div className="min-w-0">
-          <p className="text-[16px] font-semibold tracking-tight">{title}</p>
-          <p className="mt-0.5 truncate text-[12.5px] opacity-70">{subtitle}</p>
-        </div>
-        <div className="shrink-0 text-right text-[20px] font-bold tabular">
-          {value}
-        </div>
-      </Link>
     </div>
   );
 }
@@ -337,50 +285,58 @@ export default function Dashboard() {
           </Reveal>
 
           {/* Metric cards - single stacked column on mobile (like LemFi), 2x2 grid on laptop */}
-          <div className="lg:grid lg:grid-cols-2 lg:gap-4">
-            <StackedCard
-              index={0}
-              tone="lavender"
-              title="Payers"
-              subtitle={
-                payerTarget
-                  ? `${percent(uniquePayers, payerTarget)}% of your target`
-                  : `Across ${formatNumber(stats.length)} collection${stats.length === 1 ? "" : "s"}`
-              }
-              value={
-                loading
-                  ? valueSkeleton
-                  : payerTarget
-                    ? `${formatNumber(uniquePayers)} / ${formatNumber(payerTarget)}`
-                    : formatNumber(uniquePayers)
-              }
-              to="/transactions"
-            />
-            <StackedCard
-              index={1}
-              tone="mint"
-              title="Paid"
-              subtitle="Paid straight to your bank"
-              value={loading ? valueSkeleton : formatMoney(settled)}
-              to="/transactions"
-            />
-            <StackedCard
-              index={2}
-              tone="peach"
-              title="Payments"
-              subtitle={`${formatNumber(pendingCount)} awaiting confirmation`}
-              value={loading ? valueSkeleton : formatNumber(successful.length)}
-              to="/transactions"
-            />
-            <StackedCard
-              index={3}
-              tone="aqua"
-              title="Workspace"
-              subtitle={merchant?.display_name || user?.name || "Your workspace"}
-              value={merchant ? statusLabel(merchant.status) : "—"}
-              to="/settings"
-            />
-          </div>
+          <StackedCards gridLayout>
+            <div className="dash-rise" style={{ animationDelay: "120ms" }}>
+              <DashboardMetricCard
+                title="Payers"
+                subtitle={
+                  payerTarget
+                    ? `${percent(uniquePayers, payerTarget)}% of your target`
+                    : `Across ${formatNumber(stats.length)} collection${stats.length === 1 ? "" : "s"}`
+                }
+                value={
+                  loading
+                    ? valueSkeleton
+                    : payerTarget
+                      ? `${formatNumber(uniquePayers)} / ${formatNumber(payerTarget)}`
+                      : formatNumber(uniquePayers)
+                }
+                tone="lavender"
+                href="/transactions"
+                loading={loading}
+              />
+            </div>
+            <div className="dash-rise" style={{ animationDelay: "210ms" }}>
+              <DashboardMetricCard
+                title="Paid"
+                subtitle="Paid straight to your bank"
+                value={loading ? valueSkeleton : formatMoney(settled)}
+                tone="mint"
+                href="/transactions"
+                loading={loading}
+              />
+            </div>
+            <div className="dash-rise" style={{ animationDelay: "300ms" }}>
+              <DashboardMetricCard
+                title="Payments"
+                subtitle={`${formatNumber(pendingCount)} awaiting confirmation`}
+                value={loading ? valueSkeleton : formatNumber(successful.length)}
+                tone="peach"
+                href="/transactions"
+                loading={loading}
+              />
+            </div>
+            <div className="dash-rise" style={{ animationDelay: "390ms" }}>
+              <DashboardMetricCard
+                title="Workspace"
+                subtitle={merchant?.display_name || user?.name || "Your workspace"}
+                value={merchant ? statusLabel(merchant.status) : "—"}
+                tone="aqua"
+                href="/settings"
+                loading={loading}
+              />
+            </div>
+          </StackedCards>
 
           <Reveal delay={520} className="lg:hidden">
             <Link

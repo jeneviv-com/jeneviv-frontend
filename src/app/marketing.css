@@ -2630,3 +2630,379 @@ body {
   }
 }
 
+
+
+/* DashboardPreview responsive adjustments */
+@media (max-width: 720px) {
+  .m-laptop-screen .text-ink {
+    font-size: 0.625rem; /* Base font size for mobile */
+  }
+  
+  .m-laptop-screen .text-\[9px\] {
+    font-size: 8px !important;
+  }
+  
+  .m-laptop-screen .text-\[8px\] {
+    font-size: 7px !important;
+  }
+  
+  .m-laptop-screen .text-\[7px\] {
+    font-size: 6px !important;
+  }
+  
+  .m-laptop-screen .text-\[6\.5px\] {
+    font-size: 5.5px !important;
+  }
+  
+  .m-laptop-screen .text-\[6px\] {
+    font-size: 5px !important;
+  }
+  
+  .m-laptop-screen .text-\[5\.5px\] {
+    font-size: 4.5px !important;
+  }
+  
+  .m-laptop-screen .text-\[5px\] {
+    font-size: 4px !important;
+  }
+  
+  .m-laptop-screen .text-\[4px\] {
+    font-size: 3px !important;
+  }
+  
+  .m-laptop-screen .h-\[26px\] {
+    height: 22px !important;
+  }
+  
+  .m-laptop-screen .h-\[13px\] {
+    height: 11px !important;
+    width: 11px !important;
+  }
+  
+  .m-laptop-screen .w-\[13px\] {
+    width: 11px !important;
+  }
+  
+  .m-laptop-screen .h-\[5px\] {
+    height: 4px !important;
+    width: 4px !important;
+  }
+  
+  .m-laptop-screen .w-\[5px\] {
+    width: 4px !important;
+  }
+  
+  .m-laptop-screen .h-\[9px\] {
+    height: 7px !important;
+  }
+  
+  .m-laptop-screen .w-\[38px\] {
+    width: 30px !important;
+  }
+  
+  .m-laptop-screen .grid-cols-\[98px_1fr\] {
+    grid-template-columns: 80px 1fr !important;
+  }
+  
+  .m-laptop-screen .grid-cols-\[1fr_120px\] {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  .m-laptop-screen .grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .m-laptop-screen .gap-1\.5 {
+    gap: 12px !important;
+  }
+  
+  .m-laptop-screen .p-2\.5 {
+    padding: 16px !important;
+  }
+  
+  .m-laptop-screen .px-2\.5 {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  
+  .m-laptop-screen .py-2 {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+  
+  .m-laptop-screen .px-2 {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  
+  .m-laptop-screen .py-1\.5 {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .m-laptop-screen .text-ink {
+    font-size: 0.5rem; /* Even smaller for very small screens */
+  }
+  
+  .m-laptop-screen .text-\[9px\] {
+    font-size: 7px !important;
+  }
+  
+  .m-laptop-screen .text-\[8px\] {
+    font-size: 6px !important;
+  }
+  
+  .m-laptop-screen .text-\[7px\] {
+    font-size: 5px !important;
+  }
+  
+  .m-laptop-screen .text-\[6\.5px\] {
+    font-size: 4.5px !important;
+  }
+  
+  .m-laptop-screen .text-\[6px\] {
+    font-size: 4px !important;
+  }
+  
+  .m-laptop-screen .text-\[5\.5px\] {
+    font-size: 3.5px !important;
+  }
+  
+  .m-laptop-screen .text-\[5px\] {
+    font-size: 3px !important;
+  }
+  
+  .m-laptop-screen .text-\[4px\] {
+    font-size: 2.5px !important;
+  }
+  
+  .m-laptop-screen .h-\[26px\] {
+    height: 20px !important;
+  }
+  
+  .m-laptop-screen .h-\[13px\] {
+    height: 10px !important;
+    width: 10px !important;
+  }
+  
+  .m-laptop-screen .w-\[13px\] {
+    width: 10px !important;
+  }
+  
+  .m-laptop-screen .h-\[5px\] {
+    height: 3px !important;
+    width: 3px !important;
+  }
+  
+  .m-laptop-screen .w-\[5px\] {
+    width: 3px !important;
+  }
+  
+  .m-laptop-screen .h-\[9px\] {
+    height: 6px !important;
+  }
+  
+  .m-laptop-screen .w-\[38px\] {
+    width: 24px !important;
+  }
+  
+  .m-laptop-screen .grid-cols-\[98px_1fr\] {
+    grid-template-columns: 70px 1fr !important;
+  }
+  
+  .m-laptop-screen .gap-1\.5 {
+    gap: 10px !important;
+  }
+  
+  .m-laptop-screen .p-2\.5 {
+    padding: 12px !important;
+  }
+  
+  .m-laptop-screen .px-2\.5 {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  
+  .m-laptop-screen .py-2 {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+  
+  .m-laptop-screen .px-2 {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  
+  .m-laptop-screen .py-1\.5 {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+}
+
+
+/* Make DashboardPreview responsive on mobile */
+@media (max-width: 720px) {
+  .m-laptop-screen {
+    font-size: 0.85em;
+  }
+  
+  .m-laptop-screen .text-\[9px\] {
+    font-size: 7.65px;
+  }
+  
+  .m-laptop-screen .text-\[8px\] {
+    font-size: 6.8px;
+  }
+  
+  .m-laptop-screen .text-\[7px\] {
+    font-size: 5.95px;
+  }
+  
+  .m-laptop-screen .text-\[6\.5px\] {
+    font-size: 5.525px;
+  }
+  
+  .m-laptop-screen .text-\[6px\] {
+    font-size: 5.1px;
+  }
+  
+  .m-laptop-screen .text-\[5\.5px\] {
+    font-size: 4.675px;
+  }
+  
+  .m-laptop-screen .text-\[5px\] {
+    font-size: 4.25px;
+  }
+  
+  .m-laptop-screen .text-\[4px\] {
+    font-size: 3.4px;
+  }
+  
+  .m-laptop-screen .h-\[26px\] {
+    height: 22.1px;
+  }
+  
+  .m-laptop-screen .h-\[13px\] {
+    height: 11.05px;
+    width: 11.05px;
+  }
+  
+  .m-laptop-screen .w-\[13px\] {
+    width: 11.05px;
+  }
+  
+  .m-laptop-screen .h-\[5px\] {
+    height: 4.25px;
+    width: 4.25px;
+  }
+  
+  .m-laptop-screen .w-\[5px\] {
+    width: 4.25px;
+  }
+  
+  .m-laptop-screen .h-\[9px\] {
+    height: 7.65px;
+  }
+  
+  .m-laptop-screen .w-\[38px\] {
+    width: 32.3px;
+  }
+  
+  .m-laptop-screen .grid-cols-\[98px_1fr\] {
+    grid-template-columns: 83.3px 1fr;
+  }
+  
+  .m-laptop-screen .grid-cols-\[1fr_120px\] {
+    grid-template-columns: 1fr 102px;
+  }
+}
+
+@media (max-width: 420px) {
+  .m-laptop-screen {
+    font-size: 0.75em;
+  }
+  
+  .m-laptop-screen .text-\[9px\] {
+    font-size: 6.75px;
+  }
+  
+  .m-laptop-screen .text-\[8px\] {
+    font-size: 6px;
+  }
+  
+  .m-laptop-screen .text-\[7px\] {
+    font-size: 5.25px;
+  }
+  
+  .m-laptop-screen .text-\[6\.5px\] {
+    font-size: 4.875px;
+  }
+  
+  .m-laptop-screen .text-\[6px\] {
+    font-size: 4.5px;
+  }
+  
+  .m-laptop-screen .text-\[5\.5px\] {
+    font-size: 4.125px;
+  }
+  
+  .m-laptop-screen .text-\[5px\] {
+    font-size: 3.75px;
+  }
+  
+  .m-laptop-screen .text-\[4px\] {
+    font-size: 3px;
+  }
+  
+  .m-laptop-screen .h-\[26px\] {
+    height: 19.5px;
+  }
+  
+  .m-laptop-screen .h-\[13px\] {
+    height: 9.75px;
+    width: 9.75px;
+  }
+  
+  .m-laptop-screen .w-\[13px\] {
+    width: 9.75px;
+  }
+  
+  .m-laptop-screen .h-\[5px\] {
+    height: 3.75px;
+    width: 3.75px;
+  }
+  
+  .m-laptop-screen .w-\[5px\] {
+    width: 3.75px;
+  }
+  
+  .m-laptop-screen .h-\[9px\] {
+    height: 6.75px;
+  }
+  
+  .m-laptop-screen .w-\[38px\] {
+    width: 28.5px;
+  }
+  
+  .m-laptop-screen .grid-cols-\[98px_1fr\] {
+    grid-template-columns: 73.5px 1fr;
+  }
+  
+  .m-laptop-screen .grid-cols-\[1fr_120px\] {
+    grid-template-columns: 1fr 90px;
+  }
+  
+  /* Stack the two-column layout on very small screens */
+  .m-laptop-screen .grid-cols-\[1fr_120px\] {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .m-laptop-screen .grid-cols-2 {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}

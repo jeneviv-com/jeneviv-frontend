@@ -100,7 +100,7 @@ export default function AuthLayout({
 
         <div className="mx-auto my-auto w-full max-w-[420px] py-12">
           <div className="animate-rise-in">
-            <h1 className="text-[38px] font-bold leading-[1.02] tracking-[-0.045em] text-ink sm:text-[42px]">
+            <h1 className="text-[32px] font-bold leading-[1.04] tracking-[-0.045em] text-ink sm:text-[42px]">
               {title}
             </h1>
             <p className="muted mt-3 text-[14.5px]">{subtitle}</p>

@@ -7,11 +7,13 @@ import { copyText, formatMoney, formatNumber, paymentLink } from "@/lib/format";
 import {
   Button,
   Card,
+  DashboardMetricCard,
   EmptyState,
   ErrorState,
   InlineNote,
   PageHeader,
   SearchInput,
+  StackedCards,
   TableSkeleton,
   TONE_CARD,
 } from "@/components/ui";
@@ -64,25 +66,22 @@ export default function PaymentLinks() {
       />
 
       {/* summary: the same stacked pastel cards as the dashboard */}
-      <div className="mb-6 lg:grid lg:grid-cols-3 lg:gap-4">
+      <StackedCards className="mb-6 lg:grid lg:grid-cols-3 lg:gap-4">
         {summary.map((item, index) => (
           <div
             key={item.label}
-            className="dash-rise relative -mt-6 first:mt-0 lg:mt-0"
-            style={{ zIndex: index + 1, animationDelay: `${index * 90}ms` }}
+            className="dash-rise"
+            style={{ animationDelay: `${index * 90}ms` }}
           >
-            <div
-              className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_CARD[item.tone]}`}
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[16px] font-semibold tracking-tight lg:text-[18px]">{item.label}</p>
-                <p className="mt-0.5 truncate text-[12.5px] opacity-70 lg:text-[13px]">{item.hint}</p>
-              </div>
-              <p className="shrink-0 text-right text-[20px] font-bold tabular lg:mt-2 lg:w-full lg:text-left lg:text-[28px]">{item.value}</p>
-            </div>
+            <DashboardMetricCard
+              title={item.label}
+              subtitle={item.hint}
+              value={item.value}
+              tone={item.tone}
+            />
           </div>
         ))}
-      </div>
+      </StackedCards>
 
       <InlineNote tone="info" title="No app for payers, ever">
         Links open in any browser — WhatsApp, Instagram or Chrome. Payers enter
