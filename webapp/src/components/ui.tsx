@@ -721,7 +721,7 @@ export function StackedCards({
   const gridClasses = gridLayout ? "lg:grid lg:grid-cols-2 lg:gap-4" : "";
   return (
     <div
-      className={`relative space-y-0 ${gridClasses} ${className} [&>*:last-child]:min-h-[150px] [&>*:last-child>*]:h-full lg:[&>*:last-child]:min-h-0`}
+      className={`relative space-y-0 ${gridClasses} ${className} [&>*:last-child]:min-h-[100px] [&>*:last-child>*]:h-full lg:[&>*:last-child]:min-h-0`}
     >
       {children}
     </div>

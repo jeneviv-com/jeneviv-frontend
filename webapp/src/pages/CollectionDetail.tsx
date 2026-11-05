@@ -494,7 +494,7 @@ export default function CollectionDetail() {
               />
             </div>
 
-            <div className="grid gap-14 xl:grid-cols-[1.5fr_1fr]">
+            <div className="lg:grid lg:grid-cols-3 gap-14 xl:grid-cols-[1.5fr_1fr]">
               {/* activity */}
               <section>
                 <div className="mb-6 flex items-end justify-between gap-4">
