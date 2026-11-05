@@ -2,14 +2,14 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./marketing.css";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173";
+const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "https://jeneviv.com",
   ),
   title: {
-    default: "Jeneviv — Group collections, finally under control",
+    default: "Jeneviv | Group collections, finally under control",
     template: "%s · Jeneviv",
   },
   description:
@@ -31,13 +31,13 @@ export const metadata: Metadata = {
     locale: "en_NG",
     url: "/",
     siteName: "Jeneviv",
-    title: "Jeneviv — Group collections, finally under control",
+    title: "Jeneviv | Group collections, finally under control",
     description:
       "One payment link. A live dashboard. A verified payer list. Built for the way Nigerian groups actually collect money.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Jeneviv — Group collections, finally under control",
+    title: "Jeneviv | Group collections, finally under control",
     description:
       "One payment link. A live dashboard. A verified payer list. Built for the way Nigerian groups actually collect money.",
   },
