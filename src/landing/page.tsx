@@ -79,7 +79,7 @@ const USE_CASES = [
   {
     tag: "Associations",
     title: "Dues & building funds",
-    body: "Annual dues, event levies, project contributions — with an auditable list you can hand to any committee.",
+    body: "Annual dues, event levies, project contributions with an auditable list you can hand to any committee.",
     stat: "₦615,000",
     detail: "collected • 52% of target",
     progress: 52,
@@ -183,7 +183,7 @@ export default function LandingPage() {
                 <span className="accent">finally accounted for.</span>
               </h1>
               <p className="m-lede">
-                Jeneviv turns one payment link into a live ledger — who has
+                Jeneviv turns one payment link into a live ledger.. who has
                 paid, who hasn&apos;t, and what actually hit your bank. For
                 course reps, PTAs, cooperatives and associations.
               </p>
@@ -220,8 +220,8 @@ export default function LandingPage() {
               <span className="m-mono">Sample ledger</span>
               <p>
                 Every confirmed transfer lands on the coordinator&apos;s
-                dashboard with the payer, the reference and the amount —
-                nothing typed in by hand.
+                dashboard with the payer, the reference , the amount and
+                nothing is typed in by hand.
               </p>
             </div>
             <ul className="m-ledger-rows">
@@ -315,7 +315,7 @@ export default function LandingPage() {
             <h2 className="m-h2">The boring parts, handled.</h2>
             <p className="m-sub">
               Checking transfers, matching names, chasing receipts, updating
-              spreads — the work that eats a coordinator&apos;s evening. It all
+              spreads; the work that eats a coordinator&apos;s evening. It all
               happens on its own.
             </p>
           </div>
@@ -367,7 +367,7 @@ export default function LandingPage() {
               <span className="m-eyebrow">Track</span>
               <h3>Know exactly who has paid.</h3>
               <p>
-                Every payment is tied to a name, a student ID, a phone number —
+                Every payment is tied to a name, a student ID, a phone number or
                 whatever your group uses. No more cross-checking narrations.
               </p>
               <div className="m-bento-art">
@@ -484,7 +484,7 @@ export default function LandingPage() {
                 <h3>Hand over a report, not the group chat.</h3>
                 <p>
                   Filter by collection, status or payer. Export the verified
-                  list as CSV or PDF — names, identifiers, amounts, dates and
+                  list as CSV or PDF with names, identifiers, amounts, dates and
                   transaction references, ready for the department, the
                   treasurer or the AGM.
                 </p>
@@ -548,7 +548,7 @@ export default function LandingPage() {
                   <Check /> Fixed amount per payer, in naira
                 </li>
                 <li>
-                  <Check /> Custom fields — matric number, department, phone
+                  <Check /> Custom fields eg. matric number, department, phone
                 </li>
                 <li>
                   <Check /> Duplicate payments flagged automatically
@@ -783,7 +783,7 @@ export default function LandingPage() {
             <span className="m-eyebrow">Security</span>
             <h2 className="m-h2">Money infrastructure, not a side project.</h2>
             <p className="m-sub">
-              Jeneviv is the layer on top. The regulated parts — card handling,
+              Jeneviv is the layer on top. The regulated parts, card handling,
               settlement rails, gateway compliance — stay with licensed
               infrastructure that is audited for it.
             </p>
@@ -801,7 +801,7 @@ export default function LandingPage() {
           </div>
           <p className="m-sec-foot">
             <Shield />
-            Payments powered by Flutterwave • PCI-DSS Level 1 • NDPA-aligned
+            Payments powered by Paystack
           </p>
         </div>
       </section>
@@ -1112,7 +1112,7 @@ export default function LandingPage() {
           <div className="m-footer-bottom">
             <p>© 2026 Acadeva Limited. Built in Nigeria, for Nigeria.</p>
             <div className="m-footer-badges">
-              <span className="m-footer-badge">Flutterwave powered</span>
+              <span className="m-footer-badge">Paystack powered</span>
               <span className="m-footer-badge">NDPA aligned</span>
               <span className="m-footer-badge">CAC registered</span>
             </div>
