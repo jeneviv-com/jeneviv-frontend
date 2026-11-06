@@ -639,6 +639,24 @@ export const authAPI = {
     }
   },
 
+  /**
+   * Emails a reset link. Resolves even when the address has no account, so the
+   * screen can show the same "check your inbox" copy either way.
+   */
+  requestPasswordReset: (email: string) =>
+    apiFetch<{ status: boolean; message?: string }>(
+      "/api/auth/request-password-reset",
+      { method: "POST", body: { email }, anonymous: true },
+    ),
+
+  /** Completes a reset with the token from the emailed link. */
+  resetPassword: (newPassword: string, token: string) =>
+    apiFetch<{ status: boolean }>("/api/auth/reset-password", {
+      method: "POST",
+      body: { newPassword, token },
+      anonymous: true,
+    }),
+
   /** Returns the provider URL to redirect the browser to (better-auth social). */
   googleSignIn: (callbackURL: string) =>
     apiFetch<{ url: string }>("/api/auth/sign-in/social", {

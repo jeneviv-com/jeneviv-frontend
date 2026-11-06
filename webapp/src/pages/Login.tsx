@@ -117,11 +117,10 @@ export default function Login() {
       </form>
 
       <p className="hint mt-6">
-        Forgot your password? Email{" "}
-        <a className="font-semibold text-ink underline decoration-ink/25 underline-offset-2 hover:text-brand" href="mailto:myjeneviv@gmail.com">
-          myjeneviv@gmail.com
-        </a>{" "}
-        and we will reset it for you.
+        Forgot your password?{" "}
+        <Link to="/forgot-password" className="font-semibold text-ink underline decoration-ink/25 underline-offset-2 hover:text-brand">
+          Reset it here
+        </Link>.
       </p>
     </AuthLayout>
   );

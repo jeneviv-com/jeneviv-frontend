@@ -10,6 +10,7 @@ import Groups from "@/pages/Groups";
 import GroupDetail from "@/pages/GroupDetail";
 import Dashboard from "@/pages/Dashboard";
 import DashboardPreviewPage from "@/pages/DashboardPreview";
+import ForgotPassword from "@/pages/ForgotPassword";
 import Login from "@/pages/Login";
 import Notifications from "@/pages/Notifications";
 import Payers from "@/pages/Payers";
@@ -17,6 +18,7 @@ import PaymentLinks from "@/pages/PaymentLinks";
 import Payouts from "@/pages/Payouts";
 import PublicPay from "@/pages/PublicPay";
 import Refunds from "@/pages/Refunds";
+import ResetPassword from "@/pages/ResetPassword";
 import Settings from "@/pages/Settings";
 import Signup from "@/pages/Signup";
 import Templates from "@/pages/Templates";
@@ -37,6 +39,8 @@ export default function App() {
 
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route element={<RequireAuth />}>
             <Route element={<AppShell />}>

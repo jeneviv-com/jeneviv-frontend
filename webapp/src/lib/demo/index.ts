@@ -389,6 +389,24 @@ async function route(ctx: Ctx) {
     return respond(200, { success: true });
   }
 
+  if (path === "/api/auth/request-password-reset" && method === "POST") {
+    const email = String(body.email || "").trim().toLowerCase();
+    if (!email.includes("@")) return fail(400, "Enter a valid email address.");
+    // Real resets are emailed; the demo simply acknowledges the request.
+    return respond(200, { status: true });
+  }
+
+  if (path === "/api/auth/reset-password" && method === "POST") {
+    const password = String(body.newPassword || "");
+    const token = String(body.token || "").trim();
+    if (!token) return fail(400, "This reset link is invalid. Request a new one.");
+    if (password.length < 8)
+      return fail(400, "Use at least 8 characters for your new password.");
+    if (database.signedUpUser) database.signedUpUser.password = password;
+    persist();
+    return respond(200, { status: true });
+  }
+
   if (path === "/api/auth/sign-in/social" && method === "POST") {
     return fail(
       400,
