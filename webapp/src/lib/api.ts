@@ -1,3 +1,4 @@
+
 /**
  * Jeneviv API client.
  *
@@ -25,7 +26,6 @@ export class APIError extends Error {
     this.name = "APIError";
   }
 
-  /** True when the network never reached the API (backend down, CORS, offline). */
   get isNetworkError() {
     return this.status === 0;
   }
@@ -82,7 +82,6 @@ export interface RequestOptions {
   body?: unknown;
   query?: Query;
   signal?: AbortSignal;
-  /** Skip attaching credentials — used by the health probe. */
   anonymous?: boolean;
 }
 
@@ -156,10 +155,6 @@ export async function apiFetch<T>(
   }
   clearTimeout(timeout);
 
-  // The bearer plugin returns the SIGNED session token in this header on
-  // sign-in / sign-up. This is the token the API accepts as `Authorization:
-  // Bearer`. (The `token` in the JSON body is unsigned and gets rejected.)
-  // Requires `Access-Control-Expose-Headers: set-auth-token` on the backend.
   const signedToken = response.headers.get("set-auth-token");
   if (signedToken && !anonymous && response.ok) tokenStore.set(signedToken);
 
@@ -196,10 +191,6 @@ export const apiConfig = {
   },
 };
 
-/**
- * Authenticated file download. A plain <a href> cannot carry the bearer token,
- * so fetch the blob first and hand the browser a temporary object URL.
- */
 export async function downloadFile(endpoint: string, fallbackName: string) {
   const token = tokenStore.get();
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -284,15 +275,11 @@ export interface CollectionField {
   type: FieldType;
   required: boolean;
   options?: string[];
-  isSystemField?: boolean; // Marks system-required fields like email
+  isSystemField?: boolean;
 }
 
 export type CollectionStatus = "active" | "paused" | "closed";
 
-/**
- * An entity a merchant files collections under — a school, a branch, a
- * department — with one logo used on its payer pages and receipts.
- */
 export interface CollectionGroup {
   id: string;
   name: string;
@@ -414,7 +401,6 @@ export interface Merchant {
   display_name?: string;
   status: MerchantStatus;
   application_note?: string;
-  /** The admin's note recorded with an approve / reject / suspend decision. */
   admin_review_note?: string;
   wallet_balance_ngn?: number;
   payouts_balance_ngn?: number;
@@ -489,6 +475,10 @@ export interface ApprovalSummary {
   expired: boolean;
 }
 
+/**
+ * Public receipt returned by GET /api/verify/:reference.
+ * The breakdown is optional because older receipts may not include it.
+ */
 export interface PublicReceipt {
   reference: string;
   school_name: string;
@@ -503,12 +493,16 @@ export interface PublicReceipt {
   bank_verified: boolean;
   verify_url: string;
   receipt_url: string;
-  /** The merchant workspace the money settles to. */
   workspace_name?: string;
-  /** The group the collection is filed under, when it has one. */
   group_name?: string | null;
   group_logo_url?: string | null;
   details: Array<{ label: string; value: string }>;
+  breakdown?: {
+    collection: number;
+    paystack_fee: number;
+    jeneviv_fee: number;
+    total: number;
+  } | null;
 }
 
 export interface Payout {
@@ -580,12 +574,6 @@ export interface AuditLog {
 
 /* ------------------------------------------------------- field list helpers */
 
-/**
- * The backend has no per-field PATCH or DELETE routes. Field edits are done by
- * loading the whole list, changing it, and saving it back with POST.
- * Fields are matched by field_id, which is stable, rather than by client-side
- * draft ids.
- */
 function replaceFieldById(
   fields: CollectionField[],
   fieldId: string,
@@ -602,7 +590,6 @@ function replaceFieldById(
   return next;
 }
 
-/** Strip client-only draft ids before saving. The server assigns real ids. */
 function cleanFields(fields: CollectionField[]): CollectionField[] {
   return fields.map(({ id: _id, ...rest }) => rest as CollectionField);
 }
@@ -615,7 +602,6 @@ export const authAPI = {
       "/api/auth/get-session",
     ),
 
-  // The signed token is saved automatically by apiFetch (set-auth-token header).
   signIn: (email: string, password: string) =>
     apiFetch<AuthResponse>("/api/auth/sign-in/email", {
       method: "POST",
@@ -628,7 +614,6 @@ export const authAPI = {
       body: { name, email, password },
     }),
 
-  // Always clear the stored token on sign-out, even if the request fails.
   signOut: async () => {
     try {
       return await apiFetch<{ success: boolean }>("/api/auth/sign-out", {
@@ -667,12 +652,6 @@ export const authAPI = {
 
 /* -------------------------------------------------------- response shapes */
 
-/**
- * The dashboard models are snake_case, drizzle rows arrive camelCase, and the
- * two backends nest payer fields differently — `{ collection, fields }` beside
- * each other, or `fields` inside the collection. Reading through these helpers
- * keeps every page independent of which server answered.
- */
 function pickKey<T>(
   source: Record<string, unknown> | null | undefined,
   ...keys: string[]
@@ -708,7 +687,6 @@ function readFields(value: unknown): CollectionField[] {
   return Array.isArray(value) ? value.map(normalizeField) : [];
 }
 
-/** Fields are returned beside the collection, or nested inside it. */
 function fieldsFrom(payload: unknown, collection: unknown): CollectionField[] {
   const beside = readFields(pickKey<unknown[]>(asRecord(payload), "fields"));
   if (beside.length > 0) return beside;
@@ -734,10 +712,6 @@ function normalizeCollection(
   return normalized;
 }
 
-/**
- * The API emits snake_case keys, so a merchant row arrives with `created_at`
- * and `admin_review_note` rather than the camelCase the pages read.
- */
 function normalizeMerchant(raw: unknown): Merchant {
   const row = asRecord(raw);
   return {
@@ -764,7 +738,6 @@ function normalizeGroup(raw: unknown): CollectionGroup | null {
   };
 }
 
-/** Attaches the group that arrives beside the collection on the real API. */
 function withGroup(
   collection: Collection,
   payload: unknown,
@@ -873,10 +846,6 @@ export const collectionsAPI = {
       method: "DELETE",
     }),
 
-  /**
-   * The backend has no GET /:id/fields route, so the fields come back with the
-   * collection — beside it on the real API, nested inside it in demo mode.
-   */
   fields: async (id: string) => {
     const response = await apiFetch<{ collection?: unknown; fields?: unknown[] }>(
       `/api/collections/${id}`,
@@ -884,7 +853,6 @@ export const collectionsAPI = {
     return { fields: fieldsFrom(response, response.collection) };
   },
 
-  /** Replace the whole field list. POST is the method the backend accepts. */
   setFields: async (id: string, fields: CollectionField[]) => {
     const response = await apiFetch<{ fields?: unknown[] }>(
       `/api/collections/${id}/fields`,
@@ -899,7 +867,6 @@ export const collectionsAPI = {
       body: field,
     }),
 
-  /** No per-field PATCH route. Loads the list, edits one field, saves it back. */
   updateField: async (
     id: string,
     fieldId: string,
@@ -912,7 +879,6 @@ export const collectionsAPI = {
     return { field: updated as CollectionField };
   },
 
-  /** No per-field DELETE route. Loads the list, removes the field, saves it back. */
   deleteField: async (id: string, fieldId: string) => {
     const { fields } = await collectionsAPI.fields(id);
     await collectionsAPI.setFields(id, replaceFieldById(fields, fieldId, null));
@@ -931,7 +897,6 @@ export const collectionsAPI = {
       `collection-${status}.xlsx`,
     ),
 
-  /** PDF export with the same column selection the CSV export offers. */
   exportPdf: (id: string, status: "paid" | "unpaid", columns: string[]) => {
     const query = new URLSearchParams({ status });
     if (columns.length) query.set("columns", columns.join(","));
@@ -978,10 +943,6 @@ export const groupsAPI = {
 /* -------------------------------------------------------------- transactions */
 
 export const transactionsAPI = {
-  /**
-   * Not confirmed on the backend: I found GET /:id and PATCH /reconcile, but no
-   * list route. If the list returns 404, the backend needs GET / added.
-   */
   list: (query?: {
     collection_id?: string;
     status?: string;
@@ -1027,16 +988,10 @@ export const payoutsAPI = {
 
 /* -------------------------------------------------------------------- refunds */
 
-/**
- * No /api/refunds routes exist on the backend yet. Refunds are only created
- * through the admin endpoint (adminAPI.refundTransaction). These calls will
- * return 404 until the routes are added.
- */
 export const refundsAPI = {
   list: (limit?: number) =>
     apiFetch<{ refunds: Refund[] }>("/api/refunds", { query: { limit } }),
 
-  /** Paystack could not route a refund without the payer's bank details. */
   retry: (refundId: string, accountNumber: string, bankCode: string) =>
     apiFetch<{ refund: Refund }>(`/api/refunds/${refundId}/retry`, {
       method: "POST",
@@ -1079,10 +1034,6 @@ export const merchantsAPI = {
         { method: "POST", body: data },
       ),
 
-    /**
-     * No set-default route on the backend. The default is stored as
-     * settings.default_bank_account_id, so this saves that setting instead.
-     */
     setDefault: (id: string) =>
       apiFetch<{ merchant: Merchant }>("/api/merchants/me/settings", {
         method: "PATCH",
@@ -1184,7 +1135,6 @@ export const verifyAPI = {
 /* ------------------------------------------------------------------ payments */
 
 export const paymentsAPI = {
-  /** Asks the gateway now whether the payer's transfer has arrived. */
   confirm: (reference: string) =>
     apiFetch<{
       reference: string;
@@ -1197,7 +1147,6 @@ export const paymentsAPI = {
       anonymous: true,
     }),
 
-  /** Public status check for a payer's own payment. No sign-in needed. */
   status: (reference: string) =>
     apiFetch<{
       reference: string;
@@ -1206,12 +1155,9 @@ export const paymentsAPI = {
       currency: string;
       paid_at: string | null;
       amount_received: number;
-      /** Set while a payment is short. The amount still to transfer. */
       shortfall: number | null;
     }>(`/api/payments/status/${encodeURIComponent(reference)}`, { anonymous: true }),
 
-  /** No account needed: a payer is recorded from the form. Guest payments
-      carry the form's email so the backend can record the payer. */
   init: (
     collectionShortCode: string,
     fieldValues: Record<string, unknown>,
@@ -1240,9 +1186,6 @@ export const templatesAPI = {
       normalizeTemplate(item),
     );
 
-    // Some backends return the list without payer fields. Fill the gaps so the
-    // list shows what each template asks for and the editor never opens empty,
-    // which would silently overwrite the saved fields.
     await Promise.all(
       templates.map(async (template) => {
         if (template.fields && template.fields.length > 0) return;
@@ -1296,7 +1239,6 @@ export const templatesAPI = {
     return { fields: readFields(response.fields) };
   },
 
-  /** Replace the whole field list. POST is the method the backend accepts. */
   setFields: async (id: string, fields: CollectionField[]) => {
     const response = await apiFetch<{ fields?: unknown[] }>(
       `/api/templates/${id}/fields`,
@@ -1311,7 +1253,6 @@ export const templatesAPI = {
       body: field,
     }),
 
-  /** No per-field PATCH route. Loads the list, edits one field, saves it back. */
   updateField: async (
     id: string,
     fieldId: string,
@@ -1324,7 +1265,6 @@ export const templatesAPI = {
     return { field: updated as CollectionField };
   },
 
-  /** No per-field DELETE route. Loads the list, removes the field, saves it back. */
   deleteField: async (id: string, fieldId: string) => {
     const { fields } = await templatesAPI.getFields(id);
     await templatesAPI.setFields(id, replaceFieldById(fields, fieldId, null));
@@ -1359,11 +1299,6 @@ export const uploadsAPI = {
     }),
 };
 
-/**
- * Uploads a picked file straight to Cloudinary using a short-lived signature
- * from our API. Merchants choose an image instead of pasting a URL, and the
- * signed folder keeps every asset on our own cloud.
- */
 export async function uploadImage(file: File, folder = "jeneviv/groups"): Promise<string> {
   const signed = await uploadsAPI.sign(folder, "image");
 
@@ -1413,13 +1348,8 @@ export interface SettlementStatus {
 /* --------------------------------------------------------------------- admin */
 
 export const adminAPI = {
-  /**
-   * The backend has no /api/admin/stats, /api/admin/transactions or
-   * /api/admin/audit-logs routes yet. Those calls return 404 until added.
-   */
   getStats: () => apiFetch<AdminStats>("/api/admin/stats"),
 
-  /** Exists on the backend: GET /api/admin/merchants. */
   listMerchants: async (status?: MerchantStatus) => {
     const response = await apiFetch<{ merchants?: unknown[] }>(
       "/api/admin/merchants",
@@ -1446,7 +1376,6 @@ export const adminAPI = {
       { method: "POST", body: { note } },
     ),
 
-  /** Exists on the backend: POST /api/admin/transactions/:id/refund. */
   refundTransaction: (transactionId: string, reason: string) =>
     apiFetch<{ refund: Refund }>(
       `/api/admin/transactions/${transactionId}/refund`,

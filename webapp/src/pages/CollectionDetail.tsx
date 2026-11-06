@@ -126,10 +126,13 @@ export default function CollectionDetail() {
 
   const collection = useCollection(id);
   const fields = useCollectionFields(id);
-  const transactions = useCollectionTransactions(
-    id,
-    paymentFilter === "all" ? undefined : paymentFilter,
-  );
+  // Overpaid and underpaid are not statuses. The server only filters by real statuses,
+  // so those two are filtered in the page below, after the full list has loaded.
+  const serverStatus =
+    paymentFilter === "all" || paymentFilter === "overpaid" || paymentFilter === "underpaid"
+      ? undefined
+      : paymentFilter;
+  const transactions = useCollectionTransactions(id, serverStatus);
 
   const saveFields = useAction((collectionId: string, next: CollectionField[]) =>
     collectionsAPI.setFields(collectionId, next),

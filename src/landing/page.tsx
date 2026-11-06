@@ -179,7 +179,7 @@ export default function LandingPage() {
                 <span className="accent">finally accounted for.</span>
               </h1>
               <p className="m-lede">
-                Jeneviv turns one payment link into a live ledger.. who has
+                Jeneviv turns one payment link into a live ledger. Who has
                 paid, who hasn&apos;t, and what actually hit your bank. For
                 course reps, PTAs, cooperatives and associations.
               </p>
