@@ -1,16 +1,7 @@
+import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
-import {
-  BadgeCheck,
-  Building2,
-  Check,
-  CheckCircle2,
-  Copy,
-  Download,
-  Loader2,
-  ShieldCheck,
-  TriangleAlert,
-} from "lucide-react";
+import { BadgeCheck, Check, CheckCircle2, Copy, Download, Loader2, ShieldCheck, TriangleAlert } from "lucide-react";
 import { APIError, apiConfig, verifyAPI, type PublicReceipt } from "@/lib/api";
 import { copyText, formatDateTime, formatMoney } from "@/lib/format";
 import { Button, InlineNote } from "@/components/ui";
@@ -20,167 +11,173 @@ type State =
   | { kind: "valid"; receipt: PublicReceipt }
   | { kind: "missing"; message: string };
 
-/** A label on the left, a value on the right, separated by a hairline. */
-function Line({ label, children }: { label: string; children: ReactNode }) {
+/** One label and value row. Labels are grey, values are dark, and rows are not boxed. */
+function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-6 border-b border-line-soft py-2.5 last:border-0">
-      <span className="shrink-0 text-[11.5px] uppercase tracking-[0.08em] text-ink-muted">{label}</span>
-      <span className="min-w-0 text-right text-[13px] font-semibold">{children}</span>
+    <div className="flex items-start justify-between gap-6 py-2.5">
+      <dt className="shrink-0 text-[13.5px] text-ink-muted">{label}</dt>
+      <dd className="min-w-0 text-right text-[13.5px] font-medium text-ink">{children}</dd>
     </div>
   );
 }
 
-/** A small chip with a round icon well, matching the rest of the app. */
-function Verified({ icon, children }: { icon: ReactNode; children: ReactNode }) {
+/** A small orange tag, such as a verification. */
+function Tag({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#d5e8c4] py-[3px] pl-[3px] pr-2.5 text-[11px] font-semibold text-ink">
-      <span className="grid h-4 w-4 place-items-center rounded-full bg-white/85">{icon}</span>
+    <span className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2.5 py-1 text-[11px] font-semibold text-brand">
+      {icon}
       {children}
     </span>
   );
 }
 
-/** The receipt itself: brand header, amount, fields and a verify strip. */
+/**
+ * Cream discs cut into the top or bottom edge, so the ticket reads as torn.
+ * The discs are the page colour, so they blend into the background.
+ */
+function Scallops({ position }: { position: "top" | "bottom" }) {
+  const discs = Array.from({ length: 14 }, (_, i) => i);
+  return (
+    <div
+      aria-hidden="true"
+      className={`pointer-events-none absolute inset-x-0 z-10 flex justify-between px-3 ${
+        position === "top" ? "-top-[9px]" : "-bottom-[9px]"
+      }`}
+    >
+      {discs.map((i) => (
+        <span key={i} className="h-[18px] w-[18px] rounded-full bg-cream" />
+      ))}
+    </div>
+  );
+}
+
+/** A dashed tear line between sections. */
+function Tear() {
+  return <div className="my-4 border-t border-dashed border-line" />;
+}
+
 function ReceiptTicket({ receipt }: { receipt: PublicReceipt }) {
-  const details = receipt.details.filter((detail) => detail.label !== "Collection");
+  const issuer = receipt.group_name ?? receipt.workspace_name ?? receipt.school_name;
+  const logo = receipt.group_logo_url ?? receipt.logo_url;
+  const extraDetails = receipt.details.filter((d) => d.label !== "Collection");
+  const jenevivMark = apiConfig.withBase("/assets/images/jeneviv.png");
 
   return (
-    <div className="relative rounded-[18px] border border-line bg-white shadow-sm">
-      {/* watermark, like a bank slip */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[18px]">
-        <p className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-[24deg] whitespace-nowrap text-[58px] font-extrabold leading-none tracking-[-0.06em] text-ink/[0.045]">
-          jeneviv
-        </p>
-      </div>
+    <article className="relative overflow-hidden rounded-[22px] bg-white px-6 pb-10 pt-8 shadow-[0_1px_0_rgba(16,16,16,0.04),0_12px_32px_-18px_rgba(16,16,16,0.18)] sm:px-8">
+      {/* watermark: the Jeneviv mark, repeated faintly behind the content */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.06]"
+        style={{
+          backgroundImage: `url(${jenevivMark})`,
+          backgroundSize: "96px 96px",
+          backgroundRepeat: "repeat",
+          backgroundPosition: "24px 24px",
+        }}
+      />
 
-      {/* header: logo left, official label right */}
-      <div className="relative flex items-start justify-between gap-4 px-5 pt-5 sm:px-6">
-        <span className="flex items-center gap-2 text-[17px] font-extrabold tracking-[-0.05em] text-ink">
-          <img
-            src={apiConfig.withBase("/assets/images/jeneviv.png")}
-            alt=""
-            width={24}
-            height={24}
-            className="h-6 w-6 rounded-[7px] object-cover"
-          />
-          <span>
-            jeneviv<span className="text-brand">.</span>
-          </span>
-        </span>
-        <span className="max-w-[120px] text-right font-mono text-[9px] uppercase leading-[1.6] tracking-[0.16em] text-ink-muted">
-          Official payment receipt
-        </span>
-      </div>
+      <Scallops position="top" />
+      <Scallops position="bottom" />
 
-      {/* amount */}
-      <div className="relative px-5 pb-5 pt-6 text-center sm:px-6">
-        <p className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-ink-muted">Amount paid</p>
-        <p className="tabular mt-2 text-[30px] font-bold leading-none tracking-[-0.03em] sm:text-[38px]">
-          {formatMoney(receipt.amount, receipt.currency)}
-        </p>
-        <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-[#d5e8c4] px-2.5 py-1 text-[11px] font-semibold text-ink">
-          <Check size={11} /> Successful
-        </span>
-        <p className="mt-2 text-[11.5px] text-ink-muted">{formatDateTime(receipt.paid_at)}</p>
-      </div>
-
-      {/* perforation */}
-      <div className="relative px-5 sm:px-6">
-        <div className="border-t border-dashed border-line" />
-        <span className="absolute -left-[9px] -top-2 h-4 w-4 rounded-full border-r border-line bg-cream" />
-        <span className="absolute -right-[9px] -top-2 h-4 w-4 rounded-full border-l border-line bg-cream" />
-      </div>
-
-      {/* fields */}
-      <div className="relative px-5 pb-5 pt-3 sm:px-6">
-        <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-ink-faint">Fields</p>
-        <div className="mt-1">
-          <Line label="Collection">{receipt.collection_name}</Line>
-          {receipt.group_name ? (
-            <Line label="Group">
-              <span className="flex items-center justify-end gap-2">
-                {receipt.group_logo_url ? (
-                  <img
-                    src={receipt.group_logo_url}
-                    alt=""
-                    className="h-5 w-5 shrink-0 rounded-[4px] border border-line bg-white object-contain"
-                  />
-                ) : (
-                  <Building2 size={14} className="shrink-0 text-ink-muted" />
-                )}
-                <span className="truncate">{receipt.group_name}</span>
+      <div className="relative">
+        {/* header: issuer on the left, document label on the right */}
+        <header className="flex items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            {logo ? (
+              <img src={logo} alt="" className="h-11 w-11 shrink-0 rounded-[12px] border border-line object-contain" />
+            ) : (
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[12px] border border-line bg-white">
+                <img src={jenevivMark} alt="" className="h-7 w-7 rounded-[7px]" />
               </span>
-            </Line>
-          ) : null}
-          <Line label="Workspace">
-            <span className="flex items-center justify-end gap-2">
-              {receipt.logo_url ? (
-                <img
-                  src={receipt.logo_url}
-                  alt=""
-                  className="h-5 w-5 shrink-0 rounded-[4px] border border-line bg-white object-contain"
-                />
-              ) : (
-                <Building2 size={14} className="shrink-0 text-ink-muted" />
-              )}
-              <span className="truncate">{receipt.workspace_name ?? receipt.school_name}</span>
-            </span>
-          </Line>
-          <Line label="Paid by">{receipt.payer_name}</Line>
-          {receipt.student_name ? <Line label="Student">{receipt.student_name}</Line> : null}
-          <Line label="Reference">
-            <span className="font-mono text-[12px]">{receipt.reference}</span>
-          </Line>
-          {details.map((detail) => (
-            <Line key={`${detail.label}-${detail.value}`} label={detail.label}>
-              {detail.value}
-            </Line>
-          ))}
-        </div>
-
-        {receipt.nin_verified || receipt.bank_verified ? (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {receipt.nin_verified ? (
-              <Verified icon={<BadgeCheck size={10} />}>NIN verified</Verified>
-            ) : null}
-            {receipt.bank_verified ? (
-              <Verified icon={<ShieldCheck size={10} />}>Bank verified</Verified>
-            ) : null}
+            )}
+            <div className="min-w-0">
+              <p className="truncate text-[15px] font-bold tracking-tight text-ink">{issuer}</p>
+              <p className="truncate text-[11.5px] text-ink-muted">Issued through Jeneviv</p>
+            </div>
           </div>
-        ) : null}
-      </div>
+          <p className="shrink-0 text-[14px] font-semibold text-ink">Transaction Receipt</p>
+        </header>
 
-      {/* verify strip */}
-      <div className="relative border-t border-line-soft bg-cream/70 px-5 py-4 sm:px-6">
-        <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-ink-faint">Verify this receipt</p>
-        <a
-          href={receipt.verify_url}
-          className="mt-1 block break-all text-[11.5px] font-semibold text-brand underline decoration-brand/40 underline-offset-2"
-        >
-          {receipt.verify_url}
-        </a>
-        <p className="mt-3 flex items-start gap-1.5 text-[10.5px] leading-relaxed text-ink-muted">
-          <ShieldCheck size={11} className="mt-[2px] shrink-0" />
-          <span>
-            This receipt is issued by{" "}
-            <span className="font-semibold text-ink">
-              {receipt.group_name ?? receipt.workspace_name ?? receipt.school_name}
-            </span>
-            . Payments settle straight to their bank and are never held by Jeneviv.
-          </span>
+        {/* hero: amount, status and date */}
+        <div className="mt-9 text-center">
+          <p className="tabular text-[36px] font-bold leading-none tracking-[-0.03em] text-brand sm:text-[42px]">
+            {formatMoney(receipt.amount, receipt.currency)}
+          </p>
+          <p className="mt-3 text-[19px] font-semibold text-ink">Successful</p>
+          <p className="mt-1.5 text-[12.5px] text-ink-muted">{formatDateTime(receipt.paid_at)}</p>
+          {receipt.nin_verified || receipt.bank_verified ? (
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              {receipt.nin_verified ? <Tag icon={<BadgeCheck size={11} />}>NIN verified</Tag> : null}
+              {receipt.bank_verified ? <Tag icon={<ShieldCheck size={11} />}>Bank verified</Tag> : null}
+            </div>
+          ) : null}
+        </div>
+
+        <Tear />
+
+        {/* who paid, for what */}
+        <dl>
+          <Row label="Paid by">
+            <span className="font-bold uppercase">{receipt.payer_name}</span>
+          </Row>
+          {receipt.student_name && receipt.student_name !== receipt.payer_name ? (
+            <Row label="For">{receipt.student_name}</Row>
+          ) : null}
+          <Row label="Collection">{receipt.collection_name}</Row>
+          {extraDetails.map((detail) => (
+            <Row key={detail.label} label={detail.label}>
+              {detail.value}
+            </Row>
+          ))}
+          <Row label="Transaction reference">
+            <span className="break-all font-mono text-[12px]">{receipt.reference}</span>
+          </Row>
+        </dl>
+
+        {receipt.breakdown ? (
+          <>
+            <Tear />
+            <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">How the money was split</p>
+            <dl className="mt-2">
+              <Row label="Collection (set by the school)">
+                {formatMoney(receipt.breakdown.collection, receipt.currency)}
+              </Row>
+              <Row label="Paystack processing fee">{formatMoney(receipt.breakdown.paystack_fee, receipt.currency)}</Row>
+              <Row label="Jeneviv platform fee">{formatMoney(receipt.breakdown.jeneviv_fee, receipt.currency)}</Row>
+              <div className="mt-1 flex items-center justify-between gap-6 border-t border-line-soft pt-3">
+                <dt className="text-[14px] font-bold text-ink">Total paid</dt>
+                <dd className="tabular text-[15px] font-bold text-brand">
+                  {formatMoney(receipt.breakdown.total, receipt.currency)}
+                </dd>
+              </div>
+            </dl>
+          </>
+        ) : null}
+
+        <Tear />
+
+        {/* footnote and verification */}
+        <p className="text-[12px] leading-relaxed text-ink-muted">
+          This receipt is issued by <span className="font-semibold text-ink">{issuer}</span>. Payments settle straight to
+          their bank and are never held by Jeneviv.
         </p>
-        <div className="mt-3 flex items-center gap-1.5 border-t border-line-soft pt-3 text-[10.5px] font-semibold text-ink-muted">
-          <img
-            src={apiConfig.withBase("/assets/images/jeneviv.png")}
-            alt=""
-            width={16}
-            height={16}
-            className="h-4 w-4 rounded-[4px] object-cover"
-          />
-          Powered by <span className="text-ink">Jeneviv</span>
+
+        <div className="mt-5 flex items-center gap-5 rounded-[16px] border border-line-soft bg-white p-4">
+          <div className="min-w-0 flex-1">
+            <p className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-ink-muted">Verify this receipt</p>
+            <a
+              href={receipt.verify_url}
+              className="mt-1 block break-all text-[11.5px] font-semibold text-brand underline decoration-brand/40 underline-offset-2"
+            >
+              {receipt.verify_url}
+            </a>
+          </div>
+          <div className="shrink-0 rounded-[10px] border border-line-soft bg-white p-2">
+            <QRCodeSVG value={receipt.verify_url} size={76} level="M" fgColor="#101010" />
+          </div>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -252,9 +249,8 @@ export default function VerifyReceipt() {
           </div>
         ) : (
           <>
-            {/* verdict, kept quiet so the receipt leads */}
             <div className="mb-5 flex items-center gap-3">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#d5e8c4] text-ink">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand/10 text-brand">
                 <CheckCircle2 size={17} />
               </span>
               <div className="min-w-0">
