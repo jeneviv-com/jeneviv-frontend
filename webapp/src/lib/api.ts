@@ -290,8 +290,26 @@ export interface CollectionGroup {
   updated_at?: string;
 }
 
+export interface CollectionPayee {
+  display_name: string | null;
+  legal_name: string | null;
+  bank_account_name: string | null;
+  bank_verified: boolean;
+}
+
+export interface CollectionPricing {
+  amount: number;
+  platform_fee: number;
+  gateway_fee: number;
+  total: number;
+}
+
 export interface Collection {
   id: string;
+  /** Who the money goes to. Present on the public payment lookup. */
+  payee?: CollectionPayee | null;
+  /** What the payer will pay, split into parts. Present on the public payment lookup. */
+  pricing?: CollectionPricing | null;
   merchant_id?: string;
   group_id?: string | null;
   group?: CollectionGroup | null;
@@ -819,17 +837,25 @@ export const collectionsAPI = {
   },
 
   getByCode: async (shortCode: string) => {
-    const response = await apiFetch<{ collection?: unknown; fields?: unknown[] }>(
-      `/api/collections/by-code/${encodeURIComponent(shortCode)}`,
+    const response = await apiFetch<{
+      collection?: unknown;
+      fields?: unknown[];
+      payee?: CollectionPayee | null;
+      pricing?: CollectionPricing | null;
+    }>(`/api/collections/by-code/${encodeURIComponent(shortCode)}`);
+    const collection = withGroup(
+      normalizeCollection(
+        response.collection,
+        fieldsFrom(response, response.collection),
+      ),
+      response,
     );
     return {
-      collection: withGroup(
-        normalizeCollection(
-          response.collection,
-          fieldsFrom(response, response.collection),
-        ),
-        response,
-      ),
+      collection: {
+        ...collection,
+        payee: response.payee ?? null,
+        pricing: response.pricing ?? null,
+      },
     };
   },
 
