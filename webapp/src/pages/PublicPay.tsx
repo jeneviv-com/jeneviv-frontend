@@ -328,6 +328,21 @@ export default function PublicPay() {
         </div>
       </header>
 
+      {data.payee ? (
+        <div className="mt-6 rounded-[16px] border border-ink/20 bg-white px-5 py-4">
+          <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">Money goes to</p>
+          <p className="mt-1.5 text-[16px] font-bold tracking-tight">
+            {data.payee.bank_account_name ?? data.payee.display_name ?? "This workspace"}
+          </p>
+          {data.payee.legal_name ? (
+            <p className="mt-1 text-[12.5px] text-ink-muted">Verified: {data.payee.legal_name}</p>
+          ) : null}
+          <p className="mt-2 text-[12px] text-ink-muted">
+            Check this name before you pay. If it isn't the group you expect, don't pay.
+          </p>
+        </div>
+      ) : null}
+
       {/* steps: a quiet line, not a card */}
       <ol className="mt-7 flex items-center gap-2" aria-label="Progress">
         {STEPS.map((item, index) => {
@@ -439,8 +454,32 @@ export default function PublicPay() {
 
             {formError ? <InlineNote tone="error">{formError}</InlineNote> : null}
 
+            {data.pricing ? (
+              <div className="rounded-[14px] border border-line bg-white px-4 py-4">
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">What you will pay</p>
+                <dl className="mt-3 space-y-2 text-[13.5px]">
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-ink-soft">Collection (to the school)</dt>
+                    <dd className="tabular font-semibold">{formatMoney(data.pricing.amount, data.currency)}</dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-ink-soft">Jeneviv platform fee</dt>
+                    <dd className="tabular">{formatMoney(data.pricing.platform_fee, data.currency)}</dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-ink-soft">Paystack processing fee</dt>
+                    <dd className="tabular">{formatMoney(data.pricing.gateway_fee, data.currency)}</dd>
+                  </div>
+                  <div className="flex justify-between gap-4 border-t border-line-soft pt-2">
+                    <dt className="font-semibold">Total to transfer</dt>
+                    <dd className="tabular font-bold text-brand">{formatMoney(data.pricing.total, data.currency)}</dd>
+                  </div>
+                </dl>
+              </div>
+            ) : null}
+
             <p className="text-[13px] leading-relaxed text-ink-muted">
-              You will see the exact amount to transfer on the next step, with any transaction fees included.
+              The fees are confirmed again on the next step, before you transfer anything.
             </p>
 
             <Button size="lg" className="h-[52px] w-full rounded-[12px] text-[15px]" loading={submitting} onClick={submit}>
