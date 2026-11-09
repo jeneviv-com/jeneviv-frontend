@@ -337,7 +337,6 @@ export default function CollectionDetail() {
   const target = (data as { target_payers?: number }).target_payers ?? 0;
   const paid = stats?.paid ?? 0;
 
-  const shareMessage = `Pay for ${data.name} (${formatMoney(data.amount, data.currency)}): ${link}\n\nEnter your details, then transfer to the account shown. Your receipt is emailed automatically.`;
 
   const toggleActive = async () => {
     try {
@@ -524,7 +523,7 @@ export default function CollectionDetail() {
               </section>
 
               {/* share: one dark block with the link and quick actions */}
-              <section className="self-start rounded-[22px] bg-ink p-6 text-cream">
+              <section className="mt-12 self-start rounded-[22px] bg-ink p-6 text-cream xl:mt-0">
                 <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-cream/60">Share</p>
                 <h2 className="mt-2 text-[21px] font-bold tracking-[-0.03em]">One link for every payer</h2>
                 <div className="mt-5 break-all rounded-[14px] border border-cream/15 bg-cream/5 px-4 py-3.5 font-mono text-[12px] text-cream/85">
@@ -540,16 +539,6 @@ export default function CollectionDetail() {
                     className="inline-flex items-center justify-center gap-2 rounded-[12px] bg-white px-4 py-3 text-[13.5px] font-semibold text-ink transition-transform duration-150 active:scale-[0.98]"
                   >
                     <Copy size={14} /> Copy link
-                  </button>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const ok = await copyText(shareMessage);
-                      if (ok) success("Message copied", "Paste it into WhatsApp — payers just tap the link.");
-                    }}
-                    className="inline-flex items-center justify-center gap-2 rounded-[12px] border border-cream/20 px-4 py-3 text-[13.5px] font-semibold text-cream transition-colors hover:bg-cream/10"
-                  >
-                    <Copy size={14} /> WhatsApp message
                   </button>
                   <a
                     href={link}
