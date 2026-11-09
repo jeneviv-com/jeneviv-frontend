@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   ButtonHTMLAttributes,
   InputHTMLAttributes,
@@ -719,9 +720,10 @@ export function StackedCards({
   gridLayout?: boolean;
 }) {
   const gridClasses = gridLayout ? "lg:grid lg:grid-cols-2 lg:gap-4" : "";
+  // One bordered panel on phones, with a rule between rows; separate bordered cards on laptop.
   return (
     <div
-      className={`relative space-y-0 ${gridClasses} ${className} [&>*:last-child]:min-h-[100px] [&>*:last-child>*]:h-full lg:[&>*:last-child]:min-h-0`}
+      className={`relative overflow-hidden rounded-[26px] border-[1.5px] border-ink bg-white divide-y-[1.5px] divide-ink lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent lg:divide-y-0 ${gridClasses} ${className}`}
     >
       {children}
     </div>
@@ -746,25 +748,33 @@ export function DashboardMetricCard({
   href?: string;
   loading?: boolean;
 }) {
-  const content = (
-    <StackedCard tone={tone} interactive={!!href} href={href}>
-      <div className="flex min-h-[108px] items-center justify-between gap-3 lg:min-h-[92px]">
-        <div className="min-w-0 flex-1">
-          <p className="text-[16px] font-semibold tracking-tight lg:text-[18px]">{title}</p>
-          <p className="mt-0.5 truncate text-[12.5px] opacity-70 lg:text-[13px]">{subtitle}</p>
-        </div>
-        <div className="shrink-0 text-right text-[20px] font-bold tabular lg:text-[22px]">
-          {loading ? (
-            <span aria-hidden="true" className="skeleton inline-block h-5 w-16 rounded-md" />
-          ) : (
-            value
-          )}
-        </div>
+  const panel = (
+    <div
+      className={`flex min-h-[112px] items-center justify-between gap-4 px-[22px] py-[18px] lg:rounded-[26px] lg:border-[1.5px] lg:border-ink lg:min-h-[120px] ${TONE_CARD[tone]} ${
+        href ? "transition-[filter] duration-150 hover:brightness-[0.98] active:brightness-95" : ""
+      }`}
+    >
+      <div className="min-w-0 flex-1">
+        <p className="text-[24px] font-extrabold tracking-[-0.02em] lg:text-[26px]">{title}</p>
+        <p className="mt-1 truncate text-[13px] opacity-75">{subtitle}</p>
       </div>
-    </StackedCard>
+      <div className="shrink-0 text-right text-[20px] font-semibold tabular lg:text-[22px]">
+        {loading ? (
+          <span aria-hidden="true" className="skeleton inline-block h-5 w-16 rounded-md" />
+        ) : (
+          value
+        )}
+      </div>
+    </div>
   );
 
-  return content;
+  return href ? (
+    <Link to={href} className="block">
+      {panel}
+    </Link>
+  ) : (
+    panel
+  );
 }
 
 export function useDebounced<T>(value: T, delay = 300) {
