@@ -2,6 +2,7 @@ import Link from "next/link";
 import SiteNav from "@/components/marketing/SiteNav";
 import Reveal from "@/components/marketing/Reveal";
 import ScaledFrame from "@/components/marketing/ScaledFrame";
+import { BentoCard, SecurityCard, PriceCard } from "@/components/marketing/MarketingCard";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173";
 

@@ -21,6 +21,7 @@ import {
 import { AreaChart, type SeriesPoint } from "@/components/charts";
 import {
   Card,
+  SimpleCard,
   CardHeader,
   SummaryRow,
   EmptyState,
@@ -447,7 +448,7 @@ export default function Dashboard() {
                 </Link>
               </div>
 
-              <div className="mt-3 rounded-[20px] border border-line bg-white lg:shadow-sm">
+              <Card className="mt-3" rounded="2xl" shadow="sm" padded={false}>
                 {transactions.loading ? (
                   <div className="p-5">
                     <TableSkeleton rows={4} cols={2} />
@@ -497,7 +498,7 @@ export default function Dashboard() {
                     ))}
                   </ul>
                 )}
-              </div>
+              </Card>
             </section>
           </Reveal>
 
@@ -516,7 +517,7 @@ export default function Dashboard() {
                 </Link>
               </div>
 
-              <div className="mt-3 rounded-[20px] border border-line bg-white p-5 lg:shadow-sm">
+              <Card className="mt-3" rounded="2xl" padded={true} shadow="sm">
                 {collections.loading ? (
                   <TableSkeleton rows={3} cols={2} />
                 ) : collections.error ? (
@@ -567,13 +568,13 @@ export default function Dashboard() {
                     })}
                   </ul>
                 )}
-              </div>
+              </Card>
             </section>
           </Reveal>
 
           {/* settlement note - shown on mobile below collections */}
           <Reveal delay={800} className="lg:hidden">
-            <div className="rounded-[20px] border border-line bg-white p-5">
+            <SimpleCard rounded="2xl" padding="lg" bg="white">
               <div className="mb-3 flex items-center gap-2">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-cream">
                   <ShieldCheck size={16} />
@@ -592,7 +593,7 @@ export default function Dashboard() {
               <Link to="/payouts" className="btn btn-secondary btn-sm mt-4 w-full">
                 Manage bank account <ArrowUpRight size={14} />
               </Link>
-            </div>
+            </SimpleCard>
           </Reveal>
         </div>
       </div>

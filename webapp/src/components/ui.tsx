@@ -65,15 +65,112 @@ export function Card({
   children,
   className = "",
   padded = true,
+  interactive = false,
+  hoverable = false,
+  tone = "default",
+  rounded = "card",
+  shadow = "card",
+  border = true,
 }: {
   children: ReactNode;
   className?: string;
   padded?: boolean;
+  interactive?: boolean;
+  hoverable?: boolean;
+  tone?: "default" | "white" | "cream" | "stone" | "brand" | "ink" | "success" | "warning" | "error";
+  rounded?: "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "card" | "full";
+  shadow?: "none" | "sm" | "md" | "lg" | "xl" | "card" | "float";
+  border?: boolean;
 }) {
+  const toneClasses = {
+    default: "bg-white text-ink",
+    white: "bg-white text-ink",
+    cream: "bg-cream text-ink",
+    stone: "bg-stone text-ink",
+    brand: "bg-brand-soft text-ink",
+    ink: "bg-ink text-white",
+    success: "bg-green-50 text-ink border-green-100",
+    warning: "bg-amber-50 text-ink border-amber-100",
+    error: "bg-red-50 text-ink border-red-100",
+  };
+
+  const roundedClasses = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+    card: "rounded-card",
+    full: "rounded-full",
+  };
+
+  const shadowClasses = {
+    none: "shadow-none",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+    card: "shadow-card",
+    float: "shadow-float",
+  };
+
+  const baseClasses = `min-w-0 ${border ? "border" : ""} ${roundedClasses[rounded]} ${shadowClasses[shadow]} ${toneClasses[tone]}`;
+  const paddingClass = padded ? "card-pad" : "";
+  const interactiveClass = interactive ? "card-interactive" : "";
+  const hoverClass = hoverable ? "transition-all duration-200 hover:shadow-md hover:-translate-y-0.5" : "";
+
   return (
-    <section className={`card ${padded ? "card-pad" : ""} ${className}`}>
+    <section className={`${baseClasses} ${paddingClass} ${interactiveClass} ${hoverClass} ${className}`}>
       {children}
     </section>
+  );
+}
+
+export function SimpleCard({
+  children,
+  className = "",
+  padding = "md",
+  rounded = "xl",
+  border = true,
+  bg = "white",
+}: {
+  children: ReactNode;
+  className?: string;
+  padding?: "none" | "sm" | "md" | "lg" | "xl";
+  rounded?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+  border?: boolean;
+  bg?: "white" | "cream" | "transparent";
+}) {
+  const paddingClasses = {
+    none: "p-0",
+    sm: "p-3",
+    md: "p-4",
+    lg: "p-5",
+    xl: "p-6",
+  };
+
+  const roundedClasses = {
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+    "3xl": "rounded-3xl",
+  };
+
+  const bgClasses = {
+    white: "bg-white",
+    cream: "bg-cream",
+    transparent: "bg-transparent",
+  };
+
+  const borderClass = border ? "border border-line" : "";
+
+  return (
+    <div className={`${borderClass} ${roundedClasses[rounded]} ${bgClasses[bg]} ${paddingClasses[padding]} ${className}`}>
+      {children}
+    </div>
   );
 }
 
@@ -763,25 +860,38 @@ export function SummaryRow({
   subtitle,
   value,
   tone = "lavender",
+  icon,
   href,
   loading = false,
 }: {
   title: string;
   subtitle: string;
   value: ReactNode;
-  tone?: "lavender" | "peach" | "mint" | "aqua" | "ink";
+  /** A colour from the shared palette, or a meaning such as "money" or "attention". */
+  tone?: ToneCardTone | ToneKind;
+  icon?: ReactNode;
   href?: string;
   loading?: boolean;
 }) {
+  const toneClass =
+    tone in TONE_CARD
+      ? TONE_CARD[tone as ToneCardTone]
+      : TONE_MEANING[tone as ToneKind];
+
   const panel = (
     <div
-      className={`flex min-h-[112px] items-center justify-between gap-4 px-[22px] py-[18px] lg:rounded-[26px] lg:border-[1.5px] lg:border-ink lg:min-h-[120px] ${TONE_CARD[tone]} ${
+      className={`flex min-h-[112px] items-center justify-between gap-4 px-[22px] py-[18px] lg:rounded-[26px] lg:border-[1.5px] lg:border-ink lg:min-h-[120px] ${toneClass} ${
         href ? "transition-[filter] duration-150 hover:brightness-[0.98] active:brightness-95" : ""
       }`}
     >
-      <div className="min-w-0 flex-1">
-        <p className="text-[24px] font-extrabold tracking-[-0.02em] lg:text-[26px]">{title}</p>
-        <p className="mt-1 truncate text-[13px] opacity-75">{subtitle}</p>
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        {icon ? (
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/70">{icon}</span>
+        ) : null}
+        <div className="min-w-0">
+          <p className="text-[24px] font-extrabold tracking-[-0.02em] lg:text-[26px]">{title}</p>
+          <p className="mt-1 truncate text-[13px] opacity-75">{subtitle}</p>
+        </div>
       </div>
       <div className="shrink-0 text-right text-[20px] font-semibold tabular lg:text-[22px]">
         {loading ? (

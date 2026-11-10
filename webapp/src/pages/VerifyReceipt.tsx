@@ -64,38 +64,45 @@ function ReceiptTicket({ receipt }: { receipt: PublicReceipt }) {
 
   return (
     <article className="relative overflow-hidden rounded-[22px] bg-white px-6 pb-10 pt-8 shadow-[0_1px_0_rgba(16,16,16,0.04),0_12px_32px_-18px_rgba(16,16,16,0.18)] sm:px-8">
-      {/* watermark: the Jeneviv mark, repeated faintly behind the content */}
+      {/* watermark: single Jeneviv logo centered in the background */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.06]"
-        style={{
-          backgroundImage: `url(${jenevivMark})`,
-          backgroundSize: "96px 96px",
-          backgroundRepeat: "repeat",
-          backgroundPosition: "24px 24px",
-        }}
-      />
+        className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.04]"
+      >
+        <img src={jenevivMark} alt="" className="h-48 w-48" />
+      </div>
 
       <Scallops position="top" />
       <Scallops position="bottom" />
 
       <div className="relative">
         {/* header: issuer on the left, document label on the right */}
-        <header className="flex items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-3">
-            {logo ? (
-              <img src={logo} alt="" className="h-11 w-11 shrink-0 rounded-[12px] border border-line object-contain" />
-            ) : (
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[12px] border border-line bg-white">
-                <img src={jenevivMark} alt="" className="h-7 w-7 rounded-[7px]" />
-              </span>
-            )}
-            <div className="min-w-0">
-              <p className="truncate text-[15px] font-bold tracking-tight text-ink">{issuer}</p>
-              <p className="truncate text-[11.5px] text-ink-muted">Issued through Jeneviv</p>
+        <header className="flex flex-col items-center gap-4">
+          <div className="flex w-full items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              {logo ? (
+                <img src={logo} alt="" className="h-11 w-11 shrink-0 rounded-[12px] border border-line object-contain" />
+              ) : (
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[12px] border border-line bg-white">
+                  <img src={jenevivMark} alt="" className="h-7 w-7 rounded-[7px]" />
+                </span>
+              )}
+              <div className="min-w-0">
+                <p className="truncate text-[15px] font-bold tracking-tight text-ink">{issuer}</p>
+                <p className="truncate text-[11.5px] text-ink-muted">Issued through Jeneviv</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="shrink-0 text-[14px] font-semibold text-ink">Transaction Receipt</p>
+              <p className="text-[10.5px] text-ink-muted">Ref: {receipt.reference.slice(0, 8)}...</p>
             </div>
           </div>
-          <p className="shrink-0 text-[14px] font-semibold text-ink">Transaction Receipt</p>
+          
+          {/* Receipt header line */}
+          <div className="w-full border-t border-dashed border-line pt-4 text-center">
+            <h2 className="text-[20px] font-bold uppercase tracking-wider text-ink">OFFICIAL RECEIPT</h2>
+            <p className="mt-1 text-[11px] text-ink-muted">This document serves as proof of payment</p>
+          </div>
         </header>
 
         {/* hero: amount, status and date */}
@@ -103,7 +110,12 @@ function ReceiptTicket({ receipt }: { receipt: PublicReceipt }) {
           <p className="tabular text-[36px] font-bold leading-none tracking-[-0.03em] text-brand sm:text-[42px]">
             {formatMoney(receipt.amount, receipt.currency)}
           </p>
-          <p className="mt-3 text-[19px] font-semibold text-ink">Successful</p>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-green-100 text-green-700">
+              <Check size={12} />
+            </span>
+            <p className="text-[19px] font-semibold text-ink">Payment Successful</p>
+          </div>
           <p className="mt-1.5 text-[12.5px] text-ink-muted">{formatDateTime(receipt.paid_at)}</p>
           {receipt.nin_verified || receipt.bank_verified ? (
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
@@ -137,43 +149,70 @@ function ReceiptTicket({ receipt }: { receipt: PublicReceipt }) {
         {receipt.breakdown ? (
           <>
             <Tear />
-            <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">How the money was split</p>
-            <dl className="mt-2">
-              <Row label="Collection (set by the school)">
-                {formatMoney(receipt.breakdown.collection, receipt.currency)}
-              </Row>
-              <Row label="Paystack processing fee">{formatMoney(receipt.breakdown.paystack_fee, receipt.currency)}</Row>
-              <Row label="Jeneviv platform fee">{formatMoney(receipt.breakdown.jeneviv_fee, receipt.currency)}</Row>
-              <div className="mt-1 flex items-center justify-between gap-6 border-t border-line-soft pt-3">
-                <dt className="text-[14px] font-bold text-ink">Total paid</dt>
-                <dd className="tabular text-[15px] font-bold text-brand">
-                  {formatMoney(receipt.breakdown.total, receipt.currency)}
-                </dd>
-              </div>
-            </dl>
+            <div className="rounded-lg border border-line-soft bg-gray-50 p-4">
+              <p className="mb-3 font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">Payment Breakdown</p>
+              <dl className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <dt className="text-[13px] text-ink-muted">Collection Amount</dt>
+                  <dd className="tabular text-[13.5px] font-medium text-ink">
+                    {formatMoney(receipt.breakdown.collection, receipt.currency)}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <dt className="text-[13px] text-ink-muted">Payment Processing</dt>
+                  <dd className="tabular text-[13.5px] font-medium text-ink">
+                    {formatMoney(receipt.breakdown.paystack_fee, receipt.currency)}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <dt className="text-[13px] text-ink-muted">Platform Fee</dt>
+                  <dd className="tabular text-[13.5px] font-medium text-ink">
+                    {formatMoney(receipt.breakdown.jeneviv_fee, receipt.currency)}
+                  </dd>
+                </div>
+                <div className="mt-3 flex items-center justify-between border-t border-line pt-3">
+                  <dt className="text-[14px] font-bold text-ink">Total Amount Paid</dt>
+                  <dd className="tabular text-[15px] font-bold text-brand">
+                    {formatMoney(receipt.breakdown.total, receipt.currency)}
+                  </dd>
+                </div>
+              </dl>
+            </div>
           </>
         ) : null}
 
         <Tear />
 
-        {/* footnote and verification */}
-        <p className="text-[12px] leading-relaxed text-ink-muted">
-          This receipt is issued by <span className="font-semibold text-ink">{issuer}</span>. Payments settle straight to
-          their bank and are never held by Jeneviv.
-        </p>
-
-        <div className="mt-5 flex items-center gap-5 rounded-[16px] border border-line-soft bg-white p-4">
-          <div className="min-w-0 flex-1">
-            <p className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-ink-muted">Verify this receipt</p>
-            <a
-              href={receipt.verify_url}
-              className="mt-1 block break-all text-[11.5px] font-semibold text-brand underline decoration-brand/40 underline-offset-2"
-            >
-              {receipt.verify_url}
-            </a>
+        {/* footer and verification */}
+        <div className="mt-8 space-y-4">
+          <div className="rounded-lg border border-line-soft bg-white p-4">
+            <div className="flex items-start gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-ink-muted">Verification</p>
+                <p className="mt-1 text-[11.5px] text-ink-muted">
+                  Scan the QR code or visit the link below to verify this receipt
+                </p>
+                <a
+                  href={receipt.verify_url}
+                  className="mt-2 block break-all text-[11.5px] font-semibold text-brand underline decoration-brand/40 underline-offset-2"
+                >
+                  {receipt.verify_url}
+                </a>
+              </div>
+              <div className="shrink-0 rounded-[10px] border border-line-soft bg-white p-2">
+                <QRCodeSVG value={receipt.verify_url} size={76} level="M" fgColor="#101010" />
+              </div>
+            </div>
           </div>
-          <div className="shrink-0 rounded-[10px] border border-line-soft bg-white p-2">
-            <QRCodeSVG value={receipt.verify_url} size={76} level="M" fgColor="#101010" />
+
+          <div className="text-center">
+            <p className="text-[11px] leading-relaxed text-ink-muted">
+              This receipt is issued by <span className="font-semibold text-ink">{issuer}</span>. Payments settle directly to
+              their verified bank account and are never held by Jeneviv.
+            </p>
+            <p className="mt-2 text-[10px] text-ink-muted">
+              Receipt ID: {receipt.reference} • Generated on {new Date().toLocaleDateString()}
+            </p>
           </div>
         </div>
       </div>
