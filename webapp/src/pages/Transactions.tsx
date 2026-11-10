@@ -271,7 +271,22 @@ export default function Transactions() {
             <TableSkeleton rows={8} cols={3} />
           </div>
         ) : transactions.error ? (
-          <ErrorState message={transactions.error} onRetry={transactions.refetch} />
+          <div className="space-y-4 p-4">
+            <ErrorState message={transactions.error} onRetry={transactions.refetch} />
+            <div className="flex items-center gap-3 rounded-lg border border-amber-100 bg-amber-50 p-4">
+              <span className="text-amber-700">⚠</span>
+              <div className="text-sm text-amber-800">
+                <p className="font-medium">Tip: Try clearing filters</p>
+                <p className="text-xs">If the issue persists, try removing the status filter to see all transactions.</p>
+              </div>
+              <button 
+                onClick={() => setStatus("all")} 
+                className="ml-auto shrink-0 rounded bg-amber-200 px-3 py-1.5 text-sm font-medium text-amber-900 hover:bg-amber-300"
+              >
+                Clear status filter
+              </button>
+            </div>
+          </div>
         ) : rows.length === 0 ? (
           <EmptyState
             icon={<ReceiptText size={20} />}
@@ -306,14 +321,26 @@ export default function Transactions() {
                         <p className="truncate text-[13.5px] font-semibold">
                           {transactionPayer(transaction)}
                         </p>
-                        <p className="mt-0.5 truncate font-mono text-[11px] text-ink-muted">
-                          {transaction.reference}
+                        <p className="mt-0.5 truncate text-[12px] text-ink-muted">
+                          {transactionIdentifier(transaction) || transaction.reference}
                         </p>
                       </div>
                       <p className="tabular shrink-0 text-[13.5px] font-bold">
                         {formatMoney(transaction.amount, transaction.currency)}
                       </p>
                     </div>
+                    {transaction.field_values && Object.keys(transaction.field_values).length > 0 ? (
+                      <div className="mt-2 space-y-1 text-[11px] text-ink-muted">
+                        {Object.entries(transaction.field_values).slice(0, 2).map(([key, value]) => (
+                          <p key={key} className="truncate">
+                            <span className="font-medium">{key.replace(/_/g, " ")}:</span> {String(value)}
+                          </p>
+                        ))}
+                        {Object.keys(transaction.field_values).length > 2 ? (
+                          <p className="text-ink-faint">+{Object.keys(transaction.field_values).length - 2} more</p>
+                        ) : null}
+                      </div>
+                    ) : null}
                     <div className="mt-2 flex flex-wrap items-center gap-2 text-[11.5px] text-ink-muted">
                       <StatusPill status={transaction.status} />
                       {transaction.reconciled ? (
@@ -369,9 +396,19 @@ export default function Transactions() {
                       <td>
                         <button type="button" className="text-left" onClick={() => setOpen(transaction)}>
                           <span className="block font-semibold">{transactionPayer(transaction)}</span>
-                          <span className="block font-mono text-3xs text-ink-muted">
-                            {transaction.reference}
-                          </span>
+                          {transaction.field_values && Object.keys(transaction.field_values).length > 0 ? (
+                            <span className="block text-3xs text-ink-muted">
+                              {Object.entries(transaction.field_values)
+                                .slice(0, 1)
+                                .map(([key, value]) => `${key}: ${value}`)
+                                .join(", ")}
+                              {Object.keys(transaction.field_values).length > 1 ? " +" : ""}
+                            </span>
+                          ) : (
+                            <span className="block font-mono text-3xs text-ink-muted">
+                              {transaction.reference}
+                            </span>
+                          )}
                         </button>
                       </td>
                       <td className="text-ink-soft">
@@ -530,6 +567,11 @@ export default function Transactions() {
                 This payment is not confirmed yet. Confirmation normally arrives
                 within seconds of the transfer, and within 15 minutes in the
                 worst case via reconciliation.
+              </InlineNote>
+            ) : open.status === "failed" ? (
+              <InlineNote tone="error" title="Payment failed">
+                This payment was not confirmed by the gateway. The payer may need to
+                contact their bank or try again with corrected payment details.
               </InlineNote>
             ) : null}
           </div>
