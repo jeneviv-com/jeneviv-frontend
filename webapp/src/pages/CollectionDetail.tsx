@@ -65,6 +65,8 @@ import {
   Toggle,
   TONE_CARD,
   type ToneCardTone,
+  SummaryPanel,
+  SummaryRow,
 } from "@/components/ui";
 
 type Tab = "overview" | "fields" | "payments" | "settings";
@@ -86,25 +88,7 @@ function SummaryTile({
   icon: ReactNode;
 }) {
   return (
-    <div
-      className="dash-rise relative -mt-6 first:mt-0"
-      style={{ zIndex: index + 1, animationDelay: `${index * 80}ms` }}
-    >
-      <div
-        className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] ${TONE_CARD[tone]}`}
-      >
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/70">
-            {icon}
-          </span>
-          <div className="min-w-0">
-            <p className="text-[15px] font-semibold tracking-tight">{label}</p>
-            <p className="mt-0.5 truncate text-[12px] opacity-70">{hint}</p>
-          </div>
-        </div>
-        <p className="shrink-0 text-right text-[19px] font-bold tabular">{value}</p>
-      </div>
-    </div>
+    <SummaryRow tone={tone} title={label} subtitle={hint} value={value} icon={icon} />
   );
 }
 
@@ -461,7 +445,7 @@ export default function CollectionDetail() {
         {tab === "overview" ? (
           <div className="space-y-14">
             {/* summary tiles */}
-            <div className="pt-1">
+            <SummaryPanel columns={2} className="pt-1">
               <SummaryTile
                 index={0}
                 tone="mint"
@@ -494,7 +478,7 @@ export default function CollectionDetail() {
                 hint={`${formatMoney(averagePayment, data.currency)} average payment`}
                 icon={<BadgeCheck size={16} />}
               />
-            </div>
+            </SummaryPanel>
 
             <div className="lg:grid lg:grid-cols-3 gap-14 xl:grid-cols-[1.5fr_1fr]">
               {/* activity */}

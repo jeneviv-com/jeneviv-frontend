@@ -33,6 +33,8 @@ import {
   TONE_MEANING,
   type ToneKind,
   Toggle,
+  SummaryPanel,
+  SummaryRow,
 } from "@/components/ui";
 
 /** One summary tile, coloured by meaning. Matches the dashboard. */
@@ -52,25 +54,7 @@ function SummaryTile({
   icon: React.ReactNode;
 }) {
   return (
-    <div
-      className="dash-rise"
-      style={{ animationDelay: `${index * 80}ms` }}
-    >
-      <div
-        className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:px-6 lg:py-5 ${TONE_MEANING[tone]}`}
-      >
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/70">
-            {icon}
-          </span>
-          <div className="min-w-0">
-            <p className="text-[15px] font-semibold tracking-tight">{label}</p>
-            <p className="mt-0.5 truncate text-[12px] opacity-70">{hint}</p>
-          </div>
-        </div>
-        <p className="shrink-0 text-right text-[19px] font-bold tabular">{value}</p>
-      </div>
-    </div>
+    <SummaryRow tone={tone} title={label} subtitle={hint} value={value} icon={icon} />
   );
 }
 
@@ -159,7 +143,7 @@ export default function Payouts() {
       />
 
       {/* summary: meaning-based tiles */}
-      <div className="mb-6 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+      <SummaryPanel columns={3} className="mb-6">
         <SummaryTile
           index={0}
           tone={defaultAccount ? "money" : "attention"}
@@ -186,7 +170,7 @@ export default function Payouts() {
           hint={PLATFORM_FEE_SUMMARY}
           icon={<Banknote size={16} />}
         />
-      </div>
+      </SummaryPanel>
 
       <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
         <Card padded={false}>

@@ -34,6 +34,8 @@ import {
   Textarea,
   TONE_MEANING,
   type ToneKind,
+  SummaryPanel,
+  SummaryRow,
 } from "@/components/ui";
 
 /** One stacked summary tile, coloured by meaning. Matches the dashboard. */
@@ -51,20 +53,7 @@ function SummaryTile({
   hint: string;
 }) {
   return (
-    <div
-      className="dash-rise relative -mt-6 first:mt-0 lg:mt-0"
-      style={{ zIndex: index + 1, animationDelay: `${index * 80}ms` }}
-    >
-      <div
-        className={`flex min-h-[108px] items-center justify-between gap-3 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:flex-col lg:items-start lg:px-6 lg:py-5 ${TONE_MEANING[tone]}`}
-      >
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-semibold tracking-tight lg:text-[16px]">{label}</p>
-          <p className="mt-0.5 truncate text-[12px] opacity-70 lg:text-[13px]">{hint}</p>
-        </div>
-        <p className="shrink-0 text-right text-[19px] font-bold tabular lg:mt-2 lg:w-full lg:text-left lg:text-[24px]">{value}</p>
-      </div>
-    </div>
+    <SummaryRow tone={tone} title={label} subtitle={hint} value={value} />
   );
 }
 
@@ -149,7 +138,7 @@ export default function Refunds() {
       </div>
 
       {/* summary: one tile per meaning */}
-      <div className="mb-6 lg:grid lg:grid-cols-3 lg:gap-4">
+      <SummaryPanel columns={3} className="mb-6">
         <SummaryTile
           index={0}
           tone={totals.needsAttention ? "attention" : "neutral"}
@@ -175,7 +164,7 @@ export default function Refunds() {
           value={formatMoney(totals.value)}
           hint="Original payment amounts"
         />
-      </div>
+      </SummaryPanel>
 
       <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
         <Card padded={false}>

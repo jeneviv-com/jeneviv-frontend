@@ -372,11 +372,3 @@
     scroll-behavior: auto !important;
   }
 }
-
-/* Stacked summary cards on phones and tablets: the last card in each stack is taller,
-   so its figure reads clearly. Stacked cards keep their normal height. */
-@media (max-width: 1023px) {
-  div.relative[class*="-mt-"]:last-child > div {
-    min-height: 136px;
-  }
-}
