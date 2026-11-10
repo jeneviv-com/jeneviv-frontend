@@ -51,11 +51,11 @@
 
 @layer components {
   .card {
-    @apply min-w-0 rounded-card border border-ink/20 bg-white shadow-card transition-[box-shadow,border-color,transform] duration-200;
+    @apply min-w-0 rounded-card border border-line bg-white shadow-card transition-[box-shadow,border-color,transform] duration-200;
   }
 
   .card-interactive {
-    @apply hover:-translate-y-0.5 hover:border-ink/35 hover:shadow-pop;
+    @apply hover:-translate-y-0.5 hover:border-ink/15 hover:shadow-pop;
   }
 
   .card-pad {
@@ -63,11 +63,11 @@
   }
 
   .section-title {
-    @apply text-[15px] font-semibold tracking-tight text-ink;
+    @apply text-[15px] font-medium tracking-tight text-ink;
   }
 
   .eyebrow {
-    @apply font-mono text-3xs font-medium uppercase tracking-[0.16em] text-ink-muted;
+    @apply font-mono text-3xs font-normal uppercase tracking-[0.16em] text-ink-muted;
   }
 
   .muted {
@@ -271,7 +271,7 @@
   }
 
   .stacked-card {
-    @apply relative -mt-6 first:mt-0 lg:mt-0 rounded-[20px] border border-ink/15 px-5 py-5 shadow-sm lg:min-h-[92px] lg:px-6 lg:py-5;
+    @apply relative -mt-6 first:mt-0 lg:mt-0 rounded-[20px] border border-line px-5 py-5 shadow-sm lg:min-h-[92px] lg:px-6 lg:py-5;
   }
 
   .stacked-card-black {

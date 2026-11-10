@@ -16,7 +16,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-6 py-2.5">
       <dt className="shrink-0 text-[13.5px] text-ink-muted">{label}</dt>
-      <dd className="min-w-0 text-right text-[13.5px] font-medium text-ink">{children}</dd>
+      <dd className="min-w-0 text-right text-[13.5px] font-normal text-ink">{children}</dd>
     </div>
   );
 }
@@ -24,7 +24,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 /** A small orange tag, such as a verification. */
 function Tag({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2.5 py-1 text-[11px] font-semibold text-brand">
+    <span className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2.5 py-1 text-[11px] font-medium text-brand">
       {icon}
       {children}
     </span>
@@ -88,19 +88,19 @@ function ReceiptTicket({ receipt }: { receipt: PublicReceipt }) {
                 </span>
               )}
               <div className="min-w-0">
-                <p className="truncate text-[15px] font-bold tracking-tight text-ink">{issuer}</p>
+                <p className="truncate text-[15px] font-semibold tracking-tight text-ink">{issuer}</p>
                 <p className="truncate text-[11.5px] text-ink-muted">Issued through Jeneviv</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="shrink-0 text-[14px] font-semibold text-ink">Transaction Receipt</p>
+              <p className="shrink-0 text-[14px] font-medium text-ink">Transaction Receipt</p>
               <p className="text-[10.5px] text-ink-muted">Ref: {receipt.reference.slice(0, 8)}...</p>
             </div>
           </div>
           
           {/* Receipt header line */}
           <div className="w-full border-t border-dashed border-line pt-4 text-center">
-            <h2 className="text-[20px] font-bold uppercase tracking-wider text-ink">OFFICIAL RECEIPT</h2>
+            <h2 className="text-[20px] font-semibold uppercase tracking-wider text-ink">OFFICIAL RECEIPT</h2>
             <p className="mt-1 text-[11px] text-ink-muted">This document serves as proof of payment</p>
           </div>
         </header>
@@ -114,7 +114,7 @@ function ReceiptTicket({ receipt }: { receipt: PublicReceipt }) {
             <span className="grid h-6 w-6 place-items-center rounded-full bg-green-100 text-green-700">
               <Check size={12} />
             </span>
-            <p className="text-[19px] font-semibold text-ink">Payment Successful</p>
+            <p className="text-[19px] font-medium text-ink">Payment Successful</p>
           </div>
           <p className="mt-1.5 text-[12.5px] text-ink-muted">{formatDateTime(receipt.paid_at)}</p>
           {receipt.nin_verified || receipt.bank_verified ? (
