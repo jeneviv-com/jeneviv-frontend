@@ -1,239 +1,380 @@
-import { Bell, Plus, ShieldCheck } from "lucide-react";
+import {
+  Banknote,
+  Bell,
+  ChevronDown,
+  HandCoins,
+  Layers,
+  LayoutDashboard,
+  LayoutTemplate,
+  Link2,
+  Plus,
+  ReceiptText,
+  Settings as SettingsIcon,
+  Undo2,
+  Users,
+} from "lucide-react";
+import { apiConfig } from "@/lib/api";
 
 /**
- * The laptop on the marketing site and the auth pages shows a miniature of the
- * real dashboard. Keep this in step with the live app: the sidebar groups match
- * AppShell, and the layout matches Dashboard. Figures are sample values, so the
- * page never shows real merchant data.
+ * A pixel-for-pixel miniature of the signed-in dashboard, drawn at the real
+ * app's own sizes (1280x800) and scaled down by the laptop around it.
+ *
+ * Everything here is a fixed size on purpose: the component is laid out inside
+ * a 1280px canvas at any window width, so it must not change shape with the
+ * viewport's breakpoints. Only the scaler around it gets smaller. Keep the
+ * layout in step with `pages/Dashboard.tsx` and `components/AppShell.tsx`.
+ * Figures are sample values, so the page never shows real merchant data.
  */
 
-const NAV: Array<{ group: string; items: string[] }> = [
-  { group: "Overview", items: ["Dashboard"] },
-  { group: "Collect", items: ["Collections", "Groups", "Payment links", "Payers", "Templates"] },
-  { group: "Money", items: ["Transactions", "Refunds", "Bank & settlement"] },
-  { group: "Workspace", items: ["Notifications", "Settings"] },
+const NAV: Array<{ group: string; items: Array<{ label: string; icon: typeof LayoutDashboard }> }> = [
+  { group: "Overview", items: [{ label: "Dashboard", icon: LayoutDashboard }] },
+  {
+    group: "Collect",
+    items: [
+      { label: "Collections", icon: HandCoins },
+      { label: "Groups", icon: Layers },
+      { label: "Payment links", icon: Link2 },
+      { label: "Payers", icon: Users },
+      { label: "Templates", icon: LayoutTemplate },
+    ],
+  },
+  {
+    group: "Money",
+    items: [
+      { label: "Transactions", icon: ReceiptText },
+      { label: "Refunds", icon: Undo2 },
+      { label: "Bank & settlement", icon: Banknote },
+    ],
+  },
+  {
+    group: "Workspace",
+    items: [
+      { label: "Notifications", icon: Bell },
+      { label: "Settings", icon: SettingsIcon },
+    ],
+  },
 ];
 
-/* Muted palette, the same values as TONE_CARD in the app. */
-const TONE = {
-  ink: "bg-[#101010] text-white",
-  lavender: "bg-[#dcd5f3] text-[#101010]",
-  peach: "bg-[#f9d3b0] text-[#101010]",
-  mint: "bg-[#d5e8c4] text-[#101010]",
-  aqua: "bg-[#d3e9ee] text-[#101010]",
-} as const;
-
-const SUMMARY: Array<{ label: string; value: string; hint: string; tone: keyof typeof TONE }> = [
-  { label: "Payers", value: "128", hint: "Successful payments", tone: "lavender" },
-  { label: "Settled", value: "₦375,000", hint: "Paid straight to your bank", tone: "mint" },
-  { label: "Payments", value: "10", hint: "2 awaiting confirmation", tone: "peach" },
-  { label: "Workspace", value: "Approved", hint: "Sample workspace", tone: "aqua" },
+const SUMMARY = [
+  { title: "Payers", subtitle: "68% of your target", value: "128 / 188", tone: "bg-[#dcd5f3]" },
+  { title: "Paid", subtitle: "Paid straight to your bank", value: "₦375,000", tone: "bg-[#d5e8c4]" },
+  { title: "Payments", subtitle: "2 awaiting confirmation", value: "10", tone: "bg-[#f9d3b0]" },
+  { title: "Workspace", subtitle: "Sample workspace", value: "Approved", tone: "bg-[#d3e9ee]" },
 ];
 
 const RECENT = [
-  { name: "Adaeze O.", detail: "CSC 311 handout · just now", amount: "₦2,575" },
-  { name: "Emeka N.", detail: "Dept levy · 4 min ago", amount: "₦7,792" },
-  { name: "Fatima M.", detail: "CSC 311 handout · 12 min ago", amount: "₦2,575" },
+  { name: "Adaeze O.", collection: "CSC 311 handout", when: "just now", amount: "₦2,575", pending: false },
+  { name: "Emeka N.", collection: "Dept levy", when: "4 min ago", amount: "₦7,792", pending: false },
+  { name: "Fatima M.", collection: "CSC 311 handout", when: "12 min ago", amount: "₦2,575", pending: false },
+  { name: "Ibrahim K.", collection: "Dept levy", when: "26 min ago", amount: "₦7,792", pending: true },
 ];
+
+const COLLECTIONS = [
+  { name: "CSC 311 handout", collected: "₦7,725", progress: 75, payers: "3 / 4 payers" },
+  { name: "Dept levy", collected: "₦23,376", progress: 83, payers: "5 / 6 payers" },
+];
+
+const PAYERS = ["Adaeze O.", "Emeka N.", "Fatima M.", "Ibrahim K.", "Tunde A."];
+
+/** The chart's area path, drawn in the same 720x220 space as `AreaChart`. */
+const AREA =
+  "M 10 188 C 60 180 96 128 146 140 C 196 152 232 84 282 96 C 336 108 366 46 420 58 C 474 70 512 34 566 44 C 616 53 668 22 710 16";
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2);
+}
 
 export default function DashboardPreview() {
   return (
-    <div className="flex h-full w-full flex-col bg-white text-ink">
-      {/* browser chrome */}
-      <div className="flex h-[26px] shrink-0 items-center gap-1.5 border-b border-line-soft bg-[#fcfcfc] px-3">
-        <span className="text-[9px] font-extrabold tracking-[-0.05em]">
-          jeneviv<span className="text-brand">.</span>
-        </span>
-        <span className="ml-2 h-[5px] w-[5px] rounded-full bg-[#dedede]" />
-        <span className="h-[5px] w-[5px] rounded-full bg-[#dedede]" />
-        <span className="h-[5px] w-[5px] rounded-full bg-[#ffcfbf]" />
-        <span className="ml-auto h-[9px] w-[38px] rounded-[3px] bg-cream-deep" />
-      </div>
+    <div className="pointer-events-none flex h-[800px] w-[1280px] select-none overflow-hidden bg-cream text-ink">
+      {/* ------------------------------------------------------------ sidebar */}
+      <aside className="flex w-[256px] shrink-0 flex-col border-r border-line bg-white">
+        <div className="flex items-center gap-2.5 px-5 pb-3 pt-5">
+          <img
+            src={apiConfig.withBase("/assets/images/jeneviv.png")}
+            alt=""
+            width={28}
+            height={28}
+            className="h-7 w-7 rounded-[9px] object-cover shadow-[0_1px_2px_rgba(18,16,14,0.12)]"
+          />
+          <span className="flex items-baseline gap-0.5">
+            <span className="text-[19px] font-extrabold tracking-[-0.05em] text-ink">jeneviv</span>
+            <span className="text-[21px] leading-none text-brand">.</span>
+          </span>
+        </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-[98px_1fr]">
-        {/* sidebar: the same workspace card, sections and active pill as the app */}
-        <aside className="flex min-h-0 flex-col gap-0.5 overflow-hidden border-r border-line-soft bg-white px-2 py-2.5">
-          <div className="mb-2 rounded-[7px] bg-cream p-1.5">
-            <p className="truncate text-[6.5px] font-semibold">Sample workspace</p>
-            <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-[#d5e8c4] px-1.5 py-[1px] text-[5px] font-semibold">
-              <span className="h-[3px] w-[3px] rounded-full bg-ink" />
-              Approved
+        <div className="mx-3 mb-5 rounded-[16px] bg-cream p-3.5">
+          <div className="flex items-center gap-3">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink text-[12px] font-bold text-cream">
+              SW
             </span>
+            <div className="min-w-0">
+              <p className="truncate text-[13px] font-semibold text-ink">Sample workspace</p>
+              <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-[#d5e8c4] px-2 py-0.5 text-[10.5px] font-semibold text-ink">
+                <span className="h-1.5 w-1.5 rounded-full bg-ink" aria-hidden="true" />
+                Approved
+              </span>
+            </div>
           </div>
+        </div>
 
+        <nav className="flex-1 overflow-hidden px-3 pb-2">
           {NAV.map((section) => (
-            <div key={section.group} className="mb-0.5">
-              <p className="px-1.5 pb-0.5 pt-1 font-mono text-[5px] uppercase tracking-[0.14em] text-ink-faint">
+            <div key={section.group} className="mb-5">
+              <p className="px-2.5 pb-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
                 {section.group}
               </p>
-              {section.items.map((item) => {
-                const active = item === "Dashboard";
-                return (
-                  <span
-                    key={item}
-                    className={`flex items-center gap-1.5 rounded-[5px] px-1.5 py-[4px] text-[7px] ${
-                      active ? "bg-ink font-semibold text-cream" : "text-[#787878]"
-                    }`}
-                  >
-                    <i
-                      className={`h-[4px] w-[4px] shrink-0 rounded-[1px] ${active ? "bg-cream" : "bg-current opacity-50"}`}
-                      aria-hidden="true"
-                    />
-                    <span className="truncate">{item}</span>
-                  </span>
-                );
-              })}
+              <ul className="space-y-0.5">
+                {section.items.map((item) => {
+                  const active = item.label === "Dashboard";
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.label}>
+                      <span
+                        className={`flex items-center gap-3 rounded-[12px] px-2.5 py-2 text-[13.5px] font-medium ${
+                          active ? "bg-ink text-cream" : "text-ink-soft"
+                        }`}
+                      >
+                        <span
+                          className={`grid h-7 w-7 shrink-0 place-items-center rounded-[9px] ${
+                            active ? "bg-white/12 text-cream" : "bg-cream text-ink-muted"
+                          }`}
+                        >
+                          <Icon size={14} strokeWidth={1.9} aria-hidden="true" />
+                        </span>
+                        <span className="flex-1 truncate">{item.label}</span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           ))}
-        </aside>
+        </nav>
+      </aside>
 
-        {/* main - matching actual dashboard two-column layout */}
-        <div className="flex min-h-0 min-w-0 flex-col gap-1.5 p-2.5">
-          {/* top bar: title, bell and account, like the app */}
-          <div className="flex shrink-0 items-center justify-between gap-2">
-            <div className="min-w-0">
-              <p className="font-mono text-[5px] uppercase tracking-[0.14em] text-ink-faint">Workspace</p>
-              <p className="truncate text-[9px] font-bold leading-tight">Good to see you, Ifeanyi</p>
-            </div>
-            <div className="flex shrink-0 items-center gap-1">
-              <span className="grid h-[13px] w-[13px] place-items-center rounded-[4px] border border-line text-ink-muted">
-                <Bell size={6} />
+      {/* --------------------------------------------------------------- app */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* top bar */}
+        <header className="flex h-[68px] shrink-0 items-center gap-3 bg-cream/85 px-8">
+          <div className="min-w-0">
+            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-muted">Workspace</p>
+            <p className="mt-0.5 truncate text-[16px] font-bold tracking-tight text-ink">Dashboard</p>
+          </div>
+
+          <div className="ml-auto flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#d5e8c4] px-3 py-1.5 text-[11.5px] font-semibold text-ink">
+              <span className="h-1.5 w-1.5 rounded-full bg-ink" aria-hidden="true" />
+              Live
+            </span>
+
+            <span className="relative grid h-10 w-10 place-items-center rounded-[12px] border border-line bg-white text-ink-soft">
+              <Bell size={16} />
+              <span className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-brand px-1 text-[10px] font-bold text-white">
+                2
               </span>
-              <span className="grid h-[13px] w-[13px] place-items-center rounded-[4px] bg-ink text-[6px] font-bold text-cream">
-                I
+            </span>
+
+            <span className="flex h-10 items-center gap-2 rounded-[12px] border border-line bg-white py-1 pl-1 pr-2.5">
+              <span className="grid h-8 w-8 place-items-center rounded-[9px] bg-ink text-[11px] font-bold text-cream">
+                IO
               </span>
+              <span className="max-w-[120px] truncate text-[12.5px] font-semibold">Ifeanyi O.</span>
+              <ChevronDown size={14} className="text-ink-muted" aria-hidden="true" />
+            </span>
+          </div>
+        </header>
+
+        {/* page */}
+        <main className="flex min-h-0 flex-1 flex-col px-8 pt-6">
+          <div className="mx-auto flex min-h-0 w-full max-w-[1180px] flex-1 flex-col">
+            {/* greeting - matches the dashboard header exactly */}
+            <header className="flex shrink-0 items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate font-mono text-[10px] uppercase tracking-[0.16em] text-ink-muted">
+                  Sample workspace · Wednesday, 12 November
+                </p>
+                <h1 className="mt-1 text-[28px] font-bold tracking-tight">Good to see you, Ifeanyi</h1>
+              </div>
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-ink bg-white">
+                <Plus size={17} aria-hidden="true" />
+              </span>
+            </header>
+
+            {/* Main content grid - matching the dashboard's two-column layout */}
+            <div className="mt-5 grid min-h-0 flex-1 grid-cols-[1fr_420px] gap-5">
+              {/* Left column - headline, metrics and chart */}
+              <div className="flex min-h-0 flex-col gap-5">
+                <section className="shrink-0 rounded-[20px] bg-[#101010] px-6 py-6 text-white">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[18px] font-semibold tracking-tight">Collected</p>
+                      <p className="mt-0.5 text-[13px] text-white/65">12 successful payments in this range</p>
+                    </div>
+                    <p className="tabular text-right text-[32px] font-bold">₦412,500</p>
+                  </div>
+                </section>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {SUMMARY.map((item) => (
+                    <div
+                      key={item.title}
+                      className={`flex min-h-[120px] items-center justify-between gap-4 rounded-[26px] border-[1.5px] border-ink px-[22px] py-[18px] text-ink ${item.tone}`}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-[26px] font-extrabold tracking-[-0.02em]">{item.title}</p>
+                        <p className="mt-1 truncate text-[13px] opacity-75">{item.subtitle}</p>
+                      </div>
+                      <p className="tabular shrink-0 text-right text-[22px] font-semibold">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex min-h-0 flex-1 flex-col rounded-card border border-line bg-white p-5 shadow-card">
+                  <div className="mb-4 flex items-start justify-between gap-4">
+                    <div>
+                      <h2 className="text-[15px] font-medium tracking-tight text-ink">Collections over time</h2>
+                      <p className="mt-0.5 text-[13px] text-ink-muted">Successful payments per period</p>
+                    </div>
+                    <div className="inline-flex shrink-0 items-center gap-1 rounded-[11px] border border-line bg-white p-1">
+                      {["7d", "30d", "90d"].map((label) => (
+                        <span
+                          key={label}
+                          className={`rounded-lg px-3 py-1.5 text-[12.5px] font-semibold ${
+                            label === "30d" ? "bg-ink text-white" : "text-ink-muted"
+                          }`}
+                        >
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex min-h-0 flex-1 items-end">
+                    <svg
+                      viewBox="0 0 720 220"
+                      preserveAspectRatio="none"
+                      className="h-full max-h-[220px] w-full"
+                      aria-hidden="true"
+                    >
+                      <defs>
+                        <linearGradient id="previewFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#101010" stopOpacity="0.14" />
+                          <stop offset="100%" stopColor="#101010" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
+                      {[0, 0.25, 0.5, 0.75, 1].map((ratio) => (
+                        <line
+                          key={ratio}
+                          x1={0}
+                          x2={720}
+                          y1={220 * ratio}
+                          y2={220 * ratio}
+                          stroke="#efefef"
+                          strokeWidth={1}
+                        />
+                      ))}
+                      <path d={`${AREA} L 710 220 L 10 220 Z`} fill="url(#previewFill)" />
+                      <path d={AREA} fill="none" stroke="#101010" strokeWidth={2.4} strokeLinecap="round" />
+                    </svg>
+                  </div>
+
+                  <div className="mt-4 flex items-center gap-2.5 border-t border-line-soft pt-4">
+                    <div className="flex -space-x-1.5">
+                      {PAYERS.map((name) => (
+                        <span
+                          key={name}
+                          className="grid h-7 w-7 place-items-center rounded-full border-2 border-white bg-brand-peach text-3xs font-bold text-[#79300f]"
+                        >
+                          {initials(name)}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-[12px] text-ink-muted">{PAYERS.length} payers</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right column - quick action, recent payments, collections */}
+              <div className="flex min-h-0 flex-col gap-5">
+                <span className="flex shrink-0 items-center justify-center gap-2 rounded-[18px] border border-transparent bg-ink py-3.5 text-[13px] font-semibold text-cream">
+                  <Plus size={15} aria-hidden="true" /> New collection
+                </span>
+
+                <section>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h2 className="text-[15px] font-medium tracking-tight text-ink">Recent payments</h2>
+                    <span className="text-[12.5px] font-semibold text-brand">View all</span>
+                  </div>
+
+                  <div className="mt-3 overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
+                    <ul className="divide-y divide-line-soft">
+                      {RECENT.map((row) => (
+                        <li key={row.name} className="flex items-center justify-between gap-3 px-5 py-3.5">
+                          <div className="min-w-0">
+                            <p className="truncate text-[13.5px] font-semibold">{row.name}</p>
+                            <p className="mt-0.5 truncate text-[11.5px] text-ink-muted">
+                              {row.collection} · {row.when}
+                            </p>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className="tabular text-[13.5px] font-bold">{row.amount}</p>
+                            <div className="mt-1 flex justify-end">
+                              <span
+                                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10.5px] font-semibold text-ink ${
+                                  row.pending ? "bg-[#fff3dd]" : "bg-[#d5e8c4]"
+                                }`}
+                              >
+                                <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
+                                {row.pending ? "Pending" : "Successful"}
+                              </span>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </section>
+
+                <section>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h2 className="text-[15px] font-medium tracking-tight text-ink">Collections</h2>
+                    <span className="text-[12.5px] font-semibold text-brand">All</span>
+                  </div>
+
+                  <div className="mt-3 rounded-2xl border border-line bg-white p-5 shadow-sm">
+                    <ul className="space-y-4">
+                      {COLLECTIONS.map((collection) => (
+                        <li key={collection.name}>
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="truncate text-[13.5px] font-semibold">{collection.name}</span>
+                            <span className="tabular text-[12.5px] font-semibold">{collection.collected}</span>
+                          </div>
+                          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-line-soft">
+                            <div
+                              className="h-full rounded-full bg-brand"
+                              style={{ width: `${collection.progress}%` }}
+                            />
+                          </div>
+                          <div className="mt-1.5 flex items-center justify-between">
+                            <p className="font-mono text-3xs text-ink-muted">{collection.payers}</p>
+                            <span className="inline-flex items-center rounded-full bg-[#d5e8c4] px-2 py-0.5 text-[10.5px] font-semibold text-ink">
+                              Accepting
+                            </span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </section>
+              </div>
             </div>
           </div>
-
-          {/* dark headline - matches actual dashboard */}
-          <div className="shrink-0 rounded-[7px] bg-ink px-2.5 py-2 text-white shadow-sm">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-[8px] font-semibold">Collected</p>
-                <p className="mt-0.5 text-[5.5px] text-white/65">12 successful payments this range</p>
-              </div>
-              <p className="text-[12px] font-bold tabular">₦412,500</p>
-            </div>
-          </div>
-
-          {/* Main content grid - always two columns, matching actual dashboard layout */}
-          <div className="grid grid-cols-[1fr_120px] gap-1.5">
-            {/* Left column - main metrics */}
-            <div className="space-y-1.5">
-              {/* harmonized summary cards in a 2x2 grid, matching actual dashboard layout */}
-              <div className="grid grid-cols-2 gap-1">
-                {SUMMARY.map((item) => (
-                  <div
-                    key={item.label}
-                    className={`flex items-center justify-between gap-2 rounded-[8px] border border-ink/20 px-2 py-1.5 ${TONE[item.tone]}`}
-                  >
-                    <div className="min-w-0">
-                      <p className="text-[7px] font-semibold">{item.label}</p>
-                      <p className="truncate text-[5px] opacity-70">{item.hint}</p>
-                    </div>
-                    <p className="shrink-0 text-[9px] font-bold tabular">{item.value}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* new collection button, matching actual dashboard */}
-              <div className="flex shrink-0 items-center justify-center gap-1 rounded-[6px] bg-ink py-1.5 text-[6.5px] font-semibold text-cream transition-transform duration-150 hover:-translate-y-0.5 active:scale-95">
-                <Plus size={6} /> New collection
-              </div>
-
-              {/* chart */}
-              <div className="flex min-h-0 flex-1 flex-col rounded-[7px] border border-line px-2 pb-1 pt-1.5">
-                <div className="flex shrink-0 items-center justify-between">
-                  <p className="text-[6.5px] font-semibold">Collections over time</p>
-                  <p className="text-[5.5px] text-ink-faint">Last 30 days</p>
-                </div>
-                <svg viewBox="0 0 320 80" preserveAspectRatio="none" className="min-h-0 w-full flex-1" aria-hidden="true">
-                  <defs>
-                    <linearGradient id="previewFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0" stopColor="#101010" stopOpacity="0.14" />
-                      <stop offset="1" stopColor="#101010" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d="M0 64 C26 60 40 40 64 46 C92 52 106 24 134 32 C166 40 180 14 210 20 C240 26 266 10 320 6 L320 80 L0 80 Z"
-                    fill="url(#previewFill)"
-                  />
-                  <path
-                    d="M0 64 C26 60 40 40 64 46 C92 52 106 24 134 32 C166 40 180 14 210 20 C240 26 266 10 320 6"
-                    fill="none"
-                    stroke="#101010"
-                    strokeWidth="2"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            {/* Right column - sidebar content matching actual dashboard */}
-            <div className="space-y-1.5">
-              {/* recent payments - matches actual dashboard sidebar */}
-              <div className="shrink-0 rounded-[7px] border border-line px-2 py-1.5">
-                <div className="flex items-baseline justify-between gap-1 mb-1">
-                  <p className="text-[6.5px] font-semibold">Recent payments</p>
-                  <span className="text-[5px] font-semibold text-brand">View all</span>
-                </div>
-                {RECENT.map((row) => (
-                  <div key={row.name} className="flex items-center justify-between gap-2 border-t border-line-soft py-1 first:border-t-0">
-                    <div className="min-w-0">
-                      <p className="truncate text-[6px] font-semibold">{row.name}</p>
-                      <p className="truncate text-[5px] text-ink-muted">{row.detail}</p>
-                    </div>
-                    <p className="shrink-0 text-[6px] font-bold tabular">{row.amount}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* collections progress - matching actual dashboard */}
-              <div className="shrink-0 rounded-[7px] border border-line px-2 py-1.5">
-                <div className="flex items-baseline justify-between gap-1 mb-1">
-                  <p className="text-[6.5px] font-semibold">Collections</p>
-                  <span className="text-[5px] font-semibold text-brand">All</span>
-                </div>
-                <div className="space-y-1.5">
-                  <div>
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="truncate text-[5.5px] font-semibold">CSC 311 handout</span>
-                      <span className="tabular text-[5px] font-semibold">₦7,725</span>
-                    </div>
-                    <div className="mt-1 h-[3px] w-full rounded-full bg-line">
-                      <div className="h-full w-3/4 rounded-full bg-brand" />
-                    </div>
-                    <div className="mt-0.5 flex items-center justify-between">
-                      <p className="font-mono text-[4px] text-ink-muted">3/4 payers</p>
-                      <span className="inline-flex items-center gap-0.5 rounded-full bg-[#d5e8c4] px-1 py-[1px] text-[4px] font-semibold">
-                        Accepting
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="truncate text-[5.5px] font-semibold">Dept levy</span>
-                      <span className="tabular text-[5px] font-semibold">₦23,376</span>
-                    </div>
-                    <div className="mt-1 h-[3px] w-full rounded-full bg-line">
-                      <div className="h-full w-5/6 rounded-full bg-brand" />
-                    </div>
-                    <div className="mt-0.5 flex items-center justify-between">
-                      <p className="font-mono text-[4px] text-ink-muted">5/6 payers</p>
-                      <span className="inline-flex items-center gap-0.5 rounded-full bg-[#d5e8c4] px-1 py-[1px] text-[4px] font-semibold">
-                        Accepting
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* settlement note, like the app */}
-          <p className="flex shrink-0 items-center gap-1 text-[5px] text-ink-faint">
-            <ShieldCheck size={6} /> Settled straight to your bank. Never held by Jeneviv.
-          </p>
-        </div>
+        </main>
       </div>
     </div>
   );
