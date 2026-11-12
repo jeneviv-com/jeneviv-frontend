@@ -1,4 +1,3 @@
-
 /**
  * Jeneviv API client.
  *
@@ -506,6 +505,8 @@ export interface PublicReceipt {
   payer_name: string;
   amount: number;
   currency: string;
+  /** When the payer started this payment. */
+  started_at: string;
   paid_at: string;
   nin_verified: boolean;
   bank_verified: boolean;

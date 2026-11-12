@@ -87,9 +87,11 @@ export default function Admin() {
   const [refundReason, setRefundReason] = useState("");
 
   const stats = useAdminStats(isAdmin);
-  const merchants = useAdminMerchants(merchantStatus);
-  const transactions = useAdminTransactions();
-  const logs = useAuditLogs();
+  // Every admin endpoint is requireAdmin on the server, so a signed-in merchant
+  // who lands on /admin must not fire three requests that can only 403.
+  const merchants = useAdminMerchants(merchantStatus, isAdmin);
+  const transactions = useAdminTransactions(undefined, isAdmin);
+  const logs = useAuditLogs(isAdmin);
 
   const approve = useAction((id: string, why: string) => adminAPI.approveMerchant(id, why));
   const reject = useAction((id: string, why: string) => adminAPI.rejectMerchant(id, why));

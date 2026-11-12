@@ -1400,8 +1400,9 @@ export interface SettlementStatus {
 
 export const adminAPI = {
   /**
-   * The backend has no /api/admin/stats, /api/admin/transactions or
-   * /api/admin/audit-logs routes yet. Those calls return 404 until added.
+   * Platform reporting, all served by the admin router on the backend:
+   * GET /api/admin/stats, /api/admin/transactions, /api/admin/audit-logs.
+   * Every one of them is behind requireAuth + requireAdmin (403, not 404).
    */
   getStats: () => apiFetch<AdminStats>("/api/admin/stats"),
 

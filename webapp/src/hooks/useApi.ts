@@ -334,24 +334,27 @@ export function useAdminStats(enabled = true) {
   return useResource<AdminStats>(() => adminAPI.getStats(), [], { enabled });
 }
 
-export function useAdminMerchants(status?: MerchantStatus) {
+export function useAdminMerchants(status?: MerchantStatus, enabled = true) {
   return useResource<Merchant[]>(
     () => adminAPI.listMerchants(status).then((r) => r.merchants),
     [status ?? ""],
+    { enabled },
   );
 }
 
-export function useAdminTransactions(status?: string) {
+export function useAdminTransactions(status?: string, enabled = true) {
   return useResource<Transaction[]>(
     () => adminAPI.getTransactions({ status }).then((r) => r.transactions),
     [status ?? ""],
+    { enabled },
   );
 }
 
-export function useAuditLogs() {
+export function useAuditLogs(enabled = true) {
   return useResource<AuditLog[]>(
     () => adminAPI.getAuditLogs().then((r) => r.logs),
     [],
+    { enabled },
   );
 }
 
