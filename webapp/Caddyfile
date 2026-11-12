@@ -1,0 +1,50 @@
+# Custom Caddyfile (replaces Railpack's default). Same as the default, plus a
+# reverse proxy so the browser only talks to this site's own origin and the
+# backend is reached over Railway's private network. Set on this service:
+#   VITE_API_URL=/                                         (same-origin API calls)
+#   BACKEND_URL=http://${{jeneviv-backend.RAILWAY_PRIVATE_DOMAIN}}:8080
+
+{
+	admin off
+	persist_config off
+	auto_https off
+
+	log {
+		format json
+	}
+
+	servers {
+		trusted_proxies static private_ranges 100.0.0.0/8
+	}
+}
+
+:{$PORT:80} {
+	log {
+		format json
+	}
+
+	header {
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+
+	# API + health probe go to the backend
+	@backend path /api/* /health
+	handle @backend {
+		reverse_proxy {$BACKEND_URL:http://localhost:3001}
+	}
+
+	# Everything else is the SPA
+	handle {
+		root * dist
+		file_server {
+			hide .git
+			hide .env*
+		}
+		encode {
+			gzip
+			zstd
+		}
+		try_files {path} {path}.html {path}/index.html /index.html
+	}
+}
