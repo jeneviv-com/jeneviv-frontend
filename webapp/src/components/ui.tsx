@@ -5,6 +5,7 @@ import {
   ReactNode,
   SelectHTMLAttributes,
   TextareaHTMLAttributes,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -408,23 +409,44 @@ export function FilterMenu({
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
+  // The panel is positioned against the viewport, not the button: on a narrow
+  // phone a button near the right edge would otherwise push it off screen.
+  const [panel, setPanel] = useState<{ top: number; left: number; width: number } | null>(null);
   const box = useRef<HTMLDivElement | null>(null);
+  const trigger = useRef<HTMLButtonElement | null>(null);
+
+  const place = useCallback(() => {
+    const button = trigger.current;
+    if (!button) return;
+    const rect = button.getBoundingClientRect();
+    const margin = 12;
+    const width = Math.min(252, window.innerWidth - margin * 2);
+    const left = Math.min(Math.max(margin, rect.left), window.innerWidth - width - margin);
+    setPanel({ top: rect.bottom + 8, left, width });
+  }, []);
 
   useEffect(() => {
     if (!open) return;
+    place();
     const onPointerDown = (event: PointerEvent) => {
       if (!box.current?.contains(event.target as Node)) setOpen(false);
     };
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
+    // A fixed panel does not follow the page, so close it instead of drifting.
+    const onScroll = () => setOpen(false);
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", place);
     return () => {
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", place);
     };
-  }, [open]);
+  }, [open, place]);
 
   // A group counts as active when it is not on its first (usually "all") choice.
   const activeCount = groups.filter((group) => group.value !== group.options[0]?.value).length;
@@ -432,6 +454,7 @@ export function FilterMenu({
   return (
     <div className={`relative ${className}`} ref={box}>
       <button
+        ref={trigger}
         type="button"
         onClick={() => setOpen((current) => !current)}
         aria-haspopup="dialog"
@@ -451,11 +474,12 @@ export function FilterMenu({
         ) : null}
       </button>
 
-      {open ? (
+      {open && panel ? (
         <div
           role="dialog"
           aria-label={label}
-          className="absolute left-0 top-[calc(100%+8px)] z-30 w-[252px] animate-pop-in rounded-[14px] border border-line bg-white p-2 shadow-pop"
+          style={{ top: panel.top, left: panel.left, width: panel.width }}
+          className="fixed z-[70] max-h-[60vh] animate-pop-in overflow-y-auto rounded-[14px] border border-line bg-white p-2 shadow-pop"
         >
           {groups.map((group) => (
             <div key={group.label} className="mb-1 last:mb-0">

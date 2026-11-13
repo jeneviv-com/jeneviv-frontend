@@ -1146,6 +1146,51 @@ export const approvalsAPI = {
 
 /* --------------------------------------------------------------- verification */
 
+export const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+
+/** Profile picture upload. The bytes are the request body, not a form field. */
+export const profileAPI = {
+  uploadAvatar: async (file: File): Promise<{ image: string }> => {
+    if (file.size > MAX_AVATAR_BYTES) {
+      throw new Error("Profile pictures must be 5 MB or smaller.");
+    }
+    const token = tokenStore.get();
+    const response = await fetch(`${API_BASE_URL}/api/profile/avatar`, {
+      method: "POST",
+      body: file,
+      headers: {
+        Accept: "application/json",
+        "Content-Type": file.type || "application/octet-stream",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      credentials: "include",
+    });
+    const payload = (await response.json().catch(() => ({}))) as {
+      image?: string;
+      message?: string;
+    };
+    if (!response.ok || !payload.image) {
+      throw new Error(
+        payload.message ??
+          (response.status === 413
+            ? "Profile pictures must be 5 MB or smaller."
+            : "Could not upload that picture."),
+      );
+    }
+    return { image: payload.image };
+  },
+
+  removeAvatar: async (): Promise<void> => {
+    const token = tokenStore.get();
+    const response = await fetch(`${API_BASE_URL}/api/profile/avatar`, {
+      method: "DELETE",
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      credentials: "include",
+    });
+    if (!response.ok) throw new Error("Could not remove the picture.");
+  },
+};
+
 export const verifyAPI = {
   get: (reference: string) =>
     apiFetch<{ valid: boolean; receipt: PublicReceipt }>(
