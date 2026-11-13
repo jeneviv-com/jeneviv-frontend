@@ -99,12 +99,6 @@ export default function AuthLayout({
         </div>
 
         <div className="mx-auto my-auto w-full max-w-[420px] py-12">
-          {/* Below the split layout there is no brand panel, so the laptop sits
-              above the form and scales to the screen instead of disappearing. */}
-          <div className="mb-10 lg:hidden" aria-hidden="true">
-            <LaptopMockup className="animate-rise-in" />
-          </div>
-
           <div className="animate-rise-in">
             <h1 className="text-[32px] font-bold leading-[1.04] tracking-[-0.045em] text-ink sm:text-[42px]">
               {title}

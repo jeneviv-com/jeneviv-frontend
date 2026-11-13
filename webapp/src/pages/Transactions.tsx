@@ -40,8 +40,8 @@ import {
   KeyValue,
   PageHeader,
   Pill,
+  FilterMenu,
   SearchInput,
-  SegmentedControl,
   Select,
   StatusPill,
   TableSkeleton,
@@ -237,30 +237,33 @@ export default function Transactions() {
             placeholder="Search reference, payer or ID"
             className="w-full lg:w-[300px]"
           />
-          <SegmentedControl
-            value={status}
-            onChange={setStatus}
-            options={[
-              { value: "all", label: "All" },
-              { value: "success", label: "Paid" },
-              { value: "pending", label: "Pending" },
-              { value: "failed", label: "Failed" },
+          <FilterMenu
+            groups={[
+              {
+                label: "Status",
+                value: status,
+                onChange: (value) => setStatus(value as typeof status),
+                options: [
+                  { value: "all", label: "All payments" },
+                  { value: "success", label: "Paid" },
+                  { value: "pending", label: "Pending" },
+                  { value: "failed", label: "Failed" },
+                ],
+              },
+              {
+                label: "Collection",
+                value: collectionId,
+                onChange: setCollectionId,
+                options: [
+                  { value: "", label: "All collections" },
+                  ...(collections.data ?? []).map((collection) => ({
+                    value: collection.id,
+                    label: collection.name,
+                  })),
+                ],
+              },
             ]}
           />
-          <div className="w-full lg:w-[220px]">
-            <Select
-              value={collectionId}
-              onChange={(event) => setCollectionId(event.target.value)}
-              aria-label="Filter by collection"
-            >
-              <option value="">All collections</option>
-              {(collections.data ?? []).map((collection) => (
-                <option key={collection.id} value={collection.id}>
-                  {collection.name}
-                </option>
-              ))}
-            </Select>
-          </div>
           <span className="font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted lg:ml-auto">
             {rows.length} rows
           </span>

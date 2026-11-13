@@ -38,6 +38,7 @@ interface ToastContextValue {
   unreadCount: number;
   markAllRead: () => void;
   markRead: (id: string) => void;
+  removeItem: (id: string) => void;
   clearFeed: () => void;
 }
 
@@ -132,6 +133,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         setFeed((current) =>
           current.map((item) => (item.id === id ? { ...item, read: true } : item)),
         ),
+      removeItem: (id: string) =>
+        setFeed((current) => current.filter((item) => item.id !== id)),
       clearFeed: () => setFeed([]),
     }),
     [toasts, push, success, error, info, dismiss, feed],

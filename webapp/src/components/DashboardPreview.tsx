@@ -2,6 +2,7 @@ import {
   Banknote,
   Bell,
   ChevronDown,
+  ShieldCheck,
   HandCoins,
   Layers,
   LayoutDashboard,
@@ -10,6 +11,7 @@ import {
   Plus,
   ReceiptText,
   Settings as SettingsIcon,
+  SlidersHorizontal,
   Undo2,
   Users,
 } from "lucide-react";
@@ -55,11 +57,17 @@ const NAV: Array<{ group: string; items: Array<{ label: string; icon: typeof Lay
   },
 ];
 
-const SUMMARY = [
-  { title: "Payers", subtitle: "68% of your target", value: "128 / 188", tone: "bg-[#dcd5f3]" },
-  { title: "Paid", subtitle: "Paid straight to your bank", value: "₦375,000", tone: "bg-[#d5e8c4]" },
-  { title: "Payments", subtitle: "2 awaiting confirmation", value: "10", tone: "bg-[#f9d3b0]" },
-  { title: "Workspace", subtitle: "Sample workspace", value: "Approved", tone: "bg-[#d3e9ee]" },
+const SUMMARY: Array<{
+  title: string;
+  subtitle: string;
+  value: string;
+  tone: string;
+  icon: typeof Users;
+}> = [
+  { title: "Payers", subtitle: "68% of your target", value: "128 / 188", tone: "bg-[#dcd5f3]", icon: Users },
+  { title: "Paid", subtitle: "Paid straight to your bank", value: "₦375,000", tone: "bg-[#d5e8c4]", icon: Banknote },
+  { title: "Payments", subtitle: "2 awaiting confirmation", value: "10", tone: "bg-[#f9d3b0]", icon: ReceiptText },
+  { title: "Workspace", subtitle: "Sample workspace", value: "Approved", tone: "bg-[#d3e9ee]", icon: ShieldCheck },
 ];
 
 const RECENT = [
@@ -220,18 +228,30 @@ export default function DashboardPreview() {
                 </section>
 
                 <div className="grid grid-cols-2 gap-4">
-                  {SUMMARY.map((item) => (
-                    <div
-                      key={item.title}
-                      className={`flex min-h-[120px] items-center justify-between gap-4 rounded-[26px] border-[1.5px] border-ink px-[22px] py-[18px] text-ink ${item.tone}`}
-                    >
-                      <div className="min-w-0">
-                        <p className="text-[26px] font-extrabold tracking-[-0.02em]">{item.title}</p>
-                        <p className="mt-1 truncate text-[13px] opacity-75">{item.subtitle}</p>
+                  {SUMMARY.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <div
+                        key={item.title}
+                        className={`flex min-h-[140px] flex-col justify-between overflow-hidden rounded-[22px] border border-ink/10 p-5 text-ink shadow-[0_1px_2px_rgba(16,16,16,0.04)] ${item.tone}`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] opacity-60">
+                            {item.title}
+                          </p>
+                          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/60">
+                            <Icon size={15} aria-hidden="true" />
+                          </span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="tabular text-[30px] font-extrabold leading-none tracking-[-0.03em]">
+                            {item.value}
+                          </p>
+                          <p className="mt-2 truncate text-[12px] opacity-65">{item.subtitle}</p>
+                        </div>
                       </div>
-                      <p className="tabular shrink-0 text-right text-[22px] font-semibold">{item.value}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="flex min-h-0 flex-1 flex-col rounded-card border border-line bg-white p-5 shadow-card">
@@ -240,18 +260,10 @@ export default function DashboardPreview() {
                       <h2 className="text-[15px] font-medium tracking-tight text-ink">Collections over time</h2>
                       <p className="mt-0.5 text-[13px] text-ink-muted">Successful payments per period</p>
                     </div>
-                    <div className="inline-flex shrink-0 items-center gap-1 rounded-[11px] border border-line bg-white p-1">
-                      {["7d", "30d", "90d"].map((label) => (
-                        <span
-                          key={label}
-                          className={`rounded-lg px-3 py-1.5 text-[12.5px] font-semibold ${
-                            label === "30d" ? "bg-ink text-white" : "text-ink-muted"
-                          }`}
-                        >
-                          {label}
-                        </span>
-                      ))}
-                    </div>
+                    <span className="inline-flex h-[38px] shrink-0 items-center gap-2 rounded-[10px] border border-line bg-white px-3 text-[12px] font-semibold text-ink-soft">
+                      <SlidersHorizontal size={13} aria-hidden="true" />
+                      Last 30 days
+                    </span>
                   </div>
 
                   <div className="flex min-h-0 flex-1 items-end">

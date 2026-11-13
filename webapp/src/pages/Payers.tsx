@@ -17,16 +17,10 @@ import {
   Card,
   EmptyState,
   ErrorState,
-  InlineNote,
+  FilterMenu,
   PageHeader,
-  Pill,
   SearchInput,
-  SegmentedControl,
   TableSkeleton,
-  TONE_MEANING,
-  type ToneKind,
-  SummaryPanel,
-  SummaryRow,
 } from "@/components/ui";
 
 interface PayerRow {
@@ -42,22 +36,23 @@ interface PayerRow {
   email?: string;
 }
 
-/** One stacked summary tile, coloured by meaning. Matches the dashboard. */
-function SummaryTile({
-  index,
-  tone,
-  label,
-  value,
-  hint,
-}: {
-  index: number;
-  tone: ToneKind;
-  label: string;
-  value: string;
-  hint: string;
-}) {
+function initialsOf(name: string) {
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+/** One quiet figure in the strip under the title. */
+function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <SummaryRow tone={tone} title={label} subtitle={hint} value={value} />
+    <div className="min-w-[104px]">
+      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">{label}</p>
+      <p className="tabular mt-1 text-[17px] font-bold leading-none tracking-tight">{value}</p>
+    </div>
   );
 }
 
@@ -148,7 +143,7 @@ export default function Payers() {
       <PageHeader
         eyebrow="Collect"
         title="Payers"
-        description="Everyone who has paid, grouped by the details they submitted — ready to hand to a treasurer or a department."
+        description="Everyone who has paid, grouped by what they submitted."
         actions={
           <Button
             variant="secondary"
@@ -161,65 +156,48 @@ export default function Payers() {
         }
       />
 
-      <div className="mb-5">
-        <InlineNote tone="info" title="How this list is built">
-          Payers are assembled from the fields you collect on each payment, so no
-          separate customer record is needed. Export it any time for an auditable
-          class list.
-        </InlineNote>
+      {/* three quiet figures instead of a wall of coloured tiles */}
+      <div className="mb-5 flex flex-wrap items-center gap-x-8 gap-y-4 rounded-[18px] border border-line bg-white px-5 py-4">
+        <Stat label="Unique payers" value={formatNumber(totals.unique)} />
+        <span className="hidden h-9 w-px bg-line sm:block" />
+        <Stat label="Value received" value={formatMoney(totals.collected)} />
+        <span className="hidden h-9 w-px bg-line sm:block" />
+        <Stat label="Outstanding" value={formatNumber(totals.outstanding)} />
+        <span className="ml-auto hidden text-[11.5px] text-ink-faint sm:block">
+          {formatNumber(totals.repeat)} paid into more than one collection
+        </span>
       </div>
 
-      {/* summary: one tile per meaning */}
-      <SummaryPanel columns={3} className="mb-6">
-        <SummaryTile
-          index={0}
-          tone="people"
-          label="Unique payers"
-          value={formatNumber(totals.unique)}
-          hint={`${formatNumber(totals.repeat)} paid into more than one collection`}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Search name, ID or collection"
+          className="w-full sm:w-[300px]"
         />
-        <SummaryTile
-          index={1}
-          tone="money"
-          label="Value received"
-          value={formatMoney(totals.collected)}
-          hint="Confirmed payments only"
+        <FilterMenu
+          groups={[
+            {
+              label: "Payers",
+              value: filter,
+              onChange: (value) => setFilter(value as typeof filter),
+              options: [
+                { value: "all", label: "All payers" },
+                { value: "repeat", label: "Paid more than once" },
+                { value: "outstanding", label: "Outstanding transfer" },
+              ],
+            },
+          ]}
         />
-        <SummaryTile
-          index={2}
-          tone={totals.outstanding ? "attention" : "neutral"}
-          label="Outstanding transfers"
-          value={formatNumber(totals.outstanding)}
-          hint="Payments still pending confirmation"
-        />
-      </SummaryPanel>
+        <span className="ml-auto font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted">
+          {rows.length} {rows.length === 1 ? "payer" : "payers"}
+        </span>
+      </div>
 
-      <Card padded={false}>
-        {/* filters */}
-        <div className="flex flex-col gap-3 border-b border-line-soft px-4 py-3 lg:flex-row lg:flex-wrap lg:items-center">
-          <SearchInput
-            value={search}
-            onChange={setSearch}
-            placeholder="Search name, ID or collection"
-            className="w-full lg:w-[300px]"
-          />
-          <SegmentedControl
-            value={filter}
-            onChange={setFilter}
-            options={[
-              { value: "all", label: "All" },
-              { value: "repeat", label: "Repeat" },
-              { value: "outstanding", label: "Outstanding" },
-            ]}
-          />
-          <span className="font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted lg:ml-auto">
-            {rows.length} rows
-          </span>
-        </div>
-
+      <Card padded={false} rounded="2xl" shadow="sm" className="overflow-hidden">
         {transactions.loading ? (
           <div className="p-4">
-            <TableSkeleton rows={6} cols={3} />
+            <TableSkeleton rows={6} cols={2} />
           </div>
         ) : transactions.error ? (
           <ErrorState message={transactions.error} onRetry={transactions.refetch} />
@@ -235,96 +213,56 @@ export default function Payers() {
           />
         ) : (
           <>
-            {/* phones: one card per payer */}
-            <ul className="divide-y divide-line-soft md:hidden">
+            <ul className="divide-y divide-line-soft">
               {rows.slice(0, 120).map((payer) => (
-                <li key={payer.key} className="px-4 py-3.5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
+                <li
+                  key={payer.key}
+                  className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-cream/50 sm:px-5"
+                >
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cream text-[11px] font-bold text-ink-soft">
+                    {initialsOf(payer.name)}
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline justify-between gap-3">
                       <p className="truncate text-[13.5px] font-semibold">{payer.name}</p>
-                      <p className="mt-0.5 truncate font-mono text-[11px] text-ink-muted">
-                        {payer.identifier}
+                      <p className="tabular shrink-0 text-[13.5px] font-bold">
+                        {formatMoney(payer.total)}
                       </p>
                     </div>
-                    <p className="tabular shrink-0 text-[13.5px] font-bold">
-                      {formatMoney(payer.total)}
-                    </p>
+                    <div className="mt-0.5 flex items-baseline justify-between gap-3">
+                      <p className="truncate text-[11.5px] text-ink-muted">
+                        {payer.identifier}
+                        {payer.identifier && payer.collection ? " · " : ""}
+                        {payer.collectionId ? (
+                          <Link to={`/collections/${payer.collectionId}`} className="hover:text-brand">
+                            {payer.collection}
+                          </Link>
+                        ) : (
+                          payer.collection
+                        )}
+                      </p>
+                      <span
+                        className="shrink-0 text-[11px] text-ink-faint"
+                        title={formatDate(payer.lastPayment)}
+                      >
+                        {timeAgo(payer.lastPayment)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-2 text-[11.5px] text-ink-muted">
-                    {payer.payments > 0 ? (
-                      <Pill tone={payer.payments > 1 ? "green" : "neutral"}>
-                        {payer.payments} paid
-                      </Pill>
-                    ) : (
-                      <Pill tone="amber">Pending</Pill>
-                    )}
-                    <span className="min-w-0 truncate">
-                      {payer.collectionId ? (
-                        <Link to={`/collections/${payer.collectionId}`} className="hover:text-brand">
-                          {payer.collection}
-                        </Link>
-                      ) : (
-                        payer.collection
-                      )}{" "}
-                      · {timeAgo(payer.lastPayment)}
-                    </span>
-                  </div>
+
+                  {payer.pending ? (
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full bg-warning"
+                      title="Transfer awaiting confirmation"
+                    />
+                  ) : null}
                 </li>
               ))}
             </ul>
 
-            {/* tablets and up: the full table */}
-            <div className="hidden overflow-x-auto md:block">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Payer</th>
-                    <th>Collection</th>
-                    <th>Payments</th>
-                    <th>Total</th>
-                    <th>Last payment</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.slice(0, 120).map((payer) => (
-                    <tr key={payer.key}>
-                      <td>
-                        <p className="font-semibold">{payer.name}</p>
-                        <p className="font-mono text-3xs text-ink-muted">{payer.identifier}</p>
-                      </td>
-                      <td>
-                        {payer.collectionId ? (
-                          <Link
-                            to={`/collections/${payer.collectionId}`}
-                            className="text-ink-soft hover:text-brand"
-                          >
-                            {payer.collection}
-                          </Link>
-                        ) : (
-                          <span className="text-ink-soft">{payer.collection}</span>
-                        )}
-                      </td>
-                      <td>
-                        {payer.payments > 0 ? (
-                          <Pill tone={payer.payments > 1 ? "green" : "neutral"}>
-                            {payer.payments} paid
-                          </Pill>
-                        ) : (
-                          <Pill tone="amber">Pending</Pill>
-                        )}
-                      </td>
-                      <td className="tabular font-semibold">{formatMoney(payer.total)}</td>
-                      <td className="text-ink-muted">
-                        <span title={formatDate(payer.lastPayment)}>{timeAgo(payer.lastPayment)}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
             {payers.length > 120 ? (
-              <p className="muted px-4 py-3">
+              <p className="muted border-t border-line-soft px-5 py-3">
                 Showing the 120 most recent payers. Export the CSV for the full list.
               </p>
             ) : null}

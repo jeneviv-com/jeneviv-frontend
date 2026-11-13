@@ -172,12 +172,24 @@ export default function LandingPage() {
         <div className="m-wrap">
           <div className="m-hero-grid">
             <div className="m-hero-copy">
-              <h1 className="m-h1">
+                            <h1 className="m-h1">
                 Group money,
                 <br />
-                {/* A non-breaking space keeps “accounted for.” together so the
-                    accent never strands “for.” on a line of its own. */}
-                <span className="accent">finally accounted for.</span>
+                {/* The phrase rolls up into the next, forever, on its own line so
+                    it can never run under the laptop. The first one is repeated
+                    at the end so the loop restarts invisibly, and the wrapper
+                    carries the plain sentence for screen readers. */}
+                <span className="accent">finally</span>
+                <br />
+                <span className="m-roll" aria-label="accounted for.">
+                  <span className="m-roll-track" aria-hidden="true">
+                    <span>accounted for.</span>
+                    <span>settled.</span>
+                    <span>verified.</span>
+                    <span>reconciled.</span>
+                    <span>accounted for.</span>
+                  </span>
+                </span>
               </h1>
               <p className="m-lede">
                 Jeneviv turns one payment link into a live ledger. Who has
@@ -185,7 +197,7 @@ export default function LandingPage() {
                 course reps, PTAs, cooperatives and associations.
               </p>
               <div className="m-hero-cta">
-                <a href={`${appUrl}/signup`} className="m-btn m-btn-primary">
+                <a href={`${appUrl}/signup`} className="m-btn m-btn-brand">
                   Create a free collection <Arrow />
                 </a>
                 <a href="#how-it-works" className="m-btn m-btn-outline">

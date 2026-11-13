@@ -15,8 +15,8 @@ import {
   Input,
   Modal,
   PageHeader,
+  FilterMenu,
   SearchInput,
-  SegmentedControl,
   TableSkeleton,
   Textarea,
   TONE_MEANING,
@@ -92,12 +92,17 @@ export default function Templates() {
           placeholder="Search templates"
           className="w-full sm:w-[280px]"
         />
-        <SegmentedControl
-          value={scope}
-          onChange={setScope}
-          options={[
-            { value: "all", label: "All templates" },
-            { value: "mine", label: "Created by me" },
+        <FilterMenu
+          groups={[
+            {
+              label: "Templates",
+              value: scope,
+              onChange: (value) => setScope(value as typeof scope),
+              options: [
+                { value: "all", label: "All templates" },
+                { value: "mine", label: "Created by me" },
+              ],
+            },
           ]}
         />
         <span className="ml-auto font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted">

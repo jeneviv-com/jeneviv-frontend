@@ -13,15 +13,6 @@ type State =
 
 /* Receipts are shown in Nigerian time, whatever the viewer's clock says. */
 const WAT = { timeZone: "Africa/Lagos" } as const;
-const shortWhen = (iso: string) =>
-  new Date(iso).toLocaleString("en-NG", {
-    ...WAT,
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
 const fullWhen = (iso: string) =>
   `${new Date(iso).toLocaleString("en-NG", { ...WAT, dateStyle: "medium", timeStyle: "short" })} WAT`;
 
@@ -46,27 +37,6 @@ function Row({ label, children, mono = false }: { label: string; children: React
       >
         {children}
       </dd>
-    </div>
-  );
-}
-
-/** One step on the timeline. */
-function Step({ done, title, sub, time }: { done: boolean; title: string; sub: string; time: string }) {
-  return (
-    <div className="flex min-w-0 flex-1 flex-col items-center text-center">
-      <span
-        className={`grid h-7 w-7 place-items-center rounded-full ${
-          done ? "bg-brand text-white" : "border-[1.5px] border-line bg-white text-ink-faint"
-        }`}
-      >
-        {done ? <Check size={14} strokeWidth={3} /> : null}
-      </span>
-      <p className="mt-2 text-[12px] leading-tight text-ink-muted">
-        {title}
-        <br />
-        {sub}
-      </p>
-      <p className={`mt-1.5 text-[11.5px] font-semibold ${done ? "text-ink" : "text-ink-muted"}`}>{time}</p>
     </div>
   );
 }
@@ -120,12 +90,6 @@ function ReceiptBody({ receipt }: { receipt: PublicReceipt }) {
               ))}
             </div>
           ) : null}
-
-          <div className="mt-6 flex items-start gap-2">
-            <Step done title="Payment" sub="started" time={shortWhen(receipt.started_at)} />
-            <Step done title="Confirmed" sub="by Paystack" time={shortWhen(receipt.paid_at)} />
-            <Step done={false} title="Settles to" sub="their bank" time="Next working day" />
-          </div>
 
           <div className="mt-6 rounded-[12px] bg-cream px-4 py-3 text-left text-[12px] leading-relaxed text-ink-muted">
             Payments settle straight to <span className="font-semibold text-ink">{issuer}</span>&rsquo;s bank account,

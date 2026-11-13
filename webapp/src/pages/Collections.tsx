@@ -48,8 +48,8 @@ import {
   Modal,
   PageHeader,
   ProgressBar,
+  FilterMenu,
   SearchInput,
-  SegmentedControl,
   Select,
   TableSkeleton,
   Textarea,
@@ -360,13 +360,18 @@ export default function Collections() {
           className="w-full sm:w-[280px]"
         />
 
-        <SegmentedControl
-          value={status}
-          onChange={setStatus}
-          options={[
-            { value: "all", label: "All" },
-            { value: "active", label: "Accepting" },
-            { value: "paused", label: "Paused" },
+        <FilterMenu
+          groups={[
+            {
+              label: "Status",
+              value: status,
+              onChange: (value) => setStatus(value as typeof status),
+              options: [
+                { value: "all", label: "All collections" },
+                { value: "active", label: "Accepting" },
+                { value: "paused", label: "Paused" },
+              ],
+            },
           ]}
         />
 

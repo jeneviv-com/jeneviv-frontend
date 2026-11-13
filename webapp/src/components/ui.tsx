@@ -7,10 +7,12 @@ import {
   TextareaHTMLAttributes,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
   AlertCircle,
+  ArrowUpRight,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -18,6 +20,7 @@ import {
   Info,
   Loader2,
   Search,
+  SlidersHorizontal,
   TriangleAlert,
 } from "lucide-react";
 import { copyText, initials, statusLabel, statusTone, type Tone } from "@/lib/format";
@@ -381,6 +384,112 @@ export function SearchInput({
         className="input pl-9"
         type="search"
       />
+    </div>
+  );
+}
+
+/**
+ * The one filter control on a page: a filter icon and the word "Filters", with
+ * the choices tucked inside the panel. The old inline segmented rows took up a
+ * whole strip of the page for options nobody reads twice.
+ */
+export function FilterMenu({
+  groups,
+  label = "Filters",
+  className = "",
+}: {
+  groups: Array<{
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    options: Array<{ value: string; label: string; count?: number }>;
+  }>;
+  label?: string;
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!box.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  // A group counts as active when it is not on its first (usually "all") choice.
+  const activeCount = groups.filter((group) => group.value !== group.options[0]?.value).length;
+
+  return (
+    <div className={`relative ${className}`} ref={box}>
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        className={`inline-flex h-[42px] items-center gap-2 rounded-[10px] border px-3 text-[12.5px] font-semibold transition-colors ${
+          open || activeCount
+            ? "border-ink bg-ink text-cream"
+            : "border-line bg-white text-ink-soft hover:border-ink/25 hover:text-ink"
+        }`}
+      >
+        <SlidersHorizontal size={14} aria-hidden="true" />
+        {label}
+        {activeCount ? (
+          <span className="grid h-4 min-w-4 place-items-center rounded-full bg-brand px-1 text-[10px] font-bold text-white">
+            {activeCount}
+          </span>
+        ) : null}
+      </button>
+
+      {open ? (
+        <div
+          role="dialog"
+          aria-label={label}
+          className="absolute left-0 top-[calc(100%+8px)] z-30 w-[252px] animate-pop-in rounded-[14px] border border-line bg-white p-2 shadow-pop"
+        >
+          {groups.map((group) => (
+            <div key={group.label} className="mb-1 last:mb-0">
+              <p className="px-2 pb-1.5 pt-1 font-mono text-3xs uppercase tracking-[0.14em] text-ink-faint">
+                {group.label}
+              </p>
+              {group.options.map((option) => {
+                const active = option.value === group.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      group.onChange(option.value);
+                      setOpen(false);
+                    }}
+                    className={`flex w-full items-center gap-2 rounded-[9px] px-2 py-2 text-left text-[12.5px] transition-colors ${
+                      active ? "bg-ink font-semibold text-cream" : "text-ink-soft hover:bg-cream hover:text-ink"
+                    }`}
+                  >
+                    <span className="flex-1 truncate">{option.label}</span>
+                    {option.count !== undefined ? (
+                      <span className={`tabular text-[11px] ${active ? "text-cream/70" : "text-ink-faint"}`}>
+                        {option.count}
+                      </span>
+                    ) : null}
+                    {active ? <Check size={13} aria-hidden="true" /> : null}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -880,25 +989,32 @@ export function SummaryRow({
 
   const panel = (
     <div
-      className={`flex min-h-[112px] items-center justify-between gap-4 px-[22px] py-[18px] lg:rounded-[26px] lg:border-[1.5px] lg:border-ink lg:min-h-[120px] ${toneClass} ${
-        href ? "transition-[filter] duration-150 hover:brightness-[0.98] active:brightness-95" : ""
+      className={`relative flex min-h-[112px] flex-col justify-between gap-3 overflow-hidden px-[22px] py-[18px] lg:min-h-[140px] lg:rounded-[22px] lg:border lg:border-ink/10 lg:p-5 lg:shadow-[0_1px_2px_rgba(16,16,16,0.04)] ${toneClass} ${
+        href ? "transition-[filter] duration-150 hover:brightness-[0.985] active:brightness-95" : ""
       }`}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-3">
+      <div className="flex items-start justify-between gap-3">
+        <p className="font-mono text-[10.5px] font-normal uppercase tracking-[0.14em] opacity-60">
+          {title}
+        </p>
         {icon ? (
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/70">{icon}</span>
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/60">{icon}</span>
+        ) : href ? (
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/45 opacity-70">
+            <ArrowUpRight size={13} aria-hidden="true" />
+          </span>
         ) : null}
-        <div className="min-w-0">
-          <p className="text-[24px] font-extrabold tracking-[-0.02em] lg:text-[26px]">{title}</p>
-          <p className="mt-1 truncate text-[13px] opacity-75">{subtitle}</p>
-        </div>
       </div>
-      <div className="shrink-0 text-right text-[20px] font-semibold tabular lg:text-[22px]">
-        {loading ? (
-          <span aria-hidden="true" className="skeleton inline-block h-5 w-16 rounded-md" />
-        ) : (
-          value
-        )}
+
+      <div className="min-w-0">
+        <p className="tabular text-[26px] font-extrabold leading-none tracking-[-0.03em] lg:text-[30px]">
+          {loading ? (
+            <span aria-hidden="true" className="skeleton inline-block h-6 w-20 rounded-md" />
+          ) : (
+            value
+          )}
+        </p>
+        <p className="mt-2 truncate text-[12px] opacity-65">{subtitle}</p>
       </div>
     </div>
   );

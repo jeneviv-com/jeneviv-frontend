@@ -40,8 +40,8 @@ import {
   PageHeader,
   Pill,
   ProgressBar,
+  FilterMenu,
   SearchInput,
-  SegmentedControl,
   StackedCards,
   TableSkeleton,
   Textarea,
@@ -438,13 +438,18 @@ export default function GroupDetail() {
                 placeholder="Search collections"
                 className="w-full sm:w-[300px]"
               />
-              <SegmentedControl
-                value={collectionStatus}
-                onChange={setCollectionStatus}
-                options={[
-                  { value: "all", label: "All" },
-                  { value: "active", label: "Accepting" },
-                  { value: "paused", label: "Paused" },
+              <FilterMenu
+                groups={[
+                  {
+                    label: "Status",
+                    value: collectionStatus,
+                    onChange: (value) => setCollectionStatus(value as typeof collectionStatus),
+                    options: [
+                      { value: "all", label: "All collections" },
+                      { value: "active", label: "Accepting" },
+                      { value: "paused", label: "Paused" },
+                    ],
+                  },
                 ]}
               />
               <span className="ml-auto font-mono text-3xs uppercase tracking-[0.12em] text-ink-muted">

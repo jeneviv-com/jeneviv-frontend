@@ -56,6 +56,7 @@ import {
   Modal,
   Pill,
   ProgressBar,
+  FilterMenu,
   SegmentedControl,
   Select,
   StatusPill,
@@ -593,16 +594,21 @@ export default function CollectionDetail() {
                   {formatNumber(rows.length)} in this view
                 </h2>
               </div>
-              <SegmentedControl
-                value={paymentFilter}
-                onChange={setPaymentFilter}
-                options={[
-                  { value: "all", label: "All" },
-                  { value: "success", label: "Paid" },
-                  { value: "pending", label: "Pending" },
-                  { value: "failed", label: "Failed" },
-                  { value: "overpaid", label: "Overpaid" },
-                  { value: "underpaid", label: "Underpaid" },
+              <FilterMenu
+                groups={[
+                  {
+                    label: "Payments",
+                    value: paymentFilter,
+                    onChange: (value) => setPaymentFilter(value as typeof paymentFilter),
+                    options: [
+                      { value: "all", label: "All payments" },
+                      { value: "success", label: "Paid" },
+                      { value: "pending", label: "Pending" },
+                      { value: "failed", label: "Failed" },
+                      { value: "overpaid", label: "Overpaid" },
+                      { value: "underpaid", label: "Underpaid" },
+                    ],
+                  },
                 ]}
               />
             </div>

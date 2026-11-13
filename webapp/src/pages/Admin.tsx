@@ -27,7 +27,7 @@ import {
   InlineNote,
   Modal,
   PageHeader,
-  SegmentedControl,
+  FilterMenu,
   StatusPill,
   TableSkeleton,
   Tabs,
@@ -180,14 +180,19 @@ export default function Admin() {
             subtitle="Approve, reject or suspend the workspaces that collect money"
             aside={
               <div className="flex flex-wrap items-center gap-3">
-                <SegmentedControl
-                  value={merchantStatus}
-                  onChange={(value) => setMerchantStatus(value as MerchantStatus)}
-                  options={[
-                    { value: "pending", label: "Pending" },
-                    { value: "approved", label: "Approved" },
-                    { value: "rejected", label: "Rejected" },
-                    { value: "suspended", label: "Suspended" },
+                <FilterMenu
+                  groups={[
+                    {
+                      label: "Workspaces",
+                      value: merchantStatus,
+                      onChange: (value) => setMerchantStatus(value as MerchantStatus),
+                      options: [
+                        { value: "pending", label: "Pending" },
+                        { value: "approved", label: "Approved" },
+                        { value: "rejected", label: "Rejected" },
+                        { value: "suspended", label: "Suspended" },
+                      ],
+                    },
                   ]}
                 />
                 <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-muted">

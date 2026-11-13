@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, Plus, ReceiptText, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, Banknote, Plus, ReceiptText, ShieldCheck, Users } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
   useCollectionStats,
@@ -32,6 +32,7 @@ import {
   SummaryPanel,
   StatusPill,
   TableSkeleton,
+  FilterMenu,
 } from "@/components/ui";
 
 type Range = "7d" | "30d" | "90d";
@@ -302,6 +303,7 @@ export default function Dashboard() {
                       ? `${formatNumber(uniquePayers)} / ${formatNumber(payerTarget)}`
                       : formatNumber(uniquePayers)
                 }
+                icon={<Users size={15} aria-hidden="true" />}
                 tone="lavender"
                 href="/transactions"
                 loading={loading}
@@ -312,6 +314,7 @@ export default function Dashboard() {
                 title="Paid"
                 subtitle="Paid straight to your bank"
                 value={loading ? valueSkeleton : formatMoney(settled)}
+                icon={<Banknote size={15} aria-hidden="true" />}
                 tone="mint"
                 href="/transactions"
                 loading={loading}
@@ -322,6 +325,7 @@ export default function Dashboard() {
                 title="Payments"
                 subtitle={`${formatNumber(pendingCount)} awaiting confirmation`}
                 value={loading ? valueSkeleton : formatNumber(successful.length)}
+                icon={<ReceiptText size={15} aria-hidden="true" />}
                 tone="peach"
                 href="/transactions"
                 loading={loading}
@@ -332,6 +336,7 @@ export default function Dashboard() {
                 title="Workspace"
                 subtitle={merchant?.display_name || user?.name || "Your workspace"}
                 value={merchant ? statusLabel(merchant.status) : "—"}
+                icon={<ShieldCheck size={15} aria-hidden="true" />}
                 tone="aqua"
                 href="/settings"
                 loading={loading}
@@ -359,13 +364,19 @@ export default function Dashboard() {
                     : "Successful payments per period"
                 }
                 action={
-                  <SegmentedControl
-                    value={range}
-                    onChange={setRange}
-                    options={[
-                      { value: "7d", label: "7d" },
-                      { value: "30d", label: "30d" },
-                      { value: "90d", label: "90d" },
+                  <FilterMenu
+                    label={range === "7d" ? "Last 7 days" : range === "30d" ? "Last 30 days" : "Last 90 days"}
+                    groups={[
+                      {
+                        label: "Range",
+                        value: range,
+                        onChange: (value) => setRange(value as typeof range),
+                        options: [
+                          { value: "7d", label: "Last 7 days" },
+                          { value: "30d", label: "Last 30 days" },
+                          { value: "90d", label: "Last 90 days" },
+                        ],
+                      },
                     ]}
                   />
                 }
