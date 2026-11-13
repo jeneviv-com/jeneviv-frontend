@@ -381,7 +381,7 @@ export default function Settings() {
         <Row icon={<Building2 size={15} />} label="Bank accounts" hint={defaultAccount ? `${defaultAccount.bank_name} ••${defaultAccount.account_number.slice(-4)}` : "No default account"}>
           <Link
             to="/payouts"
-            className="inline-flex shrink-0 items-center gap-1 text-[12.5px] font-semibold text-brand"
+            className="inline-flex shrink-0 items-center gap-1 py-2 pl-2 text-[12.5px] font-semibold text-brand"
           >
             Manage <ChevronRight size={14} />
           </Link>
@@ -394,7 +394,7 @@ export default function Settings() {
         >
           <Link
             to="/settings/people"
-            className="inline-flex shrink-0 items-center gap-1 text-[12.5px] font-semibold text-brand"
+            className="inline-flex shrink-0 items-center gap-1 py-2 pl-2 text-[12.5px] font-semibold text-brand"
           >
             Manage <ChevronRight size={14} />
           </Link>
@@ -468,7 +468,7 @@ export default function Settings() {
         <Row icon={<Bell size={15} />} label="Notification centre" hint="Payments, refunds and settlement events">
           <Link
             to="/notifications"
-            className="inline-flex shrink-0 items-center gap-1 text-[12.5px] font-semibold text-brand"
+            className="inline-flex shrink-0 items-center gap-1 py-2 pl-2 text-[12.5px] font-semibold text-brand"
           >
             Open <ChevronRight size={14} />
           </Link>

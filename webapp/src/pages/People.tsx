@@ -267,7 +267,7 @@ export default function People() {
                     aria-label={`Remove ${member.email}`}
                     disabled={busyId === member.id}
                     onClick={() => remove(member)}
-                    className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-ink-faint transition-colors hover:bg-cream hover:text-danger disabled:opacity-50"
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-ink-faint transition-colors hover:bg-cream hover:text-danger disabled:opacity-50"
                   >
                     <Trash2 size={14} />
                   </button>
