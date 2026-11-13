@@ -90,7 +90,7 @@ const USE_CASES = [
 const SECURITY = [
   {
     title: "Regulated payment rails",
-    body: "Collections are processed through Flutterwave, a CBN-licensed payment service provider — not a wallet we invented.",
+    body: "Collections are processed through payment gateways like Paystack, a CBN-licensed payment service provider — not a wallet we invented.",
   },
   {
     title: "Webhook-verified payments",
@@ -137,7 +137,7 @@ const QUOTES = [
 const FAQ = [
   {
     q: "How does Jeneviv know a payer has actually paid?",
-    a: "Every collection gets its own payment account. When money lands, the gateway sends a signed webhook to Jeneviv. We verify the signature, match the transfer to the payer record, and mark it paid. If a webhook is delayed, a reconciliation job checks again every 15 minutes.",
+    a: "Every collection gets its own payment account. When money lands, the gateway sends a signed webhook to Jeneviv. We verify, match the transfer to the payer record, and mark it paid. If a webhook is delayed, a reconciliation job checks again every 15 minutes.",
   },
   {
     q: "Do the people paying need to download an app?",
@@ -145,15 +145,15 @@ const FAQ = [
   },
   {
     q: "What does it cost?",
-    a: "There is no monthly fee and no setup fee. Jeneviv charges 1.5% + ₦100 per successful payment, capped at ₦2,000. The fee is deducted from the collection — payers are never charged extra.",
+    a: "There is no monthly fee and no setup fee. Jeneviv charges 1.5% or 1.5% + 100 in payment gateway fees + ₦75 up to ₦7,500, then 1% capped at ₦1,000 per successful payment. The fee is passed to payers so the collection money is never touched.",
   },
   {
     q: "When does the money reach my bank account?",
-    a: "Settlements run twice daily, including weekends. You can also initiate a manual payout to any verified bank account you have added. Payout history and status are visible in the app.",
+    a: "Settlements run T +1, excluding weekends which run on the next working day. You don't need to initiate a manual payout to any verified bank account you have added because it is settled directly. Payout history and status are visible in the app.",
   },
   {
     q: "Can more than one person manage a collection?",
-    a: "Yes. The coordinator who creates a collection owns it, and every payer, transaction, field and settlement is visible on one dashboard — so a treasurer, chairperson or lecturer can all work from the same verified report.",
+    a: "Yes. The coordinator who creates a collection owns it, and every payer, transaction, field and settlement is visible on one dashboard so a treasurer, chairperson or lecturer can all work from the same verified report.",
   },
   {
     q: "What happens if a payer transfers the wrong amount?",
