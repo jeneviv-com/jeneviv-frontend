@@ -14,6 +14,7 @@ import {
   Trash2,
   Upload,
   User as UserIcon,
+  Users,
 } from "lucide-react";
 import { MAX_AVATAR_BYTES, merchantsAPI, profileAPI } from "@/lib/api";
 import KycCard from "@/components/KycCard";
@@ -380,6 +381,19 @@ export default function Settings() {
         <Row icon={<Building2 size={15} />} label="Bank accounts" hint={defaultAccount ? `${defaultAccount.bank_name} ••${defaultAccount.account_number.slice(-4)}` : "No default account"}>
           <Link
             to="/payouts"
+            className="inline-flex shrink-0 items-center gap-1 text-[12.5px] font-semibold text-brand"
+          >
+            Manage <ChevronRight size={14} />
+          </Link>
+        </Row>
+
+        <Row
+          icon={<Users size={15} />}
+          label="People"
+          hint="Invite teammates and choose what they can do"
+        >
+          <Link
+            to="/settings/people"
             className="inline-flex shrink-0 items-center gap-1 text-[12.5px] font-semibold text-brand"
           >
             Manage <ChevronRight size={14} />

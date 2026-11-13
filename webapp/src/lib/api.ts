@@ -1191,6 +1191,70 @@ export const profileAPI = {
   },
 };
 
+/* ----------------------------------------------------------------- workspaces */
+
+export type WorkspaceRole = "owner" | "admin" | "collector" | "viewer";
+export type InvitableRole = Exclude<WorkspaceRole, "owner">;
+
+export interface WorkspaceSummary {
+  id: string;
+  name: string | null;
+  status: string;
+  logo_url: string | null;
+  role: WorkspaceRole;
+  is_owner: boolean;
+}
+
+export interface WorkspaceMember {
+  id: string;
+  user_id: string;
+  role: WorkspaceRole;
+  status: string;
+  joined_at: string;
+  last_active_at: string | null;
+  name: string;
+  email: string;
+  image: string | null;
+}
+
+export interface WorkspaceInvite {
+  id: string;
+  email: string;
+  role: InvitableRole;
+  expires_at: string;
+  created_at: string;
+  status: "pending" | "accepted" | "expired";
+}
+
+export const workspacesAPI = {
+  list: () => apiFetch<{ workspaces: WorkspaceSummary[] }>("/api/workspaces"),
+  members: () => apiFetch<{ members: WorkspaceMember[] }>("/api/workspaces/members"),
+  invites: () => apiFetch<{ invites: WorkspaceInvite[] }>("/api/workspaces/invites"),
+  invite: (input: { email: string; role: InvitableRole }) =>
+    apiFetch<{ invite: WorkspaceInvite; invite_url: string; emailed: boolean }>(
+      "/api/workspaces/invites",
+      { method: "POST", body: input },
+    ),
+  revokeInvite: (id: string) =>
+    apiFetch<Record<string, never>>(`/api/workspaces/invites/${id}/revoke`, {
+      method: "POST",
+    }),
+  updateMember: (id: string, role: InvitableRole) =>
+    apiFetch<{ member: WorkspaceMember }>(`/api/workspaces/members/${id}`, {
+      method: "PATCH",
+      body: { role },
+    }),
+  removeMember: (id: string) =>
+    apiFetch<Record<string, never>>(`/api/workspaces/members/${id}`, {
+      method: "DELETE",
+    }),
+  acceptInvite: (token: string) =>
+    apiFetch<{ workspace: { id: string; name: string | null; role: WorkspaceRole } }>(
+      "/api/workspaces/invites/accept",
+      { method: "POST", body: { token } },
+    ),
+};
+
 export const verifyAPI = {
   get: (reference: string) =>
     apiFetch<{ valid: boolean; receipt: PublicReceipt }>(

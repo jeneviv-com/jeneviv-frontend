@@ -88,6 +88,10 @@ function persist() {
 export function resetDemoData() {
   const fresh = seedDatabase();
   database = fresh;
+  demoGuestMembers = [];
+  demoInviteRecords = [];
+  persistGuests();
+  persistInvites();
   saveDatabase(fresh);
   DatabaseEvents.emit();
 }
@@ -106,6 +110,105 @@ const DatabaseEvents = {
 
 export const onDemoDataChanged = (listener: () => void) =>
   DatabaseEvents.subscribe(listener);
+
+/* ------------------------------------------------------- workspace demo state */
+
+interface DemoGuestMember {
+  id: string;
+  user_id: string;
+  role: "admin" | "collector" | "viewer";
+  status: "active";
+  joined_at: string;
+  last_active_at: null;
+  name: string;
+  email: string;
+  image: null;
+}
+
+interface DemoInviteRecord {
+  id: string;
+  email: string;
+  role: "admin" | "collector" | "viewer";
+  token: string;
+  expires_at: string;
+  created_at: string;
+  revoked_at: string | null;
+  accepted_at: string | null;
+}
+
+// Teammates and pending invites are kept in their own storage keys rather than
+// the demo database, so resetting demo data clears them too. They have to
+// survive a reload: opening an invite link is a full page load, and an
+// in-memory invite would look invalid by the time it is accepted.
+const DEMO_INVITES_KEY = "jeneviv.demo.invites";
+const DEMO_GUESTS_KEY = "jeneviv.demo.guests";
+
+function readStored<T>(key: string): T[] {
+  if (typeof localStorage === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return Array.isArray(parsed) ? (parsed as T[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeStored(key: string, value: unknown) {
+  if (typeof localStorage === "undefined") return;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* storage disabled: the demo still works for this page view */
+  }
+}
+
+let demoGuestMembers: DemoGuestMember[] = readStored<DemoGuestMember>(DEMO_GUESTS_KEY);
+let demoInviteRecords: DemoInviteRecord[] =
+  readStored<DemoInviteRecord>(DEMO_INVITES_KEY);
+
+function persistInvites() {
+  writeStored(DEMO_INVITES_KEY, demoInviteRecords);
+}
+
+function persistGuests() {
+  writeStored(DEMO_GUESTS_KEY, demoGuestMembers);
+}
+
+function demoMembers() {
+  const database = db();
+  return [
+    {
+      id: "wm_owner",
+      user_id: database.user.id,
+      role: "owner" as const,
+      status: "active" as const,
+      joined_at: database.user.createdAt,
+      last_active_at: null,
+      name: database.user.name,
+      email: database.user.email,
+      image: database.user.image ?? null,
+    },
+    ...demoGuestMembers,
+  ];
+}
+
+function demoInviteStatus(invite: DemoInviteRecord) {
+  if (invite.accepted_at) return "accepted" as const;
+  if (new Date(invite.expires_at).getTime() < Date.now()) return "expired" as const;
+  return "pending" as const;
+}
+
+function publicDemoInvite(invite: DemoInviteRecord) {
+  return {
+    id: invite.id,
+    email: invite.email,
+    role: invite.role,
+    expires_at: invite.expires_at,
+    created_at: invite.created_at,
+    status: demoInviteStatus(invite),
+  };
+}
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -537,6 +640,154 @@ async function route(ctx: Ctx) {
   if (path === "/api/merchants/me" && method === "GET") {
     return respond(200, {
       merchant: merchantPayload(database.merchant, database),
+    });
+  }
+
+  /* ------------------------------------------------------------ workspaces */
+
+  if (path === "/api/workspaces" && method === "GET") {
+    return respond(200, {
+      workspaces: [
+        {
+          id: database.merchant.id,
+          name: database.merchant.display_name,
+          status: database.merchant.status,
+          logo_url: null,
+          role: "owner",
+          is_owner: true,
+        },
+      ],
+    });
+  }
+
+  if (path === "/api/workspaces/members" && method === "GET") {
+    return respond(200, { members: demoMembers() });
+  }
+
+  if (path === "/api/workspaces/invites" && method === "GET") {
+    return respond(200, { invites: demoInviteRecords.map(publicDemoInvite) });
+  }
+
+  if (path === "/api/workspaces/invites" && method === "POST") {
+    const email = String(body.email || "").trim().toLowerCase();
+    const role = String(body.role || "collector") as DemoGuestMember["role"];
+    if (!email.includes("@")) return fail(400, "Enter a valid email address.");
+    if (demoMembers().some((member) => member.email.toLowerCase() === email))
+      return fail(409, "That email already has access to this workspace.");
+
+    const record: DemoInviteRecord = {
+      id: nextId("invite"),
+      email,
+      role,
+      token: `demo${Math.random().toString(36).slice(2, 12)}${Math.random()
+        .toString(36)
+        .slice(2, 12)}`,
+      expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+      created_at: new Date().toISOString(),
+      revoked_at: null,
+      accepted_at: null,
+    };
+    demoInviteRecords = [record, ...demoInviteRecords];
+    persistInvites();
+    return respond(201, {
+      invite: publicDemoInvite(record),
+      // The demo has no mailer, so the link is always handed back.
+      invite_url: `${window.location.origin}/accept-invite?token=${record.token}`,
+      emailed: false,
+    });
+  }
+
+  if (path === "/api/workspaces/invites/accept" && method === "POST") {
+    const token = String(body.token || "");
+    const invite = demoInviteRecords.find((entry) => entry.token === token);
+    if (!invite) return fail(404, "This invite link is not valid");
+    if (invite.revoked_at)
+      return fail(410, "This invite was withdrawn. Ask for a new one.");
+    if (invite.accepted_at) return fail(409, "This invite has already been used");
+    if (new Date(invite.expires_at).getTime() < Date.now())
+      return fail(410, "This invite has expired");
+    if (invite.email.toLowerCase() !== database.user.email.toLowerCase())
+      return fail(
+        403,
+        `This invite was sent to ${invite.email}. Sign in as that account to accept it.`,
+      );
+
+    invite.accepted_at = new Date().toISOString();
+    persistInvites();
+    demoGuestMembers = [
+      ...demoGuestMembers,
+      {
+        id: nextId("wm"),
+        user_id: nextId("user"),
+        role: invite.role,
+        status: "active",
+        joined_at: new Date().toISOString(),
+        last_active_at: null,
+        name: invite.email.split("@")[0],
+        email: invite.email,
+        image: null,
+      },
+    ];
+    persistGuests();
+    return respond(200, {
+      workspace: {
+        id: database.merchant.id,
+        name: database.merchant.display_name,
+        role: invite.role,
+      },
+    });
+  }
+
+  const revokeDemoInvite = pathMatch(ctx, "/api/workspaces/invites/:id/revoke");
+  if (revokeDemoInvite && method === "POST") {
+    const invite = demoInviteRecords.find(
+      (entry) => entry.id === revokeDemoInvite.id,
+    );
+    if (!invite || invite.revoked_at)
+      return fail(404, "That invite is no longer pending");
+    invite.revoked_at = new Date().toISOString();
+    persistInvites();
+    return respond(204, {});
+  }
+
+  const demoMember = pathMatch(ctx, "/api/workspaces/members/:id");
+  if (demoMember && method === "PATCH") {
+    const guest = demoGuestMembers.find((entry) => entry.id === demoMember.id);
+    if (!guest)
+      return fail(403, "The workspace owner's role cannot be changed");
+    guest.role = String(body.role || guest.role) as DemoGuestMember["role"];
+    persistGuests();
+    return respond(200, { member: guest });
+  }
+
+  if (demoMember && method === "DELETE") {
+    const before = demoGuestMembers.length;
+    demoGuestMembers = demoGuestMembers.filter(
+      (entry) => entry.id !== demoMember.id,
+    );
+    if (demoGuestMembers.length === before)
+      return fail(403, "The workspace owner cannot be removed");
+    persistGuests();
+    return respond(204, {});
+  }
+
+  if (path === "/api/merchants/me/kyc" && method === "GET") {
+    const merchant = database.merchant as unknown as Record<string, unknown>;
+    return respond(200, {
+      kyc: {
+        can_collect: true,
+        // The seeded demo workspace is deliberately mid-verification, so the
+        // three-step card has something to walk through.
+        can_withdraw: false,
+        maturity: "unverified",
+        verified_legal_name: null,
+        nin_last4: null,
+        nin_verified_at: null,
+        treasurer_name: merchant.treasurer_name ?? null,
+        treasurer_phone: merchant.treasurer_phone ?? null,
+        logo_url: merchant.logo_url ?? null,
+        escrow_enabled: false,
+      },
     });
   }
 
@@ -1211,6 +1462,54 @@ function requestUrl(input: RequestInfo | URL) {
       : input.url;
 }
 
+function toResponse(
+  result: { status: number; data: unknown },
+  extraHeaders: Record<string, string> = {},
+) {
+  return new Response(JSON.stringify(result.data), {
+    status: result.status,
+    headers: {
+      "Content-Type": "application/json",
+      "x-jeneviv-demo": "1",
+      ...extraHeaders,
+    },
+  });
+}
+
+/**
+ * The real backend returns the signed token as a `set-auth-token` header, which
+ * is the only place the client stores it. Without it a demo sign-in looks fine
+ * but every later request is anonymous, so the app bounces straight back to the
+ * login screen. Mirror the header here.
+ */
+function authHeadersFor(path: string, data: unknown): Record<string, string> {
+  if (!path.startsWith("/api/auth/")) return {};
+  const token = (data as { token?: unknown } | null)?.token;
+  return typeof token === "string" && token ? { "set-auth-token": token } : {};
+}
+
+/**
+ * Avatars arrive as raw image bytes, which the JSON router cannot read, so the
+ * demo answers them here with an object URL the <img> can render immediately.
+ */
+function routeAvatar(method: string, init?: RequestInit) {
+  if (!isAuthed(init)) return fail(401, "Sign in to continue.");
+  if (method === "DELETE") return respond(200, { success: true });
+
+  const blob = init?.body instanceof Blob ? init.body : null;
+  if (!blob)
+    return fail(
+      400,
+      "Send the image bytes as the request body with an image content type.",
+    );
+  if (blob.size > 5 * 1024 * 1024)
+    return fail(413, "Profile pictures must be 5 MB or smaller.");
+  if (!["image/png", "image/jpeg", "image/webp"].includes(blob.type))
+    return fail(415, "Use a PNG, JPEG or WebP image.");
+
+  return respond(201, { image: URL.createObjectURL(blob) });
+}
+
 async function handleFetch(input: RequestInfo | URL, init?: RequestInit) {
   const rawUrl = requestUrl(input);
 
@@ -1234,18 +1533,20 @@ async function handleFetch(input: RequestInfo | URL, init?: RequestInit) {
 
   await new Promise((resolve) => setTimeout(resolve, latency()));
 
+  if (url.pathname.replace(/\/$/, "") === "/api/profile/avatar") {
+    return toResponse(routeAvatar(method, init));
+  }
+
+  const path = url.pathname.replace(/\/$/, "") || "/";
   const result = await route({
     method,
-    path: url.pathname.replace(/\/$/, "") || "/",
+    path,
     params: url.searchParams,
     body,
     init,
   });
 
-  return new Response(JSON.stringify(result.data), {
-    status: result.status,
-    headers: { "Content-Type": "application/json", "x-jeneviv-demo": "1" },
-  });
+  return toResponse(result, authHeadersFor(path, result.data));
 }
 
 const CONFIGURED_MODE = String(import.meta.env.VITE_DEMO_MODE ?? "false").toLowerCase();

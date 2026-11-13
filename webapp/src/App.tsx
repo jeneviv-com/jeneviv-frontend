@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { ToastProvider } from "@/context/ToastContext";
 import AppShell from "@/components/AppShell";
+import AcceptInvite from "@/pages/AcceptInvite";
 import Admin from "@/pages/Admin";
 import ApproveWithdrawal from "@/pages/ApproveWithdrawal";
 import CollectionDetail from "@/pages/CollectionDetail";
@@ -14,6 +15,7 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import Login from "@/pages/Login";
 import Notifications from "@/pages/Notifications";
 import Payers from "@/pages/Payers";
+import People from "@/pages/People";
 import PaymentLinks from "@/pages/PaymentLinks";
 import Payouts from "@/pages/Payouts";
 import PublicPay from "@/pages/PublicPay";
@@ -43,6 +45,8 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route element={<RequireAuth />}>
+            {/* Invite links land here; the layout comes from the page itself. */}
+            <Route path="/accept-invite" element={<AcceptInvite />} />
             <Route element={<AppShell />}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
@@ -58,6 +62,7 @@ export default function App() {
               <Route path="/refunds" element={<Refunds />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/settings/people" element={<People />} />
               <Route path="/admin" element={<Admin />} />
             </Route>
           </Route>
