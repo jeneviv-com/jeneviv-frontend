@@ -445,53 +445,6 @@ export interface KycView {
   maturity: "unverified" | "nin_verified" | "ready";
 }
 
-export interface WithdrawalApproval {
-  role: "rep" | "treasurer" | "system";
-  label: string;
-  at: string;
-  detail?: string;
-}
-
-export type WithdrawalStatus =
-  | "pending_treasurer"
-  | "rejected"
-  | "processing"
-  | "success"
-  | "failed"
-  | "expired";
-
-export interface Withdrawal {
-  id: string;
-  merchant_id: string;
-  amount: number;
-  currency: string;
-  status: WithdrawalStatus;
-  source: "escrow" | "payouts";
-  treasurer_name: string;
-  treasurer_phone: string;
-  requested_at: string;
-  treasurer_approved_at: string | null;
-  rejected_at: string | null;
-  gateway: string | null;
-  gateway_ref: string | null;
-  gateway_tx_id: string | null;
-  failure_reason: string | null;
-  otp_expires_at: string;
-  approvals: WithdrawalApproval[];
-}
-
-export interface ApprovalSummary {
-  amount: number;
-  currency: string;
-  status: WithdrawalStatus;
-  school_name: string;
-  treasurer_name: string;
-  requested_by: string;
-  requested_at: string;
-  expires_at: string;
-  expired: boolean;
-}
-
 /**
  * Public receipt returned by GET /api/verify/:reference.
  * The breakdown is optional because older receipts may not include it.
@@ -1101,47 +1054,6 @@ export const merchantsAPI = {
 
   settlementStatus: () =>
     apiFetch<{ status: SettlementStatus }>("/api/merchants/me/settlement-status"),
-};
-
-/* -------------------------------------------------------------- withdrawals */
-
-export const withdrawalsAPI = {
-  list: () => apiFetch<{ withdrawals: Withdrawal[] }>("/api/withdrawals"),
-
-  get: (id: string) =>
-    apiFetch<{ withdrawal: Withdrawal }>(`/api/withdrawals/${id}`),
-
-  create: (amount: number) =>
-    apiFetch<{
-      withdrawal: Withdrawal;
-      approval_link?: string;
-      dev_otp?: string;
-    }>("/api/withdrawals", {
-      method: "POST",
-      body: { amount, currency: "NGN" },
-    }),
-};
-
-/* ----------------------------------------------------------- approvals (public) */
-
-export const approvalsAPI = {
-  get: (token: string) =>
-    apiFetch<{ approval: ApprovalSummary }>(
-      `/api/approvals/${encodeURIComponent(token)}`,
-      { anonymous: true },
-    ),
-
-  approve: (token: string, otp: string) =>
-    apiFetch<{ withdrawal: Withdrawal }>(
-      `/api/approvals/${encodeURIComponent(token)}/approve`,
-      { method: "POST", body: { otp }, anonymous: true },
-    ),
-
-  reject: (token: string, reason?: string) =>
-    apiFetch<{ withdrawal: Withdrawal }>(
-      `/api/approvals/${encodeURIComponent(token)}/reject`,
-      { method: "POST", body: { reason }, anonymous: true },
-    ),
 };
 
 /* --------------------------------------------------------------- verification */

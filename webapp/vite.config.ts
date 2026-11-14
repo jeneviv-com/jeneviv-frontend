@@ -64,7 +64,6 @@ export default defineConfig({
           ],
           "pages-admin": [
             "@/pages/Admin",
-            "@/pages/ApproveWithdrawal",
             "@/pages/Notifications",
             "@/pages/Settings",
           ],

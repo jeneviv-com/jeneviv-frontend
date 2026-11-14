@@ -4,7 +4,6 @@ import { ToastProvider } from "@/context/ToastContext";
 import AppShell from "@/components/AppShell";
 import AcceptInvite from "@/pages/AcceptInvite";
 import Admin from "@/pages/Admin";
-import ApproveWithdrawal from "@/pages/ApproveWithdrawal";
 import CollectionDetail from "@/pages/CollectionDetail";
 import Collections from "@/pages/Collections";
 import Groups from "@/pages/Groups";
@@ -37,7 +36,6 @@ export default function App() {
           <Route path="/pay/:code" element={<PublicPay />} />
           <Route path="/preview/dashboard" element={<DashboardPreviewPage />} />
           <Route path="/verify/:reference" element={<VerifyReceipt />} />
-          <Route path="/approve/:token" element={<ApproveWithdrawal />} />
 
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />

@@ -11,7 +11,6 @@ import {
   refundsAPI,
   templatesAPI,
   transactionsAPI,
-  withdrawalsAPI,
   type AdminStats,
   type AuditLog,
   type Bank,
@@ -28,7 +27,6 @@ import {
   type Template,
   type Transaction,
   type User,
-  type Withdrawal,
 } from "@/lib/api";
 import { isDemoMode, onDemoDataChanged } from "@/lib/demo";
 
@@ -279,13 +277,6 @@ export function useMerchant() {
 export function useKyc() {
   return useResource<KycView>(
     () => merchantsAPI.getKyc().then((r) => r.kyc),
-    [],
-  );
-}
-
-export function useWithdrawals() {
-  return useResource<Withdrawal[]>(
-    () => withdrawalsAPI.list().then((r) => r.withdrawals),
     [],
   );
 }
