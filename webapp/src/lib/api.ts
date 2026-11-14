@@ -1106,7 +1106,19 @@ export const profileAPI = {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       credentials: "include",
     });
-    if (!response.ok) throw new Error("Could not remove the picture.");
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => ({}))) as {
+        message?: string;
+        error?: { message?: string };
+      };
+      throw new Error(
+        payload.error?.message ??
+          payload.message ??
+          (response.status === 404
+            ? "This server does not support profile pictures yet."
+            : "Could not remove the picture."),
+      );
+    }
   },
 };
 

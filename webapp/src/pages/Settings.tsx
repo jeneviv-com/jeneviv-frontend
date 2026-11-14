@@ -126,7 +126,8 @@ function Row({
 /* --------------------------------------------------------------------- page */
 
 export default function Settings() {
-  const { user, merchant, refreshMerchant, logout, isAdmin } = useAuth();
+  const { user, merchant, refreshMerchant, refreshSession, logout, isAdmin } =
+    useAuth();
   const { success, error: toastError } = useToast();
   const accounts = useBankAccounts();
   const fileInput = useRef<HTMLInputElement | null>(null);
@@ -196,6 +197,8 @@ export default function Settings() {
     try {
       const { image } = await profileAPI.uploadAvatar(file);
       setAvatar(image);
+      // Keep the session copy in step so the picture survives navigation.
+      await refreshSession();
       success("Profile picture updated");
     } catch (err) {
       toastError("Could not upload", err instanceof Error ? err.message : "");
@@ -210,7 +213,8 @@ export default function Settings() {
     try {
       await profileAPI.removeAvatar();
       setAvatar(null);
-      success("Profile picture removed");
+      await refreshSession();
+      success("Picture removed", "Your initials are used again.");
     } catch (err) {
       toastError("Could not remove", err instanceof Error ? err.message : "");
     } finally {
@@ -277,7 +281,8 @@ export default function Settings() {
                 type="button"
                 onClick={clearAvatar}
                 disabled={uploading}
-                aria-label="Remove profile picture"
+                aria-label="Remove profile picture and use my initials"
+                title="Remove and use your initials"
                 className="grid h-8 w-8 place-items-center rounded-full text-ink-faint transition-colors hover:bg-cream hover:text-danger disabled:opacity-50"
               >
                 <Trash2 size={14} />
