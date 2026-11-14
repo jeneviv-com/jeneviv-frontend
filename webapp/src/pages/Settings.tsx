@@ -295,7 +295,7 @@ export default function Settings() {
             <input
               ref={fileInput}
               type="file"
-              accept="image/png,image/jpeg,image/webp"
+              accept="image/png,image/jpeg,image/webp,image/heic,image/heif,image/avif"
               className="hidden"
               onChange={(event) => pickAvatar(event.target.files?.[0])}
             />

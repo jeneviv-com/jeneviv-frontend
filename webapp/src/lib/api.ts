@@ -1080,13 +1080,20 @@ export const profileAPI = {
     const payload = (await response.json().catch(() => ({}))) as {
       image?: string;
       message?: string;
+      // The API nests its reason under error.message.
+      error?: { code?: string; message?: string };
     };
     if (!response.ok || !payload.image) {
+      const serverMessage = payload.error?.message ?? payload.message;
       throw new Error(
-        payload.message ??
+        serverMessage ??
           (response.status === 413
             ? "Profile pictures must be 5 MB or smaller."
-            : "Could not upload that picture."),
+            : response.status === 404
+              ? "This server does not support profile pictures yet."
+              : response.status === 503
+                ? "Picture storage is not configured on the server."
+                : "Could not upload that picture."),
       );
     }
     return { image: payload.image };
