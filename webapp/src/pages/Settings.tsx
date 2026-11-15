@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowLeft,
   BadgeCheck,
   Banknote,
   Bell,
@@ -33,6 +32,7 @@ import {
   type ToneKind,
 } from "@/components/ui";
 
+
 /* ----------------------------------------------------------- building blocks */
 
 function Chip({
@@ -61,8 +61,9 @@ function Chip({
 /** A labelled group of rows, the way an app's settings screen reads. */
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="mb-7">
-      <h2 className="mb-2 px-1 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
+    <section className="mb-6">
+      <h2 className="mb-2 flex items-center gap-2 px-1 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-soft">
+        <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
         {title}
       </h2>
       <div className="overflow-hidden rounded-[18px] border border-line bg-white shadow-sm">
@@ -92,7 +93,7 @@ function Row({
     <>
       <span
         className={`grid h-8 w-8 shrink-0 place-items-center rounded-[10px] ${
-          tone === "danger" ? "bg-[#fbeceb] text-danger" : "bg-cream text-ink-soft"
+          tone === "danger" ? "bg-[#fbeceb] text-danger" : "bg-brand-soft text-brand-dark"
         }`}
       >
         {icon}
@@ -178,7 +179,6 @@ export default function Settings() {
         : merchant?.status === "rejected"
           ? "Action needed"
           : "Not set up";
-  const statusTone: ToneKind = merchant?.status === "approved" ? "money" : "attention";
 
   const initials = (user?.name || merchant?.display_name || "J")
     .split(" ")
@@ -224,46 +224,33 @@ export default function Settings() {
 
   return (
     <div className="mx-auto w-full max-w-[760px]">
-      {/* app-style bar */}
-      <div className="mb-6 flex items-center gap-3">
-        <Link
-          to="/dashboard"
-          aria-label="Back to dashboard"
-          className="grid h-9 w-9 place-items-center rounded-full text-ink transition-colors hover:bg-white"
-        >
-          <ArrowLeft size={17} />
-        </Link>
-        <h1 className="flex-1 text-center text-[16px] font-bold tracking-tight">Settings</h1>
-        <span className="h-9 w-9" aria-hidden="true" />
-      </div>
-
-      {/* identity */}
-      <div className="mb-7 flex items-center gap-4">
-        <span className="relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full bg-ink text-[18px] font-bold text-cream">
-          {avatar ? (
-            <img src={avatar} alt="" className="h-full w-full object-cover" />
-          ) : (
-            initials
-          )}
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-[19px] font-bold tracking-tight">
-            {merchant?.display_name || user?.name || "Your workspace"}
-          </p>
-          <p className="mt-0.5 truncate text-[12.5px] text-ink-muted">{user?.email}</p>
-          <div className="mt-2">
-            <Chip
-              tone={statusTone}
-              icon={
-                merchant?.status === "approved" ? (
-                  <BadgeCheck size={12} />
-                ) : (
-                  <span className="h-1.5 w-1.5 rounded-full bg-ink" />
-                )
-              }
-            >
+      {/* identity: the black shell and one orange accent, as on the landing page */}
+      <div className="relative mb-6 overflow-hidden rounded-[22px] bg-ink p-4 text-cream sm:p-5">
+        <span
+          className="pointer-events-none absolute -right-10 -top-12 h-32 w-32 rounded-full bg-brand/25 blur-2xl"
+          aria-hidden="true"
+        />
+        <div className="relative flex items-center gap-4">
+          <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full bg-brand text-[18px] font-bold text-white ring-2 ring-brand/45 ring-offset-2 ring-offset-ink">
+            {avatar ? (
+              <img src={avatar} alt="" className="h-full w-full object-cover" />
+            ) : (
+              initials
+            )}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="line-clamp-2 text-[17px] font-bold leading-snug tracking-tight text-cream sm:text-[19px]">
+              {merchant?.display_name || user?.name || "Your workspace"}
+            </p>
+            <p className="mt-0.5 truncate text-[12.5px] text-cream/60">{user?.email}</p>
+            <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-cream">
+              {merchant?.status === "approved" ? (
+                <BadgeCheck size={12} className="text-brand-peach" />
+              ) : (
+                <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+              )}
               {statusCopy}
-            </Chip>
+            </span>
           </div>
         </div>
       </div>
@@ -273,7 +260,7 @@ export default function Settings() {
         <Row
           icon={<UserIcon size={15} />}
           label="Profile picture"
-          hint="PNG, JPEG or WebP · up to 5 MB"
+          hint="PNG, JPEG, WebP or HEIC · up to 5 MB"
         >
           <div className="flex shrink-0 items-center gap-2">
             {avatar ? (

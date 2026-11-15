@@ -137,19 +137,16 @@ export default function People() {
 
   return (
     <div className="mx-auto w-full max-w-[760px]">
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-4 flex items-center">
         <Link
           to="/settings"
-          aria-label="Back to settings"
-          className="grid h-9 w-9 place-items-center rounded-full text-ink transition-colors hover:bg-white"
+          className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-[12px] font-semibold text-ink-soft transition-colors hover:border-ink/20 hover:text-ink"
         >
-          <ArrowLeft size={17} />
+          <ArrowLeft size={14} /> Settings
         </Link>
-        <h1 className="flex-1 text-center text-[16px] font-bold tracking-tight">People</h1>
-        <span className="h-9 w-9" aria-hidden="true" />
       </div>
 
-      <p className="mb-6 px-1 text-[12.5px] leading-relaxed text-ink-muted">
+      <p className="mb-5 px-1 text-[12.5px] leading-relaxed text-ink-muted">
         Everyone here works inside <strong className="text-ink">{merchant?.display_name || "this workspace"}</strong>{" "}
         and sees the same collections. People who aren't on this list have no access.
       </p>

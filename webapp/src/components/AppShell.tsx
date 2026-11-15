@@ -75,6 +75,7 @@ const TITLES: Record<string, string> = {
   "/refunds": "Refunds",
   "/notifications": "Notifications",
   "/settings": "Settings",
+  "/settings/people": "People",
   "/admin": "Admin",
 };
 

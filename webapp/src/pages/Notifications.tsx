@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowLeft,
   BadgeCheck,
   Bell,
   CheckCheck,
@@ -165,16 +164,30 @@ export default function Notifications() {
 
   return (
     <div className="mx-auto w-full max-w-[720px]">
-      {/* app-style bar: back, title, menu */}
-      <div className="mb-5 flex items-center gap-3">
-        <Link
-          to="/dashboard"
-          aria-label="Back to dashboard"
-          className="grid h-9 w-9 place-items-center rounded-full text-ink transition-colors hover:bg-white"
-        >
-          <ArrowLeft size={17} />
-        </Link>
-        <h1 className="flex-1 text-center text-[16px] font-bold tracking-tight">Notifications</h1>
+      {/* one calm row: how much is unread, the filter, and the list actions */}
+      <div className="mb-4 flex items-center gap-2.5">
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-[11.5px] font-semibold text-cream">
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${unreadCount > 0 ? "bg-brand" : "bg-cream/40"}`}
+            aria-hidden="true"
+          />
+          {unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
+        </span>
+
+        <FilterMenu
+          className="ml-auto"
+          groups={[
+            {
+              label: "Show",
+              value: filter,
+              onChange: (value) => setFilter(value as typeof filter),
+              options: [
+                { value: "all", label: "All notifications", count: feed.length },
+                { value: "unread", label: "Unread only", count: unreadCount },
+              ],
+            },
+          ]}
+        />
 
         <div className="relative" ref={menuRef}>
           <button
@@ -183,7 +196,7 @@ export default function Notifications() {
             aria-label="Notification actions"
             aria-haspopup="menu"
             aria-expanded={menuOpen}
-            className="grid h-9 w-9 place-items-center rounded-full text-ink transition-colors hover:bg-white"
+            className="grid h-9 w-9 place-items-center rounded-[10px] border border-line bg-white text-ink-muted transition-colors hover:border-ink/20 hover:text-ink"
           >
             <MoreVertical size={17} />
           </button>
@@ -222,33 +235,6 @@ export default function Notifications() {
         </div>
       </div>
 
-      {/* count and filter */}
-      <div className="mb-4 flex items-center gap-3">
-        <p className="text-[12.5px] text-ink-muted">
-          {unreadCount > 0 ? (
-            <>
-              <span className="font-semibold text-ink">{unreadCount}</span> unread
-            </>
-          ) : (
-            "You are all caught up"
-          )}
-        </p>
-        <FilterMenu
-          className="ml-auto"
-          groups={[
-            {
-              label: "Show",
-              value: filter,
-              onChange: (value) => setFilter(value as typeof filter),
-              options: [
-                { value: "all", label: "All notifications", count: feed.length },
-                { value: "unread", label: "Unread only", count: unreadCount },
-              ],
-            },
-          ]}
-        />
-      </div>
-
       {rows.length === 0 ? (
         <EmptyState
           icon={<Inbox size={20} />}
@@ -259,7 +245,8 @@ export default function Notifications() {
         <div className="space-y-6">
           {groups.map((group) => (
             <section key={group.label} aria-label={group.label}>
-              <p className="mb-2 px-1 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">
+              <p className="mb-2 flex items-center gap-2 px-1 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-soft">
+                <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
                 {group.label}
               </p>
               <ul className="overflow-hidden rounded-[18px] border border-line bg-white shadow-sm">
