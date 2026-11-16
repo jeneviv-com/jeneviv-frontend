@@ -74,7 +74,7 @@ function Head({ title, subtitle, aside }: { title: string; subtitle: string; asi
 
 export default function Admin() {
   const { isAdmin, user } = useAuth();
-  const { success, error: toastError } = useToast();
+  const { success, error: toastError, notify } = useToast();
 
   const [tab, setTab] = useState<Tab>("merchants");
   const [merchantStatus, setMerchantStatus] = useState<MerchantStatus>("pending");
@@ -571,10 +571,15 @@ export default function Admin() {
           try {
             await refund.run(refundTarget, refundReason || "Admin refund");
             await transactions.refetch();
-            success("Refund started", "The reversal is queued with the gateway.");
+            // A refund moves money, so it belongs in the notification centre.
+            notify("Refund started", "The reversal is queued with the gateway.", "success");
             setRefundTarget(null);
           } catch (err) {
-            toastError("Refund failed", err instanceof Error ? err.message : "");
+            notify(
+              "Refund failed",
+              err instanceof Error ? err.message : "The reversal did not go through.",
+              "error",
+            );
           }
         }}
         onClose={() => setRefundTarget(null)}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BrandLoader from "@/components/BrandLoader";
 import { useAuth } from "@/context/AuthContext";
@@ -18,6 +18,9 @@ import { Button } from "@/components/ui";
  * preferred. Either way the credentials are removed from the address bar as the
  * first thing that happens, before the sign-in call, so they do not sit in
  * history or in a screenshot of the page.
+ *
+ * They are then held in memory for the life of the tab: retrying after a failed
+ * attempt has to use them again, and the address bar no longer has them.
  */
 function readCredentials(): { email: string; password: string } | null {
   const fromHash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
@@ -42,34 +45,70 @@ export default function AccessLink() {
   const { login, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const [failure, setFailure] = useState<string | null>(null);
-  const started = useRef(false);
+  const [attempt, setAttempt] = useState(0);
+  const credentials = useRef<{ email: string; password: string } | null>(null);
+  const inFlight = useRef(false);
+
+  // Pasting a second link into the bar while already on /access only changes
+  // the hash, which does not remount the route — read it again explicitly.
+  useEffect(() => {
+    const onHashChange = () => {
+      credentials.current = readCredentials();
+      if (window.location.hash || window.location.search) {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+      setFailure(null);
+      setAttempt((value) => value + 1);
+    };
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
+  /**
+   * The router replaces the location with the hash it still remembers, so the
+   * credentials come back into the bar after the hop unless they are swept out
+   * once the new page has rendered.
+   */
+  const leave = useCallback(() => {
+    navigate("/dashboard", { replace: true });
+    window.setTimeout(() => {
+      if (window.location.hash || window.location.search) {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    }, 0);
+  }, [navigate]);
 
   useEffect(() => {
     if (loading) return;
 
-    const credentials = readCredentials();
-    // Strip before anything else: the link's job is done once it is read.
-    if (credentials || window.location.hash || window.location.search) {
-      window.history.replaceState({}, "", window.location.pathname);
+    if (credentials.current === null && attempt === 0) {
+      credentials.current = readCredentials();
+      // Strip before anything else: the link's job is done once it is read.
+      if (window.location.hash || window.location.search) {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
     }
 
     if (isAuthenticated) {
-      navigate("/dashboard", { replace: true });
+      leave();
       return;
     }
 
-    if (!credentials) {
+    if (!credentials.current) {
       setFailure("This link is missing its sign-in details.");
       return;
     }
 
-    if (started.current) return;
-    started.current = true;
+    if (inFlight.current) return;
+    inFlight.current = true;
 
-    login(credentials.email, credentials.password)
-      .then(() => navigate("/dashboard", { replace: true }))
-      .catch((err: unknown) => setFailure(errorMessage(err)));
-  }, [isAuthenticated, loading, login, navigate]);
+    login(credentials.current.email, credentials.current.password)
+      .then(() => leave())
+      .catch((err: unknown) => setFailure(errorMessage(err)))
+      .finally(() => {
+        inFlight.current = false;
+      });
+  }, [attempt, isAuthenticated, leave, loading, login]);
 
   if (failure) {
     return (
@@ -86,16 +125,18 @@ export default function AccessLink() {
         <Button className="mt-6" onClick={() => navigate("/login", { replace: true })}>
           Go to sign in
         </Button>
-        <button
-          type="button"
-          onClick={() => {
-            setFailure(null);
-            started.current = false;
-          }}
-          className="mt-4 text-[12.5px] font-semibold text-ink-muted hover:text-ink"
-        >
-          Try this link again
-        </button>
+        {credentials.current ? (
+          <button
+            type="button"
+            onClick={() => {
+              setFailure(null);
+              setAttempt((value) => value + 1);
+            }}
+            className="mt-4 text-[12.5px] font-semibold text-ink-muted hover:text-ink"
+          >
+            Try this link again
+          </button>
+        ) : null}
       </div>
     );
   }

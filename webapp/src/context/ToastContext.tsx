@@ -33,6 +33,13 @@ interface ToastContextValue {
   success: (title: string, body?: string) => void;
   error: (title: string, body?: string) => void;
   info: (title: string, body?: string) => void;
+  /**
+   * Toast *and* keep: for events worth finding again in the notification
+   * centre (money moved, account state changed). Routine confirmations —
+   * "Link copied", "Export ready", "Workspace updated" — stay toast-only so the
+   * centre does not fill with things the audit trail already records.
+   */
+  notify: (title: string, body?: string, tone?: ToastTone) => void;
   dismiss: (id: string) => void;
   feed: FeedItem[];
   unreadCount: number;
@@ -43,7 +50,9 @@ interface ToastContextValue {
 }
 
 const ToastContext = createContext<ToastContextValue | undefined>(undefined);
-const FEED_KEY = "jeneviv.feed";
+// v2: earlier builds wrote every confirmation into the feed, so the old key is
+// deliberately abandoned rather than migrated — its contents are the clutter.
+const FEED_KEY = "jeneviv.feed.v2";
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -96,23 +105,28 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const success = useCallback(
     (title: string, body?: string) => {
       push({ tone: "success", title, body });
-      remember("success", title, body);
     },
-    [push, remember],
+    [push],
   );
 
   const error = useCallback(
     (title: string, body?: string) => {
       push({ tone: "error", title, body });
-      remember("error", title, body);
     },
-    [push, remember],
+    [push],
   );
 
   const info = useCallback(
     (title: string, body?: string) => {
       push({ tone: "info", title, body });
-      remember("info", title, body);
+    },
+    [push],
+  );
+
+  const notify = useCallback(
+    (title: string, body?: string, tone: ToastTone = "info") => {
+      push({ tone, title, body });
+      remember(tone, title, body);
     },
     [push, remember],
   );
@@ -124,6 +138,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       success,
       error,
       info,
+      notify,
       dismiss,
       feed,
       unreadCount: feed.filter((item) => !item.read).length,
@@ -137,7 +152,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         setFeed((current) => current.filter((item) => item.id !== id)),
       clearFeed: () => setFeed([]),
     }),
-    [toasts, push, success, error, info, dismiss, feed],
+    [toasts, push, success, error, info, notify, dismiss, feed],
   );
 
   return (

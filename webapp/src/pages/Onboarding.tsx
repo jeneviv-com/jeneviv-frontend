@@ -60,7 +60,7 @@ function Block({ label, children }: { label: string; children: ReactNode }) {
 
 export default function Onboarding() {
   const { merchant, user, refreshMerchant, setMerchant } = useAuth();
-  const { success, error: toastError, info } = useToast();
+  const { success, error: toastError, info, notify } = useToast();
 
   const [displayName, setDisplayName] = useState(merchant?.display_name || user?.name || "");
   const [note, setNote] = useState(merchant?.application_note || "");
@@ -86,17 +86,19 @@ export default function Onboarding() {
       setCheckedAt(new Date());
 
       switch (fresh?.status) {
+        // Account decisions are kept: they change what the workspace can do.
         case "approved":
-          success("Your workspace is approved", "You can collect and settle payments now.");
+          notify("Your workspace is approved", "You can collect and settle payments now.", "success");
           break;
         case "rejected":
-          toastError(
+          notify(
             "Your application was not approved",
             fresh.admin_review_note || fresh.application_note || "Update your details and apply again.",
+            "error",
           );
           break;
         case "suspended":
-          toastError("This workspace is suspended", "Email myjeneviv@gmail.com to resolve it.");
+          notify("This workspace is suspended", "Email myjeneviv@gmail.com to resolve it.", "error");
           break;
         default:
           info(

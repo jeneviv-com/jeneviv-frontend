@@ -239,7 +239,7 @@ export default function Notifications() {
         <EmptyState
           icon={<Inbox size={20} />}
           title={filter === "unread" ? "Nothing unread" : "No notifications yet"}
-          description="Payments, refunds and settlement events appear here as they happen. You can also have them emailed to you from Settings."
+          description="Money movements, refunds and account decisions appear here as they happen. Routine confirmations stay in the audit trail, not in your notifications."
         />
       ) : (
         <div className="space-y-6">
