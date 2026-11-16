@@ -26,7 +26,7 @@ import Templates from "@/pages/Templates";
 import Transactions from "@/pages/Transactions";
 import VerifyReceipt from "@/pages/VerifyReceipt";
 import RequireAuth from "@/components/RequireAuth";
-import DemoEntry from "@/pages/DemoEntry";
+import AccessLink from "@/pages/AccessLink";
 
 export default function App() {
   return (
@@ -36,8 +36,8 @@ export default function App() {
           {/* Public pages — no account needed */}
           <Route path="/pay/:code" element={<PublicPay />} />
           <Route path="/preview/dashboard" element={<DashboardPreviewPage />} />
-          {/* Credential-free entry for judges: sample data, no account. */}
-          <Route path="/demo" element={<DemoEntry />} />
+          {/* A link that carries the account it should sign in as. */}
+          <Route path="/access" element={<AccessLink />} />
           <Route path="/verify/:reference" element={<VerifyReceipt />} />
 
           <Route path="/login" element={<Login />} />
