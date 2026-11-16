@@ -20,17 +20,37 @@ export default function AuthLayout({
   children: ReactNode;
   footer: ReactNode;
 }) {
-  const landing = import.meta.env.VITE_PUBLIC_APP_URL || "/";
+  // The dashboard is served from its own host, where this variable may be unset;
+  // "" or "/" would send "Back to site" back into the dashboard.
+  const configuredLanding = (import.meta.env.VITE_PUBLIC_APP_URL ?? "").replace(/\/+$/, "");
+  const pointsAtThisApp =
+    configuredLanding !== "" &&
+    (() => {
+      try {
+        return new URL(configuredLanding).origin === window.location.origin;
+      } catch {
+        return false;
+      }
+    })();
+  const landing =
+    configuredLanding && configuredLanding !== "/" && !pointsAtThisApp
+      ? configuredLanding
+      : "https://jeneviv.com";
 
   return (
     // On a laptop the branded side stays under half the width so the form is
     // the thing you look at; the laptop preview never drops out.
-    <div className="min-h-screen bg-cream lg:grid lg:grid-cols-[minmax(0,44%)_minmax(0,1fr)]">
-      {/* brand panel: the same laptop and dashboard as the landing page */}
-      <aside className="relative hidden overflow-hidden bg-[#fbfaf7] px-10 py-8 lg:flex lg:flex-col xl:px-14">
+    <div className="min-h-screen bg-cream lg:grid lg:grid-cols-[minmax(0,46%)_minmax(0,1fr)]">
+      {/* brand panel: black like the landing band, laptop preview kept, and
+          still under half the screen on a laptop */}
+      <aside className="relative hidden overflow-hidden bg-ink px-10 py-8 text-cream lg:flex lg:flex-col xl:px-14">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[0.55] [background-image:linear-gradient(to_right,rgba(16,16,16,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(16,16,16,0.045)_1px,transparent_1px)] [background-size:26px_26px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_78%)]"
+          className="pointer-events-none absolute inset-0 opacity-60 [background-image:linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:26px_26px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_78%)]"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-16 top-1/4 h-72 w-72 rounded-full bg-brand/15 blur-3xl"
         />
 
         <div className="relative flex items-center justify-between">
@@ -43,7 +63,7 @@ export default function AuthLayout({
               className="h-[30px] w-[30px] rounded-[9px] object-cover shadow-[0_1px_2px_rgba(18,16,14,0.14)]"
             />
             <span className="flex items-baseline gap-0.5">
-              <span className="text-[21px] font-extrabold leading-none tracking-[-0.055em] text-ink">
+              <span className="text-[21px] font-extrabold leading-none tracking-[-0.055em] text-cream">
                 jeneviv
               </span>
               <span className="text-[24px] leading-none text-brand">.</span>
@@ -51,7 +71,7 @@ export default function AuthLayout({
           </a>
           <a
             href={landing}
-            className="group flex items-center gap-1.5 text-[12.5px] font-medium text-ink-muted transition-colors hover:text-ink"
+            className="group flex items-center gap-1.5 text-[12.5px] font-medium text-cream/55 transition-colors hover:text-cream"
           >
             <ArrowLeft size={13} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
             Back to site
@@ -62,15 +82,17 @@ export default function AuthLayout({
           <LaptopMockup className="animate-rise-in" />
 
           <div className="mt-9 animate-rise-in [animation-delay:120ms]">
-            <p className="eyebrow">One link. Every payer.</p>
-            <h2 className="mt-3 text-[30px] font-bold leading-[1.05] tracking-[-0.045em] text-ink xl:text-[36px]">
+            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-cream/50">
+              One link. Every payer.
+            </p>
+            <h2 className="mt-3 text-[30px] font-bold leading-[1.05] tracking-[-0.045em] text-cream xl:text-[36px]">
               The dashboard you sign in to looks exactly like this.
             </h2>
             <ul className="mt-5 space-y-2.5">
               {PROOF.map((item) => (
-                <li key={item} className="flex items-center gap-2.5 text-[13px] text-ink-soft">
-                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#d5e8c4]">
-                    <Check size={11} className="text-ink" />
+                <li key={item} className="flex items-center gap-2.5 text-[13px] text-cream/70">
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand text-white">
+                    <Check size={11} />
                   </span>
                   {item}
                 </li>
@@ -79,7 +101,7 @@ export default function AuthLayout({
           </div>
         </div>
 
-        <p className="relative flex items-center gap-2 text-[11.5px] text-ink-faint">
+        <p className="relative flex items-center gap-2 text-[11.5px] text-cream/45">
           <ShieldCheck size={13} /> Payments settled by Paystack · NDPA aligned
         </p>
       </aside>

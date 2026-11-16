@@ -411,8 +411,14 @@ export function FilterMenu({
   const [open, setOpen] = useState(false);
   // The panel is positioned against the viewport, not the button: on a narrow
   // phone a button near the right edge would otherwise push it off screen.
-  const [panel, setPanel] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [panel, setPanel] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    maxHeight: number;
+  } | null>(null);
   const box = useRef<HTMLDivElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
   const trigger = useRef<HTMLButtonElement | null>(null);
 
   const place = useCallback(() => {
@@ -420,9 +426,22 @@ export function FilterMenu({
     if (!button) return;
     const rect = button.getBoundingClientRect();
     const margin = 12;
+    const gap = 8;
     const width = Math.min(252, window.innerWidth - margin * 2);
     const left = Math.min(Math.max(margin, rect.left), window.innerWidth - width - margin);
-    setPanel({ top: rect.bottom + 8, left, width });
+
+    // Open downwards when there is room, otherwise upwards, and never past an
+    // edge: a panel that hangs off the bottom looked like a broken menu.
+    const below = window.innerHeight - rect.bottom - gap - margin;
+    const above = rect.top - gap - margin;
+    const openUp = below < 200 && above > below;
+    const room = openUp ? above : below;
+    const maxHeight = Math.max(160, Math.min(340, room));
+    const top = openUp
+      ? Math.max(margin, rect.top - gap - maxHeight)
+      : rect.bottom + gap;
+
+    setPanel({ top, left, width, maxHeight });
   }, []);
 
   useEffect(() => {
@@ -434,8 +453,13 @@ export function FilterMenu({
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
-    // A fixed panel does not follow the page, so close it instead of drifting.
-    const onScroll = () => setOpen(false);
+    // A fixed panel does not follow the page, so close it instead of drifting —
+    // but the panel's own list scrolling must not dismiss it.
+    const onScroll = (event: Event) => {
+      const target = event.target;
+      if (target instanceof Node && panelRef.current?.contains(target)) return;
+      setOpen(false);
+    };
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKey);
     window.addEventListener("scroll", onScroll, true);
@@ -476,10 +500,16 @@ export function FilterMenu({
 
       {open && panel ? (
         <div
+          ref={panelRef}
           role="dialog"
           aria-label={label}
-          style={{ top: panel.top, left: panel.left, width: panel.width }}
-          className="fixed z-[70] max-h-[60vh] animate-pop-in overflow-y-auto rounded-[14px] border border-line bg-white p-2 shadow-pop"
+          style={{
+            top: panel.top,
+            left: panel.left,
+            width: panel.width,
+            maxHeight: panel.maxHeight,
+          }}
+          className="fixed z-[70] animate-pop-in overflow-y-auto overscroll-contain rounded-[14px] border border-line bg-white p-2 shadow-pop"
         >
           {groups.map((group) => (
             <div key={group.label} className="mb-1 last:mb-0">
