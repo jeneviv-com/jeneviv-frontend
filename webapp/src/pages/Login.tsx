@@ -6,7 +6,7 @@ import { useToast } from "@/context/ToastContext";
 import { errorMessage } from "@/hooks/useApi";
 import AuthLayout from "@/components/AuthLayout";
 import { Button, Field, InlineNote, Input } from "@/components/ui";
-import { isDemoMode } from "@/lib/demo";
+import { DEMO_EMAIL, DEMO_PASSWORD, isDemoMode } from "@/lib/demo";
 
 export default function Login() {
   const { login, loading: bootstrapping, connection } = useAuth();
@@ -40,6 +40,20 @@ export default function Login() {
 
   const demo = isDemoMode() || connection === "demo";
 
+  /** One click, no credentials: the demo data lives in this browser. */
+  const enterDemo = async () => {
+    setFormError(null);
+    setSubmitting(true);
+    try {
+      await login(DEMO_EMAIL, DEMO_PASSWORD);
+      navigate(redirectTo, { replace: true });
+    } catch (err) {
+      setFormError(errorMessage(err));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <AuthLayout
       title="Sign in"
@@ -57,8 +71,18 @@ export default function Login() {
         <div className="mb-6 rounded-[14px] bg-[#fff3dd] px-4 py-3.5 text-[13px] text-ink">
           <p className="font-semibold">Demo workspace</p>
           <p className="mt-1 text-ink-soft">
-            The backend host is offline, so the dashboard is showing sample data.
+            No account needed — the dashboard runs on sample data held in this
+            browser.
           </p>
+          <button
+            type="button"
+            onClick={enterDemo}
+            disabled={submitting}
+            className="mt-3 inline-flex h-10 items-center gap-2 rounded-[10px] bg-ink px-4 text-[13px] font-semibold text-cream transition-colors hover:bg-black disabled:opacity-60"
+          >
+            Enter the demo workspace
+            <span aria-hidden="true">→</span>
+          </button>
         </div>
       ) : null}
 

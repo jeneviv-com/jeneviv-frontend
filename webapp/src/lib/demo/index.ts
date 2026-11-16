@@ -57,6 +57,14 @@ let database: DemoDatabase | null = null;
 
 const listeners = new Set<(state: ConnectionState) => void>();
 
+/**
+ * The sign-in used by the credential-free entry points (`/demo`, `?demo=1` and
+ * the button on the login screen). The password is not a secret — the demo
+ * dataset lives in this browser and signs in to nothing on the server.
+ */
+export const DEMO_EMAIL = "coordinator@jeneviv.test";
+export const DEMO_PASSWORD = "jeneviv-demo";
+
 export function connectionState() {
   return state;
 }
@@ -1559,9 +1567,14 @@ let negotiation: Promise<ConnectionState> | null = null;
 function negotiate(): Promise<ConnectionState> {
   if (!negotiation) {
     negotiation = (async () => {
+      // `/demo` and `?demo=1` are the credential-free entry points a judge
+      // gets, so they must win even when the build is configured for live data.
+      const params = new URLSearchParams(window.location.search);
       const previewPage =
         window.location.pathname.startsWith("/preview") ||
-        new URLSearchParams(window.location.search).get("preview") === "1";
+        window.location.pathname.startsWith("/demo") ||
+        params.get("preview") === "1" ||
+        params.get("demo") === "1";
       if (CONFIGURED_MODE === "true" || previewPage) {
         setState("demo");
         return state;
