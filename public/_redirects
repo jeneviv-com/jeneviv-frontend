@@ -1,0 +1,5 @@
+# The dashboard is a single-page app: `/demo`, `/settings` and every other
+# client route must load index.html when opened directly, not 404 at the host.
+# Netlify and Cloudflare Pages read this from the dashboard build output; hosts
+# with their own rewrite config need the same rule there.
+/*  /index.html  200
