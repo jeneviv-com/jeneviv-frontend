@@ -27,6 +27,7 @@ import Transactions from "@/pages/Transactions";
 import VerifyReceipt from "@/pages/VerifyReceipt";
 import RequireAuth from "@/components/RequireAuth";
 import AccessLink from "@/pages/AccessLink";
+import DevNotifyCheck from "@/pages/DevNotifyCheck";
 
 export default function App() {
   return (
@@ -38,6 +39,10 @@ export default function App() {
           <Route path="/preview/dashboard" element={<DashboardPreviewPage />} />
           {/* A link that carries the account it should sign in as. */}
           <Route path="/access" element={<AccessLink />} />
+          {/* Local harness for the notification contract; dev builds only. */}
+          {import.meta.env.DEV ? (
+            <Route path="/dev/notify-check" element={<DevNotifyCheck />} />
+          ) : null}
           <Route path="/verify/:reference" element={<VerifyReceipt />} />
 
           <Route path="/login" element={<Login />} />
