@@ -47,11 +47,25 @@ function initialsOf(name: string) {
 }
 
 /** One quiet figure in the strip under the title. */
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
   return (
     <div className="min-w-[104px]">
       <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">{label}</p>
-      <p className="tabular mt-1 text-[17px] font-bold leading-none tracking-tight">{value}</p>
+      <p
+        className={`tabular mt-1 text-[17px] font-bold leading-none tracking-tight ${
+          accent ? "text-brand-dark" : ""
+        }`}
+      >
+        {value}
+      </p>
     </div>
   );
 }
@@ -160,7 +174,7 @@ export default function Payers() {
       <div className="mb-5 flex flex-wrap items-center gap-x-8 gap-y-4 rounded-[18px] border border-line bg-white px-5 py-4">
         <Stat label="Unique payers" value={formatNumber(totals.unique)} />
         <span className="hidden h-9 w-px bg-line sm:block" />
-        <Stat label="Value received" value={formatMoney(totals.collected)} />
+        <Stat label="Value received" value={formatMoney(totals.collected)} accent />
         <span className="hidden h-9 w-px bg-line sm:block" />
         <Stat label="Outstanding" value={formatNumber(totals.outstanding)} />
         <span className="ml-auto hidden text-[11.5px] text-ink-faint sm:block">
@@ -219,20 +233,16 @@ export default function Payers() {
                   key={payer.key}
                   className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-cream/50 sm:px-5"
                 >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cream text-[11px] font-bold text-ink-soft">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-soft text-[11px] font-bold text-brand-dark">
                     {initialsOf(payer.name)}
                   </span>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <p className="truncate text-[13.5px] font-semibold">{payer.name}</p>
-                      <p className="tabular shrink-0 text-[13.5px] font-bold">
-                        {formatMoney(payer.total)}
-                      </p>
-                    </div>
-                    <div className="mt-0.5 flex items-baseline justify-between gap-3">
-                      <p className="truncate text-[11.5px] text-ink-muted">
-                        {payer.identifier}
+                  {/* One line per payer: who, what they paid for, then the money. */}
+                  <div className="flex min-w-0 flex-1 items-baseline gap-2">
+                    <p className="truncate text-[13.5px] font-semibold">{payer.name}</p>
+                    <p className="min-w-0 truncate text-[11.5px] text-ink-muted">
+                      {payer.identifier}
+                      <span className="hidden sm:inline">
                         {payer.identifier && payer.collection ? " · " : ""}
                         {payer.collectionId ? (
                           <Link to={`/collections/${payer.collectionId}`} className="hover:text-brand">
@@ -241,22 +251,27 @@ export default function Payers() {
                         ) : (
                           payer.collection
                         )}
-                      </p>
-                      <span
-                        className="shrink-0 text-[11px] text-ink-faint"
-                        title={formatDate(payer.lastPayment)}
-                      >
-                        {timeAgo(payer.lastPayment)}
                       </span>
-                    </div>
+                    </p>
                   </div>
 
                   {payer.pending ? (
                     <span
-                      className="h-2 w-2 shrink-0 rounded-full bg-warning"
+                      className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand"
                       title="Transfer awaiting confirmation"
                     />
                   ) : null}
+
+                  <span
+                    className="tabular shrink-0 text-[12px] font-bold text-ink"
+                    title={formatDate(payer.lastPayment)}
+                  >
+                    {formatMoney(payer.total)}
+                  </span>
+
+                  <span className="hidden w-[62px] shrink-0 text-right text-[11px] text-ink-faint lg:block">
+                    {timeAgo(payer.lastPayment)}
+                  </span>
                 </li>
               ))}
             </ul>

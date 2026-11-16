@@ -23,7 +23,9 @@ export default function AuthLayout({
   const landing = import.meta.env.VITE_PUBLIC_APP_URL || "/";
 
   return (
-    <div className="min-h-screen bg-cream lg:grid lg:grid-cols-[1.08fr_1fr]">
+    // On a laptop the branded side stays under half the width so the form is
+    // the thing you look at; the laptop preview never drops out.
+    <div className="min-h-screen bg-cream lg:grid lg:grid-cols-[minmax(0,44%)_minmax(0,1fr)]">
       {/* brand panel: the same laptop and dashboard as the landing page */}
       <aside className="relative hidden overflow-hidden bg-[#fbfaf7] px-10 py-8 lg:flex lg:flex-col xl:px-14">
         <div
@@ -56,7 +58,7 @@ export default function AuthLayout({
           </a>
         </div>
 
-        <div className="relative my-auto w-full max-w-[620px] self-center py-9">
+        <div className="relative my-auto w-full max-w-[560px] self-center py-8">
           <LaptopMockup className="animate-rise-in" />
 
           <div className="mt-9 animate-rise-in [animation-delay:120ms]">

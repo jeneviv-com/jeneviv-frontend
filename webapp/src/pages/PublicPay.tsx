@@ -524,26 +524,15 @@ export default function PublicPay() {
             </div>
 
             <div>
-              <Line label="Amount">
-                <span className="tabular text-[16px] font-bold">{formatMoney(payAmount, data.currency)}</span>
+              <Line label="Amount to send">
+                <span className="tabular text-[16px] font-bold text-brand">
+                  {formatMoney(payAmount, data.currency)}
+                </span>
               </Line>
               <Line label="Reference">
                 <span className="font-mono text-[12.5px]">{result.transaction.reference}</span>
               </Line>
-              <Line label="Bank">{result.payment_account.bank_name}</Line>
             </div>
-
-            <button
-              type="button"
-              onClick={async () => {
-                await copyText(
-                  `${data.name}\n${formatMoney(payAmount, data.currency)} to ${result.payment_account.bank_name} ${result.payment_account.account_number} (${result.payment_account.account_name})\nReference: ${result.transaction.reference}`,
-                );
-              }}
-              className="flex items-center gap-1.5 text-[12.5px] font-semibold text-ink-muted underline decoration-line underline-offset-2 hover:text-ink"
-            >
-              <Copy size={12} /> Copy all transfer details
-            </button>
 
             {result.payment_account.expiry_at ? (
               <p className="hint">
