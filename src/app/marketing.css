@@ -3093,11 +3093,6 @@ body {
   }
 }
 
-/* the black band gets an orange hairline */
-.m-maroon {
-  border-top: 2px solid var(--brand);
-}
-
 /* phones: a little more air, and a headline that always fits */
 @media (max-width: 720px) {
   :root {

@@ -108,6 +108,10 @@ const SECURITY = [
     title: "Continuous reconciliation",
     body: "A background job re-checks the gateway every 15 minutes, catching transfers that left a payer's bank but arrived late.",
   },
+  {
+    title: "Role-scoped team access",
+    body: "Everyone you invite gets a role — owner, admin, collector or viewer — so a helper can add payers without ever seeing settlement or bank details.",
+  },
 ];
 
 const QUOTES = [
@@ -197,7 +201,7 @@ export default function LandingPage() {
                 course reps, PTAs, cooperatives and associations.
               </p>
               <div className="m-hero-cta">
-                <a href={`${appUrl}/signup`} className="m-btn m-btn-brand">
+                <a href={`${appUrl}/signup`} className="m-btn m-btn-primary">
                   Create a free collection <Arrow />
                 </a>
                 <a href="#how-it-works" className="m-btn m-btn-outline">
