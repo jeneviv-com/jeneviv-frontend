@@ -32,7 +32,7 @@ Edit `.env.local`:
 
 ```env
 NEXT_PUBLIC_API_URL=https://api.jeneviv.com
-NEXT_PUBLIC_APP_URL=https://jeneviv.com
+NEXT_PUBLIC_APP_URL=https://jeneviv.onrender.com
 ```
 
 ### 3. Run Development Server

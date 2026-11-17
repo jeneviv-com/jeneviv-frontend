@@ -6,7 +6,7 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://jeneviv.com",
+    process.env.NEXT_PUBLIC_SITE_URL || "https://jeneviv.onrender.com",
   ),
   title: {
     default: "Jeneviv | Group collections, finally under control",

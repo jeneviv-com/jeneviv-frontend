@@ -702,9 +702,11 @@ export function EmptyState({
 
 export function ErrorState({
   message,
+  title = "We couldn't load this",
   onRetry,
 }: {
   message: string;
+  title?: string;
   onRetry?: () => void;
 }) {
   return (
@@ -712,9 +714,7 @@ export function ErrorState({
       <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#fdecea] text-danger">
         <TriangleAlert size={19} />
       </span>
-      <h3 className="mt-4 text-[15px] font-bold text-ink">
-        We couldn&apos;t load this
-      </h3>
+      <h3 className="mt-4 text-[15px] font-bold text-ink">{title}</h3>
       <p className="muted mt-1.5 max-w-md">{message}</p>
       {onRetry ? (
         <Button variant="secondary" className="mt-5" onClick={onRetry}>
@@ -1020,9 +1020,8 @@ export function StackedCard({
  * Container for stacked cards that properly handles mobile stacking and laptop grid
  */
 /**
- * The one container for summary cards on every page. On phones it is a single
- * bordered panel with a rule between rows. On laptop the rows are separate rounded
- * cards, laid out in `columns` columns. Change the look here and every page follows.
+ * The one container for summary cards on every page. Individual cards keep the
+ * same surface at every breakpoint; only the grid changes with the viewport.
  */
 export function SummaryPanel({
   children,
@@ -1033,17 +1032,13 @@ export function SummaryPanel({
   columns?: 1 | 2 | 3;
   className?: string;
 }) {
-  const laptopGrid = {
-    1: "",
-    2: "lg:grid lg:grid-cols-2 lg:gap-4",
-    3: "lg:grid lg:grid-cols-3 lg:gap-4",
+  const gridColumns = {
+    1: "grid-cols-1",
+    2: "grid-cols-1 sm:grid-cols-2",
+    3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
   }[columns];
   return (
-    <div
-      className={`relative overflow-hidden rounded-[26px] border-[1.5px] border-ink bg-white divide-y-[1.5px] divide-ink lg:overflow-visible lg:rounded-none lg:border-0 lg:bg-transparent lg:divide-y-0 ${laptopGrid} ${className}`}
-    >
-      {children}
-    </div>
+    <div className={`grid gap-3 lg:gap-4 ${gridColumns} ${className}`}>{children}</div>
   );
 }
 
@@ -1075,6 +1070,8 @@ export function SummaryRow({
   icon,
   href,
   loading = false,
+  footer,
+  className = "",
 }: {
   title: string;
   subtitle: string;
@@ -1084,6 +1081,8 @@ export function SummaryRow({
   icon?: ReactNode;
   href?: string;
   loading?: boolean;
+  footer?: ReactNode;
+  className?: string;
 }) {
   const toneClass =
     tone in TONE_CARD
@@ -1092,9 +1091,11 @@ export function SummaryRow({
 
   const panel = (
     <div
-      className={`relative flex min-h-[112px] flex-col justify-between gap-3 overflow-hidden px-[22px] py-[18px] lg:min-h-[140px] lg:rounded-card lg:border lg:border-line lg:p-5 lg:shadow-card ${toneClass} ${
-        href ? "transition-[filter] duration-150 hover:brightness-[0.985] active:brightness-95" : ""
-      }`}
+      className={`relative flex min-h-[140px] flex-col justify-between gap-3 overflow-hidden rounded-[18px] border border-ink p-5 ${toneClass} ${
+        href
+          ? "transition-[filter,transform,box-shadow] duration-150 hover:-translate-y-0.5 hover:brightness-[0.985] hover:shadow-card active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
+          : ""
+      } ${className}`}
     >
       <div className="flex items-start justify-between gap-3">
         <p className="font-mono text-[10.5px] font-normal uppercase tracking-[0.14em] opacity-60">
@@ -1110,7 +1111,7 @@ export function SummaryRow({
       </div>
 
       <div className="min-w-0">
-        <p className="tabular text-[26px] font-extrabold leading-none tracking-[-0.03em] lg:text-[30px]">
+        <p className="tabular text-[30px] font-extrabold leading-none tracking-[-0.03em]">
           {loading ? (
             <span aria-hidden="true" className="skeleton inline-block h-6 w-20 rounded-md" />
           ) : (
@@ -1118,12 +1119,13 @@ export function SummaryRow({
           )}
         </p>
         <p className="mt-2 truncate text-[12px] opacity-65">{subtitle}</p>
+        {footer ? <div className="mt-4">{footer}</div> : null}
       </div>
     </div>
   );
 
   return href ? (
-    <Link to={href} className="block">
+    <Link to={href} className="block h-full">
       {panel}
     </Link>
   ) : (

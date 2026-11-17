@@ -1,8 +1,8 @@
-import { ReactNode } from "react";
-import { ArrowLeft, Check, ShieldCheck } from "lucide-react";
 import LaptopMockup from "@/components/LaptopMockup";
-import { useGateway } from "@/lib/gateway";
 import { JENEVIV_LOGO } from "@/lib/brand";
+import { useGateway } from "@/lib/gateway";
+import { ArrowLeft, Check, ShieldCheck } from "lucide-react";
+import { ReactNode } from "react";
 
 const PROOF = [
   "Every naira tied to a name and a reference",
@@ -24,7 +24,10 @@ export default function AuthLayout({
   const gateway = useGateway();
   // The dashboard is served from its own host, where this variable may be unset;
   // "" or "/" would send "Back to site" back into the dashboard.
-  const configuredLanding = (import.meta.env.VITE_PUBLIC_APP_URL ?? "").replace(/\/+$/, "");
+  const configuredLanding = (import.meta.env.VITE_PUBLIC_APP_URL ?? "").replace(
+    /\/+$/,
+    "",
+  );
   const pointsAtThisApp =
     configuredLanding !== "" &&
     (() => {
@@ -37,7 +40,7 @@ export default function AuthLayout({
   const landing =
     configuredLanding && configuredLanding !== "/" && !pointsAtThisApp
       ? configuredLanding
-      : "https://jeneviv.com";
+      : "https://jeneviv.onrender.com";
 
   return (
     // On a laptop the branded side stays under half the width so the form is
@@ -56,7 +59,11 @@ export default function AuthLayout({
         />
 
         <div className="relative flex items-center justify-between">
-          <a href={landing} className="flex items-center gap-2.5" aria-label="Jeneviv — back to the website">
+          <a
+            href={landing}
+            className="flex items-center gap-2.5"
+            aria-label="Jeneviv — back to the website"
+          >
             <img
               src={JENEVIV_LOGO}
               alt=""
@@ -75,7 +82,10 @@ export default function AuthLayout({
             href={landing}
             className="group flex items-center gap-1.5 text-[12.5px] font-medium text-cream/55 transition-colors hover:text-cream"
           >
-            <ArrowLeft size={13} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
+            <ArrowLeft
+              size={13}
+              className="transition-transform duration-200 group-hover:-translate-x-0.5"
+            />
             Back to site
           </a>
         </div>
@@ -92,7 +102,10 @@ export default function AuthLayout({
             </h2>
             <ul className="mt-5 space-y-2.5">
               {PROOF.map((item) => (
-                <li key={item} className="flex items-center gap-2.5 text-[13px] text-cream/70">
+                <li
+                  key={item}
+                  className="flex items-center gap-2.5 text-[13px] text-cream/70"
+                >
                   <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand text-white">
                     <Check size={11} />
                   </span>
@@ -104,7 +117,8 @@ export default function AuthLayout({
         </div>
 
         <p className="relative flex items-center gap-2 text-[11.5px] text-cream/45">
-          <ShieldCheck size={13} /> Payments settled by {gateway.label} · NDPA aligned
+          <ShieldCheck size={13} /> Payments settled by {gateway.label} · NDPA
+          aligned
         </p>
       </aside>
 
@@ -116,10 +130,19 @@ export default function AuthLayout({
             className="flex items-center gap-2 text-[21px] font-extrabold tracking-[-0.05em]"
             aria-label="Jeneviv — back to the website"
           >
-            <img src={JENEVIV_LOGO} alt="" width={28} height={28} className="h-7 w-7 rounded-[9px] object-cover" />
+            <img
+              src={JENEVIV_LOGO}
+              alt=""
+              width={28}
+              height={28}
+              className="h-7 w-7 rounded-[9px] object-cover"
+            />
             jeneviv<span className="text-brand">.</span>
           </a>
-          <a href={landing} className="flex items-center gap-1.5 text-[12.5px] text-ink-muted">
+          <a
+            href={landing}
+            className="flex items-center gap-1.5 text-[12.5px] text-ink-muted"
+          >
             <ArrowLeft size={13} /> Site
           </a>
         </div>
@@ -131,8 +154,12 @@ export default function AuthLayout({
             </h1>
             <p className="muted mt-3 text-[14.5px]">{subtitle}</p>
           </div>
-          <div className="mt-9 animate-rise-in [animation-delay:80ms]">{children}</div>
-          <div className="mt-8 border-t border-line pt-6 text-[13px] text-ink-muted">{footer}</div>
+          <div className="mt-9 animate-rise-in [animation-delay:80ms]">
+            {children}
+          </div>
+          <div className="mt-8 border-t border-line pt-6 text-[13px] text-ink-muted">
+            {footer}
+          </div>
         </div>
       </main>
     </div>

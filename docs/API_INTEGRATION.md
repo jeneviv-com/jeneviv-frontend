@@ -483,6 +483,13 @@ const { banks } = await banksAPI.list("NG");
 
 ## ❌ Error Handling
 
+### Cold-start responses
+
+The centralized API client retries `500`, `502`, `503`, and `504` responses up
+to three times for idempotent methods (`GET`, `HEAD`, `OPTIONS`, `PUT`, and
+`DELETE`), within a 30-second total request budget. Mutating `POST` and `PATCH`
+requests are never retried.
+
 ### APIError Class
 
 ```typescript

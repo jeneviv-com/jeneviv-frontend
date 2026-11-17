@@ -39,6 +39,7 @@ export function errorMessage(error: unknown) {
 export interface Resource<T> {
   data: T | null;
   error: string | null;
+  errorCode: string | null;
   loading: boolean;
   refreshing: boolean;
   refetch: () => void;
@@ -62,6 +63,7 @@ export function useResource<T>(
   const { enabled = true, pollMs } = options;
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(enabled);
   const [refreshing, setRefreshing] = useState(false);
   const [nonce, setNonce] = useState(0);
@@ -88,11 +90,13 @@ export function useResource<T>(
         if (cancelled) return;
         setData(result);
         setError(null);
+        setErrorCode(null);
         hasLoaded.current = true;
       } catch (err) {
         if (cancelled) return;
         if ((err as Error)?.name === "AbortError") return;
         setError(errorMessage(err));
+        setErrorCode(err instanceof APIError ? err.code : null);
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -126,7 +130,7 @@ export function useResource<T>(
 
   const refetch = useCallback(() => setNonce((value) => value + 1), []);
 
-  return { data, error, loading, refreshing, refetch, setData };
+  return { data, error, errorCode, loading, refreshing, refetch, setData };
 }
 
 /* ------------------------------------------------------------------- groups */

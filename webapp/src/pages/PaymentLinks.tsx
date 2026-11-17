@@ -13,7 +13,7 @@ import {
   InlineNote,
   PageHeader,
   SearchInput,
-  StackedCards,
+  SummaryPanel,
   TableSkeleton,
   TONE_CARD,
 } from "@/components/ui";
@@ -66,7 +66,7 @@ export default function PaymentLinks() {
       />
 
       {/* summary: the same stacked pastel cards as the dashboard */}
-      <StackedCards className="mb-6 lg:grid lg:grid-cols-3 lg:gap-4">
+      <SummaryPanel columns={3} className="mb-6">
         {summary.map((item, index) => (
           <div
             key={item.label}
@@ -81,7 +81,7 @@ export default function PaymentLinks() {
             />
           </div>
         ))}
-      </StackedCards>
+      </SummaryPanel>
 
       <InlineNote tone="info" title="No app for payers, ever">
         Links open in any browser — WhatsApp, Instagram or Chrome. Payers enter

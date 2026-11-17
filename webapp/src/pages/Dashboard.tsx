@@ -38,6 +38,8 @@ import {
   Pill,
   ProgressBar,
   StatusPill,
+  SummaryPanel,
+  SummaryRow,
   TableSkeleton,
   FilterMenu,
 } from "@/components/ui";
@@ -136,10 +138,6 @@ function Reveal({
   );
 }
 
-const valueSkeleton = (
-  <span aria-hidden="true" className="skeleton inline-block h-5 w-16 rounded-md" />
-);
-
 /* ------------------------------------------------------------------ cards */
 
 /**
@@ -165,7 +163,7 @@ function HeadlineCard({
   return (
     <section
       aria-label="Collected"
-      className="relative isolate overflow-hidden rounded-card bg-ink px-5 pb-5 pt-5 text-white lg:px-7 lg:pb-6 lg:pt-6"
+      className="relative isolate overflow-hidden rounded-[18px] border border-ink bg-ink px-5 pb-5 pt-5 text-white lg:px-7 lg:pb-6 lg:pt-6"
     >
       <img
         src={JENEVIV_LOGO}
@@ -223,7 +221,7 @@ function StatCard({
   footer,
   href,
   loading,
-  accent = false,
+  tone,
 }: {
   label: string;
   icon: React.ReactNode;
@@ -232,36 +230,20 @@ function StatCard({
   footer?: React.ReactNode;
   href: string;
   loading: boolean;
-  accent?: boolean;
+  tone: "people" | "attention" | "money";
 }) {
   return (
-    <Link
-      to={href}
-      className="group relative flex h-full flex-col rounded-card border border-line bg-white p-4 shadow-card transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-ink/20 hover:shadow-pop focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink lg:p-5"
-    >
-      <div className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-2">
-          <span
-            className={`grid h-7 w-7 place-items-center rounded-full ${
-              accent ? "bg-brand text-white" : "bg-cream text-ink"
-            }`}
-          >
-            {icon}
-          </span>
-          <span className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">{label}</span>
-        </span>
-        <ArrowUpRight
-          size={15}
-          aria-hidden="true"
-          className="text-ink-faint transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-ink"
-        />
-      </div>
-      <p className="tabular mt-4 text-[26px] font-extrabold leading-none tracking-[-0.035em] lg:text-[28px]">
-        {loading ? valueSkeleton : value}
-      </p>
-      <p className="mt-1.5 truncate text-[12px] text-ink-muted">{context}</p>
-      {footer ? <div className="mt-auto pt-4">{footer}</div> : null}
-    </Link>
+    <SummaryRow
+      title={label}
+      subtitle={context}
+      value={value}
+      icon={icon}
+      href={href}
+      loading={loading}
+      tone={tone}
+      footer={footer}
+      className="h-full"
+    />
   );
 }
 
@@ -456,10 +438,11 @@ export default function Dashboard() {
           </Reveal>
 
           {/* three metric cards; one column on phones, three across from tablet up */}
-          <div className="grid gap-3 sm:grid-cols-3 lg:gap-4">
+          <SummaryPanel columns={3}>
             <Reveal delay={120} className="h-full">
               <StatCard
                 label="Payers"
+                tone="people"
                 icon={<Users size={14} aria-hidden="true" />}
                 href="/payers"
                 loading={loading}
@@ -481,6 +464,7 @@ export default function Dashboard() {
             <Reveal delay={200} className="h-full">
               <StatCard
                 label="Payments"
+                tone="attention"
                 icon={<ReceiptText size={14} aria-hidden="true" />}
                 href="/transactions"
                 loading={loading}
@@ -493,10 +477,10 @@ export default function Dashboard() {
               {gateway.settles_direct ? (
                 <StatCard
                   label="To your bank"
+                  tone="money"
                   icon={<Banknote size={14} aria-hidden="true" />}
                   href="/payouts"
                   loading={loading}
-                  accent
                   value={formatMoney(collected)}
                   context={`Split by ${gateway.label} as it lands`}
                   footer={
@@ -508,10 +492,10 @@ export default function Dashboard() {
               ) : (
                 <StatCard
                   label="Wallet"
+                  tone="money"
                   icon={<Wallet size={14} aria-hidden="true" />}
                   href="/payouts"
                   loading={loading}
-                  accent
                   value={formatMoney(walletBalance)}
                   context={`Confirmed by ${gateway.label}, awaiting payout`}
                   footer={
@@ -526,7 +510,7 @@ export default function Dashboard() {
                 />
               )}
             </Reveal>
-          </div>
+          </SummaryPanel>
 
           <Reveal delay={520} className="lg:hidden">
             <Link

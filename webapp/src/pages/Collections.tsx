@@ -388,7 +388,16 @@ export default function Collections() {
       ) : collections.error ? (
         <Card>
           <ErrorState
-            message={collections.error}
+            title={
+              collections.errorCode === "merchant_required"
+                ? "Create a workspace to see your collections"
+                : undefined
+            }
+            message={
+              collections.errorCode === "merchant_required"
+                ? "Finish setting up your workspace, then try again."
+                : collections.error
+            }
             onRetry={collections.refetch}
           />
         </Card>

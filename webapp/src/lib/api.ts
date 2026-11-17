@@ -13,6 +13,10 @@ const API_BASE_URL = (
 
 const TOKEN_KEY = "jeneviv.token";
 const REQUEST_TIMEOUT = 25_000;
+const TOTAL_REQUEST_TIMEOUT = 30_000;
+const MAX_RETRIES = 3;
+const RETRYABLE_STATUSES = new Set([500, 502, 503, 504]);
+const IDEMPOTENT_METHODS = new Set(["GET", "HEAD", "OPTIONS", "PUT", "DELETE"]);
 
 export class APIError extends Error {
   constructor(
@@ -31,6 +35,17 @@ export class APIError extends Error {
 
   get isAuthError() {
     return this.status === 401 || this.status === 403;
+  }
+
+  get code(): string | null {
+    if (!this.data || typeof this.data !== "object") return null;
+    const payload = this.data as Record<string, unknown>;
+    const nested = payload.error;
+    if (nested && typeof nested === "object") {
+      const code = (nested as Record<string, unknown>).code;
+      if (typeof code === "string") return code;
+    }
+    return typeof payload.code === "string" ? payload.code : null;
   }
 }
 
@@ -77,27 +92,75 @@ export function qs(query?: Query) {
 }
 
 export interface RequestOptions {
-  method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
+  method?: "GET" | "HEAD" | "OPTIONS" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
   query?: Query;
   signal?: AbortSignal;
   anonymous?: boolean;
 }
 
-function errorMessage(status: number, data: unknown): string {
-  if (data && typeof data === "object") {
-    const payload = data as Record<string, unknown>;
-    const nested = payload.error as Record<string, unknown> | undefined;
-    const candidate =
-      (nested?.message as string) ||
-      (payload.message as string) ||
-      (payload.error as string);
-    if (typeof candidate === "string" && candidate.length) return candidate;
+function waitForRetry(delayMs: number, signal?: AbortSignal): Promise<boolean> {
+  if (signal?.aborted) return Promise.resolve(false);
+
+  return new Promise((resolve) => {
+    let timer: ReturnType<typeof setTimeout>;
+    const cleanup = () => {
+      clearTimeout(timer);
+      signal?.removeEventListener("abort", onAbort);
+    };
+    const onAbort = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    timer = setTimeout(() => {
+      cleanup();
+      resolve(true);
+    }, delayMs);
+    signal?.addEventListener("abort", onAbort, { once: true });
+    if (signal?.aborted) onAbort();
+  });
+}
+
+function errorMessage(status: number, data: unknown, endpoint?: string): string {
+  const payload =
+    data && typeof data === "object"
+      ? (data as Record<string, unknown>)
+      : null;
+  const nested =
+    payload?.error && typeof payload.error === "object"
+      ? (payload.error as Record<string, unknown>)
+      : null;
+  const code =
+    typeof nested?.code === "string"
+      ? nested.code
+      : typeof payload?.code === "string"
+        ? payload.code
+        : null;
+
+  if (code === "merchant_required") {
+    return endpoint?.startsWith("/api/collections")
+      ? "Create a workspace to view and manage your collections."
+      : "Create a workspace to use this feature.";
   }
   if (status === 401) return "Your session has expired. Please sign in again.";
-  if (status === 403) return "You do not have access to this resource.";
-  if (status === 404) return "We could not find what you asked for.";
-  if (status >= 500) return "The server had a problem. Please try again.";
+  if (status === 403) return "You do not have permission to do that.";
+  if (status === 404 || code === "not_found")
+    return "We could not find what you were looking for.";
+  if (status === 429)
+    return "Too many attempts. Please wait a moment, then try again.";
+  if (code === "gateway_error")
+    return "The payment provider could not prepare your payment details. Please try again shortly.";
+  if (status >= 500 || code === "internal_error")
+    return "We could not complete that just now. Please try again shortly.";
+  if (code === "invalid_json")
+    return "We could not save that. Please check the information and try again.";
+
+  const candidate =
+    (typeof nested?.message === "string" && nested.message) ||
+    (typeof payload?.message === "string" && payload.message) ||
+    (typeof payload?.error === "string" && payload.error);
+  if (candidate) return candidate;
   return `Request failed with status ${status}`;
 }
 
@@ -105,7 +168,13 @@ export async function apiFetch<T>(
   endpoint: string,
   options: RequestOptions = {},
 ): Promise<T> {
-  const { method = "GET", body, query, signal, anonymous } = options;
+  const {
+    method = "GET",
+    body,
+    query,
+    signal,
+    anonymous,
+  } = options;
   const url = `${API_BASE_URL}${endpoint}${qs(query)}`;
 
   const headers: Record<string, string> = { Accept: "application/json" };
@@ -117,70 +186,110 @@ export async function apiFetch<T>(
   const token = tokenStore.get();
   if (token && !anonymous) headers.Authorization = `Bearer ${token}`;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
-  if (signal) {
-    if (signal.aborted) controller.abort();
-    else signal.addEventListener("abort", () => controller.abort(), {
-      once: true,
-    });
-  }
+  const canRetry = IDEMPOTENT_METHODS.has(method);
+  const startedAt = Date.now();
+  let attempt = 0;
 
-  let response: Response;
-  try {
-    response = await fetch(url, {
-      method,
-      headers,
-      body:
-        body === undefined
-          ? undefined
-          : isFormData
-            ? (body as FormData)
-            : JSON.stringify(body),
-      credentials: "include",
-      signal: controller.signal,
-    });
-  } catch (error) {
-    clearTimeout(timeout);
-    const aborted = (error as Error)?.name === "AbortError";
-    throw new APIError(
-      0,
-      aborted
-        ? "The request took too long. Check your connection and try again."
-        : "Cannot reach the Jeneviv API. Check your connection or API URL.",
-      { error },
-      endpoint,
-    );
-  }
-  clearTimeout(timeout);
+  while (true) {
+    if (signal?.aborted) {
+      throw new APIError(0, "That request was cancelled.", undefined, endpoint);
+    }
 
-  const signedToken = response.headers.get("set-auth-token");
-  if (signedToken && !anonymous && response.ok) tokenStore.set(signedToken);
+    const remaining = TOTAL_REQUEST_TIMEOUT - (Date.now() - startedAt);
+    if (remaining <= 0) {
+      throw new APIError(
+        0,
+        "That is taking longer than usual. Please try again.",
+        undefined,
+        endpoint,
+      );
+    }
 
-  const text = await response.text();
-  let data: unknown = {};
-  if (text) {
+    attempt += 1;
+    const controller = new AbortController();
+    let timedOut = false;
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, Math.min(REQUEST_TIMEOUT, remaining));
+    const abortFromCaller = () => controller.abort();
+    signal?.addEventListener("abort", abortFromCaller, { once: true });
+
+    let response: Response;
+    let text: string;
     try {
-      data = JSON.parse(text);
-    } catch {
-      data = { message: text.slice(0, 300) };
+      response = await fetch(url, {
+        method,
+        headers,
+        body:
+          body === undefined
+            ? undefined
+            : isFormData
+              ? (body as FormData)
+              : JSON.stringify(body),
+        credentials: "include",
+        signal: controller.signal,
+      });
+      text = await response.text();
+    } catch (error) {
+      const aborted = timedOut || (error as Error)?.name === "AbortError";
+      throw new APIError(
+        0,
+        aborted
+          ? "That is taking longer than usual. Please try again."
+          : "We are having trouble connecting. Check your internet connection and try again.",
+        { error },
+        endpoint,
+      );
+    } finally {
+      clearTimeout(timeout);
+      signal?.removeEventListener("abort", abortFromCaller);
     }
-  }
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      tokenStore.set(null);
-      window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+    let data: unknown = {};
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { message: text.slice(0, 300) };
+      }
     }
-    throw new APIError(
-      response.status,
-      errorMessage(response.status, data),
-      data,
-      endpoint,
-    );
-  }
 
-  return data as T;
+    if (
+      canRetry &&
+      RETRYABLE_STATUSES.has(response.status) &&
+      attempt <= MAX_RETRIES
+    ) {
+      const delay =
+        Math.min(500 * 2 ** (attempt - 1), 2_000) + Math.random() * 200;
+      const retryBudget =
+        TOTAL_REQUEST_TIMEOUT - (Date.now() - startedAt);
+      if (delay < retryBudget && (await waitForRetry(delay, signal))) {
+        continue;
+      }
+      if (signal?.aborted) {
+        throw new APIError(0, "That request was cancelled.", undefined, endpoint);
+      }
+    }
+
+    const signedToken = response.headers.get("set-auth-token");
+    if (signedToken && !anonymous && response.ok) tokenStore.set(signedToken);
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        tokenStore.set(null);
+        window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+      }
+      throw new APIError(
+        response.status,
+        errorMessage(response.status, data, endpoint),
+        data,
+        endpoint,
+      );
+    }
+
+    return data as T;
+  }
 }
 
 export const apiConfig = {
@@ -206,7 +315,7 @@ export async function downloadFile(endpoint: string, fallbackName: string) {
     }
     throw new APIError(
       response.status,
-      errorMessage(response.status, data),
+      errorMessage(response.status, data, endpoint),
       data,
       endpoint,
     );
