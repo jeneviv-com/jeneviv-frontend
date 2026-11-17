@@ -62,8 +62,10 @@ const DASH_CSS = `
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: none; }
 }
+/* "backwards", not "both": a forwards fill keeps a transform on the element
+   after the animation, which traps position: fixed children (popovers). */
 .dash-rise {
-  animation: dash-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: dash-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
 }
 @media (prefers-reduced-motion: reduce) {
   .dash-rise { animation: none; }
@@ -552,6 +554,7 @@ export default function Dashboard() {
                       {
                         label: "Range",
                         value: range,
+                        defaultValue: "30d",
                         onChange: (value) => setRange(value as typeof range),
                         options: [
                           { value: "7d", label: "Last 7 days" },

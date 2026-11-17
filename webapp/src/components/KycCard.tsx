@@ -4,6 +4,7 @@ import {
   Field,
   InlineNote,
   Input,
+  SegmentedControl,
   Select,
   TONE_MEANING,
   type ToneKind,
@@ -22,7 +23,6 @@ import {
   Users,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
-import { useGateway } from "@/lib/gateway";
 
 function messageOf(error: unknown): string {
   if (error instanceof APIError) {
@@ -34,13 +34,43 @@ function messageOf(error: unknown): string {
         typeof record.account_name === "string" &&
         typeof record.legal_name === "string"
       ) {
-        return `Bank name "${record.account_name}" does not match the NIN name "${record.legal_name}".`;
+        const idLabel = record.id_type === "bvn" ? "BVN" : "NIN";
+        return `Bank name "${record.account_name}" does not match the ${idLabel} name "${record.legal_name}".`;
       }
     }
     return error.message;
   }
   return error instanceof Error ? error.message : "Something went wrong.";
 }
+
+type IdType = "nin" | "bvn";
+
+/** Copy for each identity method, so the form below stays one code path. */
+const ID_METHODS: Record<
+  IdType,
+  {
+    short: string;
+    long: string;
+    placeholder: string;
+    body: string;
+    hint: string;
+  }
+> = {
+  nin: {
+    short: "NIN",
+    long: "National Identity Number",
+    placeholder: "70123456789",
+    body: "Verified through Veripine against your NIMC record.",
+    hint: "11 digits. Dial *346# on your registered line to retrieve it. Stored as a hash, never in plain text.",
+  },
+  bvn: {
+    short: "BVN",
+    long: "Bank Verification Number",
+    placeholder: "22123456789",
+    body: "Verified through Veripine against your bank's BVN record.",
+    hint: "11 digits. Dial *565*0# on your bank-registered line to retrieve it. Stored as a hash, never in plain text.",
+  },
+};
 
 /** Status chip with a round icon well, shared look with Settings. */
 function Chip({
@@ -112,8 +142,9 @@ export default function KycCard() {
   const { refreshMerchant } = useAuth();
   const { success, error: toastError } = useToast();
 
-  const [nin, setNin] = useState("");
-  const [ninConsent, setNinConsent] = useState(false);
+  const [idType, setIdType] = useState<IdType>("nin");
+  const [idNumber, setIdNumber] = useState("");
+  const [idConsent, setIdConsent] = useState(false);
   const [bankCode, setBankCode] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [treasurer, setTreasurer] = useState({ name: "", phone: "" });
@@ -130,7 +161,11 @@ export default function KycCard() {
     setLogoUrl(data.logo_url ?? "");
   }, [data?.treasurer_name, data?.treasurer_phone, data?.logo_url]);
 
-  const verifyNin = useAction((value: string) => merchantsAPI.verifyNin(value));
+  const verifyId = useAction((type: IdType, value: string) =>
+    type === "bvn"
+      ? merchantsAPI.verifyBvn(value)
+      : merchantsAPI.verifyNin(value),
+  );
   const verifyBank = useAction((code: string, account: string) =>
     merchantsAPI.verifyBank(code, account),
   );
@@ -161,8 +196,13 @@ export default function KycCard() {
     }
   };
 
-  const busy = verifyNin.loading || verifyBank.loading;
+  const busy = verifyId.loading || verifyBank.loading;
   const ninDone = Boolean(data?.verified_legal_name);
+  const method = ID_METHODS[idType];
+  // Older API builds don't send id_type; everything verified then was a NIN.
+  const verifiedType: IdType = data?.id_type === "bvn" ? "bvn" : "nin";
+  const verifiedLabel = ID_METHODS[verifiedType].short;
+  const verifiedLast4 = data?.id_last4 ?? data?.nin_last4 ?? null;
   const bankDone = Boolean(data?.can_withdraw);
   const treasurerDone = Boolean(data?.treasurer_name && data?.treasurer_phone);
 
@@ -170,7 +210,10 @@ export default function KycCard() {
     data?.maturity === "ready"
       ? { tone: "money" as const, label: "Ready for direct settlement" }
       : data?.maturity === "nin_verified"
-        ? { tone: "attention" as const, label: "NIN verified · bank pending" }
+        ? {
+            tone: "attention" as const,
+            label: `${verifiedLabel} verified · bank pending`,
+          }
         : { tone: "attention" as const, label: "Verification pending" };
 
   if (kyc.loading) {
@@ -210,8 +253,8 @@ export default function KycCard() {
       </div>
 
       <p className="muted -mt-4 max-w-2xl">
-        Collect from day one. Payments settle once the NIN and bank account
-        names match.
+        Collect from day one. Payments settle once the NIN or BVN name matches
+        the bank account name.
       </p>
 
       {/* the three steps */}
@@ -219,62 +262,86 @@ export default function KycCard() {
         <Step
           number={1}
           done={ninDone}
-          title="Verify your NIN"
-          body="Verified through Veripine against your NIN record."
+          title={
+            ninDone
+              ? `Identity verified with ${verifiedLabel}`
+              : "Verify your identity"
+          }
+          body={
+            ninDone
+              ? ID_METHODS[verifiedType].body
+              : "Use your NIN or your BVN. Either one unlocks settlement once the bank name matches."
+          }
         >
           {ninDone ? (
-            <InlineNote tone="success" title="NIN verified">
+            <InlineNote tone="success" title={`${verifiedLabel} verified`}>
               {data?.verified_legal_name}
-              {data?.nin_last4 ? ` ·••• ${data.nin_last4}` : ""}
+              {verifiedLast4 ? ` ·••• ${verifiedLast4}` : ""}
               {data?.nin_verified_at
                 ? ` · ${formatDateTime(data.nin_verified_at)}`
                 : ""}
             </InlineNote>
           ) : (
             <>
+              <SegmentedControl<IdType>
+                value={idType}
+                onChange={(next) => {
+                  if (next === idType) return;
+                  setIdType(next);
+                  setIdNumber("");
+                  setIdConsent(false);
+                }}
+                options={[
+                  { value: "nin", label: "NIN" },
+                  { value: "bvn", label: "BVN" },
+                ]}
+              />
               <Field
-                label="National Identity Number"
-                htmlFor="kyc-nin"
-                hint="11 digits. Stored as a hash, never in plain text."
+                label={method.long}
+                htmlFor="kyc-id-number"
+                hint={method.hint}
               >
                 <Input
-                  id="kyc-nin"
+                  id="kyc-id-number"
                   inputMode="numeric"
+                  autoComplete="off"
                   maxLength={11}
-                  value={nin}
+                  value={idNumber}
                   onChange={(event) => {
-                    setNin(event.target.value.replace(/\D/g, "").slice(0, 11));
-                    setNinConsent(false);
+                    setIdNumber(
+                      event.target.value.replace(/\D/g, "").slice(0, 11),
+                    );
+                    setIdConsent(false);
                   }}
-                  placeholder="70123456789"
+                  placeholder={method.placeholder}
                   className="font-mono"
                 />
               </Field>
               <label className="flex items-start gap-2 text-[13px] text-ink-muted">
                 <input
                   type="checkbox"
-                  checked={ninConsent}
-                  onChange={(event) => setNinConsent(event.target.checked)}
+                  checked={idConsent}
+                  onChange={(event) => setIdConsent(event.target.checked)}
                   className="mt-1"
                 />
                 <span>
                   I confirm I have the data subject&apos;s consent to verify
-                  this NIN with Veripine.
+                  this {method.short} with Veripine.
                 </span>
               </label>
               <Button
                 icon={<Fingerprint size={14} />}
-                loading={verifyNin.loading}
-                disabled={nin.length !== 11 || !ninConsent}
+                loading={verifyId.loading}
+                disabled={idNumber.length !== 11 || !idConsent}
                 onClick={() =>
                   run(
-                    () => verifyNin.run(nin),
-                    "NIN verified",
+                    () => verifyId.run(idType, idNumber),
+                    `${method.short} verified`,
                     "Now link the settlement bank account.",
                   )
                 }
               >
-                Verify NIN
+                Verify {method.short}
               </Button>
             </>
           )}
@@ -284,7 +351,9 @@ export default function KycCard() {
           number={2}
           done={bankDone}
           title="Link the settlement bank"
-          body={`Resolved with ${gateway.label}. The account name must match the NIN name.`}
+          body={`Resolved with Paystack. The account name must match the ${
+            ninDone ? verifiedLabel : "NIN or BVN"
+          } name.`}
         >
           {bankDone ? (
             <InlineNote tone="success" title="Bank verified">
@@ -341,7 +410,7 @@ export default function KycCard() {
               </Button>
               {!ninDone ? (
                 <p className="hint">
-                  Verify the NIN first — the names must match.
+                  Verify your NIN or BVN first. The names must match.
                 </p>
               ) : null}
             </>

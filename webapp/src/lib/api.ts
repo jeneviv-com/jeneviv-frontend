@@ -432,6 +432,10 @@ export interface KycView {
   can_collect: boolean;
   can_withdraw: boolean;
   nin_last4: string | null;
+  /** Which number verified the identity step. Older backends omit it. */
+  id_type?: "nin" | "bvn" | null;
+  /** Last four digits of that number. */
+  id_last4?: string | null;
   verified_legal_name: string | null;
   nin_verified_at: string | null;
   bank_verified_at: string | null;
@@ -1062,6 +1066,12 @@ export const merchantsAPI = {
     apiFetch<{ kyc: KycView }>("/api/merchants/me/kyc/nin", {
       method: "POST",
       body: { nin },
+    }),
+
+  verifyBvn: (bvn: string) =>
+    apiFetch<{ kyc: KycView }>("/api/merchants/me/kyc/bvn", {
+      method: "POST",
+      body: { bvn },
     }),
 
   verifyBank: (bankCode: string, accountNumber: string) =>
