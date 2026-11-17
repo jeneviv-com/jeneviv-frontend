@@ -782,6 +782,8 @@ async function route(ctx: Ctx) {
         maturity: "unverified",
         verified_legal_name: null,
         nin_last4: null,
+        id_type: null,
+        id_last4: null,
         nin_verified_at: null,
         treasurer_name: merchant.treasurer_name ?? null,
         treasurer_phone: merchant.treasurer_phone ?? null,

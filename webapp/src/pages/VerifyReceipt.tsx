@@ -47,7 +47,7 @@ function ReceiptBody({ receipt }: { receipt: PublicReceipt }) {
   const jenevivMark = apiConfig.withBase("/assets/images/jeneviv.png");
   const extraDetails = receipt.details.filter((d) => d.label !== "Collection");
   const verifications = [
-    ...(receipt.nin_verified ? [{ label: "NIN verified", icon: <BadgeCheck size={11} /> }] : []),
+    ...(receipt.nin_verified ? [{ label: "Identity verified", icon: <BadgeCheck size={11} /> }] : []),
     ...(receipt.bank_verified ? [{ label: "Bank verified", icon: <ShieldCheck size={11} /> }] : []),
   ];
 
