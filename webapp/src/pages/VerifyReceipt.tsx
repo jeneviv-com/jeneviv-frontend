@@ -21,7 +21,7 @@ const fullWhen = (iso: string) =>
 /** A card with the same corners and border on every section. */
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <section className={`relative rounded-[20px] border border-line bg-white px-6 py-6 sm:px-7 ${className}`}>
+    <section className={`relative rounded-card border border-line bg-white px-6 py-6 shadow-card sm:px-7 ${className}`}>
       {children}
     </section>
   );

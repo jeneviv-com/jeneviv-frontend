@@ -986,7 +986,7 @@ export function StackedCard({
     ink: "bg-[#101010] text-white border-ink",
   };
 
-  const baseClasses = `relative -mt-6 first:mt-0 lg:mt-0 rounded-[20px] border px-5 py-5 shadow-sm lg:min-h-[92px] lg:px-6 lg:py-5 ${tones[tone]}`;
+  const baseClasses = `relative -mt-6 first:mt-0 lg:mt-0 rounded-card border px-5 py-5 shadow-card lg:min-h-[92px] lg:px-6 lg:py-5 ${tones[tone]}`;
   const interactiveClasses = interactive 
     ? "transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-card active:scale-[0.985] focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2" 
     : "";

@@ -88,7 +88,7 @@ function Section({
         </h2>
         <p className="mt-0.5 text-[12.5px] text-ink-muted">{description}</p>
       </div>
-      <div className="overflow-hidden rounded-[20px] border border-line bg-white shadow-card">{children}</div>
+      <div className="overflow-hidden rounded-card border border-line bg-white shadow-card">{children}</div>
     </section>
   );
 }

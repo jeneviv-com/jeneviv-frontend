@@ -221,7 +221,7 @@ export default function Payers() {
   return (
     <div className="mx-auto w-full max-w-[1200px] pb-10">
       {/* branded header */}
-      <header className="relative isolate mb-5 overflow-hidden rounded-[24px] border border-line bg-white shadow-card">
+      <header className="relative isolate mb-5 overflow-hidden rounded-card border border-line bg-white shadow-card">
         <img
           src={JENEVIV_LOGO}
           alt=""
@@ -299,7 +299,7 @@ export default function Payers() {
         </label>
       </div>
 
-      <div className="overflow-hidden rounded-[20px] border border-line bg-white shadow-card">
+      <div className="overflow-hidden rounded-card border border-line bg-white shadow-card">
         {loading ? (
           <div className="p-4">
             <TableSkeleton rows={6} cols={3} />
