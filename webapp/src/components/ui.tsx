@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { createPortal } from "react-dom";
 import {
   ButtonHTMLAttributes,
   InputHTMLAttributes,
@@ -412,6 +413,8 @@ export function FilterMenu({
     value: string;
     onChange: (value: string) => void;
     options: Array<{ value: string; label: string; count?: number }>;
+    /** The resting choice. Defaults to the first option ("All"). */
+    defaultValue?: string;
   }>;
   label?: string;
   className?: string;
@@ -420,7 +423,10 @@ export function FilterMenu({
   // The panel is positioned against the viewport, not the button: on a narrow
   // phone a button near the right edge would otherwise push it off screen.
   const [panel, setPanel] = useState<{
-    top: number;
+    /** Set when opening downwards. */
+    top?: number;
+    /** Set when opening upwards, so the panel hugs the button whatever its height. */
+    bottom?: number;
     left: number;
     width: number;
     maxHeight: number;
@@ -445,43 +451,60 @@ export function FilterMenu({
     const openUp = below < 200 && above > below;
     const room = openUp ? above : below;
     const maxHeight = Math.max(160, Math.min(340, room));
-    const top = openUp
-      ? Math.max(margin, rect.top - gap - maxHeight)
-      : rect.bottom + gap;
 
-    setPanel({ top, left, width, maxHeight });
+    setPanel(
+      openUp
+        ? { bottom: window.innerHeight - rect.top + gap, left, width, maxHeight }
+        : { top: rect.bottom + gap, left, width, maxHeight },
+    );
   }, []);
 
   useEffect(() => {
     if (!open) return;
     place();
     const onPointerDown = (event: PointerEvent) => {
-      if (!box.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target as Node;
+      // The panel lives in a portal, so it is outside `box` in the DOM.
+      if (box.current?.contains(target) || panelRef.current?.contains(target)) return;
+      setOpen(false);
     };
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
-    // A fixed panel does not follow the page, so close it instead of drifting —
-    // but the panel's own list scrolling must not dismiss it.
+    // Follow the button while the page scrolls instead of closing. Closing on
+    // any scroll made the menu vanish on phones, where momentum scrolling and
+    // the collapsing address bar fire scroll events right as it opens. Close
+    // only once the button itself has left the screen.
     const onScroll = (event: Event) => {
       const target = event.target;
       if (target instanceof Node && panelRef.current?.contains(target)) return;
-      setOpen(false);
+      const rect = trigger.current?.getBoundingClientRect();
+      if (!rect || rect.bottom < 0 || rect.top > window.innerHeight) {
+        setOpen(false);
+        return;
+      }
+      place();
     };
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKey);
     window.addEventListener("scroll", onScroll, true);
     window.addEventListener("resize", place);
+    // Mobile browsers resize the visual viewport (address bar, keyboard)
+    // without always firing a window resize.
+    window.visualViewport?.addEventListener("resize", place);
     return () => {
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKey);
       window.removeEventListener("scroll", onScroll, true);
       window.removeEventListener("resize", place);
+      window.visualViewport?.removeEventListener("resize", place);
     };
   }, [open, place]);
 
-  // A group counts as active when it is not on its first (usually "all") choice.
-  const activeCount = groups.filter((group) => group.value !== group.options[0]?.value).length;
+  // A group counts as active when it is off its resting choice (usually "All").
+  const activeCount = groups.filter(
+    (group) => group.value !== (group.defaultValue ?? group.options[0]?.value),
+  ).length;
 
   return (
     <div className={`relative ${className}`} ref={box}>
@@ -491,7 +514,7 @@ export function FilterMenu({
         onClick={() => setOpen((current) => !current)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className={`inline-flex h-[42px] items-center gap-2 rounded-[10px] border px-3 text-[12.5px] font-semibold transition-colors ${
+        className={`inline-flex h-[42px] shrink-0 items-center gap-2 whitespace-nowrap rounded-[10px] border px-3 text-[12.5px] font-semibold transition-colors ${
           open || activeCount
             ? "border-ink bg-ink text-cream"
             : "border-line bg-white text-ink-soft hover:border-ink/25 hover:text-ink"
@@ -506,52 +529,59 @@ export function FilterMenu({
         ) : null}
       </button>
 
-      {open && panel ? (
-        <div
-          ref={panelRef}
-          role="dialog"
-          aria-label={label}
-          style={{
-            top: panel.top,
-            left: panel.left,
-            width: panel.width,
-            maxHeight: panel.maxHeight,
-          }}
-          className="fixed z-[70] animate-pop-in overflow-y-auto overscroll-contain rounded-[14px] border border-line bg-white p-2 shadow-pop"
-        >
-          {groups.map((group) => (
-            <div key={group.label} className="mb-1 last:mb-0">
-              <p className="px-2 pb-1.5 pt-1 font-mono text-3xs uppercase tracking-[0.14em] text-ink-faint">
-                {group.label}
-              </p>
-              {group.options.map((option) => {
-                const active = option.value === group.value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => {
-                      group.onChange(option.value);
-                      setOpen(false);
-                    }}
-                    className={`flex w-full items-center gap-2 rounded-[9px] px-2 py-2 text-left text-[12.5px] transition-colors ${
-                      active ? "bg-ink font-semibold text-cream" : "text-ink-soft hover:bg-cream hover:text-ink"
-                    }`}
-                  >
-                    <span className="flex-1 truncate">{option.label}</span>
-                    {option.count !== undefined ? (
-                      <span className={`tabular text-[11px] ${active ? "text-cream/70" : "text-ink-faint"}`}>
-                        {option.count}
-                      </span>
-                    ) : null}
-                    {active ? <Check size={13} aria-hidden="true" /> : null}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      ) : null}
+      {/* Portalled to <body>: a transformed or animated ancestor (the dashboard's
+          entrance animation, for one) would otherwise become the containing
+          block for `position: fixed` and throw the panel off screen. */}
+      {open && panel && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              ref={panelRef}
+              role="dialog"
+              aria-label={label}
+              style={{
+                top: panel.top,
+                bottom: panel.bottom,
+                left: panel.left,
+                width: panel.width,
+                maxHeight: panel.maxHeight,
+              }}
+              className="fixed z-[70] animate-pop-in overflow-y-auto overscroll-contain rounded-[14px] border border-line bg-white p-2 shadow-pop"
+            >
+              {groups.map((group) => (
+                <div key={group.label} className="mb-1 last:mb-0">
+                  <p className="px-2 pb-1.5 pt-1 font-mono text-3xs uppercase tracking-[0.14em] text-ink-faint">
+                    {group.label}
+                  </p>
+                  {group.options.map((option) => {
+                    const active = option.value === group.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => {
+                          group.onChange(option.value);
+                          setOpen(false);
+                        }}
+                        className={`flex w-full items-center gap-2 rounded-[9px] px-2 py-2 text-left text-[12.5px] transition-colors ${
+                          active ? "bg-ink font-semibold text-cream" : "text-ink-soft hover:bg-cream hover:text-ink"
+                        }`}
+                      >
+                        <span className="flex-1 truncate">{option.label}</span>
+                        {option.count !== undefined ? (
+                          <span className={`tabular text-[11px] ${active ? "text-cream/70" : "text-ink-faint"}`}>
+                            {option.count}
+                          </span>
+                        ) : null}
+                        {active ? <Check size={13} aria-hidden="true" /> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
