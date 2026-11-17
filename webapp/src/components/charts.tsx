@@ -89,12 +89,30 @@ export function AreaChart({
         ) : null}
       </svg>
 
-      <div className="mt-3 flex justify-between">
-        {data.map((point) => (
-          <span key={point.label} className="font-mono text-3xs text-ink-muted">
-            {point.label}
-          </span>
-        ))}
+      {/* Each label sits under its own point. On phones a 15-point range would
+          run the dates together, so only every third label (and the last) shows
+          below the sm breakpoint. */}
+      <div className="relative mt-3 h-4">
+        {data.map((point, index) => {
+          const last = data.length - 1;
+          const left = last > 0 ? (index / last) * 100 : 50;
+          const thin = data.length > 8 && index % 3 !== 0 && index !== last;
+          // Hide the label just before the last when thinning, so they never touch.
+          const crowdsLast = data.length > 8 && index !== last && last - index < 3;
+          const align =
+            index === 0 ? "translate-x-0" : index === last ? "-translate-x-full" : "-translate-x-1/2";
+          return (
+            <span
+              key={`${point.label}-${index}`}
+              style={{ left: `${left}%` }}
+              className={`absolute top-0 whitespace-nowrap font-mono text-3xs text-ink-muted ${align} ${
+                thin || crowdsLast ? "hidden sm:inline" : ""
+              }`}
+            >
+              {point.label}
+            </span>
+          );
+        })}
       </div>
       <p className="mt-2 font-mono text-3xs text-ink-faint">
         peak {formatCompact(safeMax / 1.15, currency)}
