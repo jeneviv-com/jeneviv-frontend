@@ -459,7 +459,7 @@ export default function Dashboard() {
                 </Link>
               </div>
 
-              <Card className="mt-3" rounded="2xl" shadow="sm" padded={false}>
+              <Card className="mt-3" padded={false}>
                 {transactions.loading ? (
                   <div className="p-5">
                     <TableSkeleton rows={4} cols={2} />
@@ -528,7 +528,7 @@ export default function Dashboard() {
                 </Link>
               </div>
 
-              <Card className="mt-3" rounded="2xl" padded={true} shadow="sm">
+              <Card className="mt-3" padded={true}>
                 {collections.loading ? (
                   <TableSkeleton rows={3} cols={2} />
                 ) : collections.error ? (
@@ -585,7 +585,7 @@ export default function Dashboard() {
 
           {/* settlement note - shown on mobile below collections */}
           <Reveal delay={800} className="lg:hidden">
-            <SimpleCard rounded="2xl" padding="lg" bg="white">
+            <SimpleCard padding="lg" bg="white">
               <div className="mb-3 flex items-center gap-2">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-cream">
                   <ShieldCheck size={16} />

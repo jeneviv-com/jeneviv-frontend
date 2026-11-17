@@ -208,7 +208,7 @@ export default function Payouts() {
               {(accounts.data ?? []).map((account) => {
                 const details = accountDetails(account);
                 return (
-                  <li key={account.id} className="card card-interactive rounded-[18px] border border-ink/15 p-5">
+                  <li key={account.id} className="card card-interactive p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="flex flex-wrap items-center gap-2 text-[14px] font-semibold">

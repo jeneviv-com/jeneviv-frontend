@@ -152,7 +152,7 @@ export default function People() {
       </p>
 
       {canInvite ? (
-        <section className="mb-7 rounded-[18px] border border-line bg-white p-4 shadow-sm">
+        <section className="mb-7 rounded-card border border-line bg-white p-4 shadow-card">
           <div className="mb-3 flex items-center gap-2">
             <UserPlus size={15} className="text-ink-soft" />
             <h2 className="text-[13.5px] font-semibold">Invite someone</h2>
@@ -211,7 +211,7 @@ export default function People() {
         <h2 className="mb-2 px-1 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
           Members
         </h2>
-        <div className="overflow-hidden rounded-[18px] border border-line bg-white shadow-sm">
+        <div className="overflow-hidden rounded-card border border-line bg-white shadow-card">
           {loading && members.length === 0 ? (
             <p className="px-4 py-6 text-center text-[12.5px] text-ink-muted">Loading…</p>
           ) : null}
@@ -280,7 +280,7 @@ export default function People() {
           <h2 className="mb-2 px-1 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
             Pending invites
           </h2>
-          <div className="overflow-hidden rounded-[18px] border border-line bg-white shadow-sm">
+          <div className="overflow-hidden rounded-card border border-line bg-white shadow-card">
             {invites.map((invite) => (
               <div
                 key={invite.id}

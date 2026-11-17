@@ -41,7 +41,9 @@ export default {
         mono: ['"DM Mono"', "ui-monospace", "SFMono-Regular", "monospace"],
       },
       borderRadius: {
-        card: "10px",
+        /* One radius for every dashboard card; the outline is the same on every
+           page, so a card looks like a card wherever it appears. */
+        card: "18px",
         pill: "999px",
       },
       boxShadow: {

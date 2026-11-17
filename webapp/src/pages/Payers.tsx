@@ -171,7 +171,7 @@ export default function Payers() {
       />
 
       {/* three quiet figures instead of a wall of coloured tiles */}
-      <div className="mb-5 flex flex-wrap items-center gap-x-8 gap-y-4 rounded-[18px] border border-line bg-white px-5 py-4">
+      <div className="mb-5 flex flex-wrap items-center gap-x-8 gap-y-4 rounded-card border border-line bg-white px-5 py-4 shadow-card">
         <Stat label="Unique payers" value={formatNumber(totals.unique)} />
         <span className="hidden h-9 w-px bg-line sm:block" />
         <Stat label="Value received" value={formatMoney(totals.collected)} accent />
@@ -208,7 +208,7 @@ export default function Payers() {
         </span>
       </div>
 
-      <Card padded={false} rounded="2xl" shadow="sm" className="overflow-hidden">
+      <Card padded={false} className="overflow-hidden">
         {transactions.loading ? (
           <div className="p-4">
             <TableSkeleton rows={6} cols={2} />

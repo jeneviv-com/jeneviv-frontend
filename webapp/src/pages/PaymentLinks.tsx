@@ -141,7 +141,7 @@ export default function PaymentLinks() {
             return (
               <article
                 key={collection.id}
-                className="dash-rise flex h-full flex-col rounded-[18px] border border-ink/15 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+                className="card card-interactive dash-rise flex h-full flex-col p-5"
                 style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
               >
                 {/* title and state */}

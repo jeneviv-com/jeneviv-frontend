@@ -107,6 +107,7 @@ export default function KycCard() {
   const { success, error: toastError } = useToast();
 
   const [nin, setNin] = useState("");
+  const [ninConsent, setNinConsent] = useState(false);
   const [bankCode, setBankCode] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [treasurer, setTreasurer] = useState({ name: "", phone: "" });
@@ -208,7 +209,7 @@ export default function KycCard() {
           number={1}
           done={ninDone}
           title="Verify your NIN"
-          body="Checked with Dojah against the NIMC record."
+          body="Verified through Veripine against your NIN record."
         >
           {ninDone ? (
             <InlineNote tone="success" title="NIN verified">
@@ -228,15 +229,30 @@ export default function KycCard() {
                   inputMode="numeric"
                   maxLength={11}
                   value={nin}
-                  onChange={(event) => setNin(event.target.value.replace(/\D/g, "").slice(0, 11))}
+                  onChange={(event) => {
+                    setNin(event.target.value.replace(/\D/g, "").slice(0, 11));
+                    setNinConsent(false);
+                  }}
                   placeholder="70123456789"
                   className="font-mono"
                 />
               </Field>
+              <label className="flex items-start gap-2 text-[13px] text-ink-muted">
+                <input
+                  type="checkbox"
+                  checked={ninConsent}
+                  onChange={(event) => setNinConsent(event.target.checked)}
+                  className="mt-1"
+                />
+                <span>
+                  I confirm I have the data subject&apos;s consent to verify this NIN
+                  with Veripine.
+                </span>
+              </label>
               <Button
                 icon={<Fingerprint size={14} />}
                 loading={verifyNin.loading}
-                disabled={nin.length !== 11}
+                disabled={nin.length !== 11 || !ninConsent}
                 onClick={() =>
                   run(
                     () => verifyNin.run(nin),

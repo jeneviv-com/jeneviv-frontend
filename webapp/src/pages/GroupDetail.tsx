@@ -333,7 +333,7 @@ export default function GroupDetail() {
                         style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
                       >
                         {/* An article, not a Link: the card already holds an Open link. */}
-                        <article className="card card-interactive flex h-full flex-col rounded-[18px] border border-ink/15 p-5">
+                        <article className="card card-interactive flex h-full flex-col p-5">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <Link
@@ -494,7 +494,7 @@ export default function GroupDetail() {
                       style={{ animationDelay: `${Math.min(index, 6) * 60}ms` }}
                     >
                       {/* An article, not a Link: the card already holds an Open link. */}
-                      <article className="card card-interactive flex h-full flex-col rounded-[18px] border border-ink/15 p-5">
+                      <article className="card card-interactive flex h-full flex-col p-5">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <Link

@@ -119,7 +119,14 @@ export function Card({
     float: "shadow-float",
   };
 
-  const baseClasses = `min-w-0 ${border ? "border" : ""} ${roundedClasses[rounded]} ${shadowClasses[shadow]} ${toneClasses[tone]}`;
+  // border-line, not Tailwind's default grey, so every neutral surface shares
+  // one outline colour. Toned cards carry their own border colour.
+  const borderClass = !border
+    ? ""
+    : tone === "default" || tone === "white"
+      ? "border border-line"
+      : "border";
+  const baseClasses = `min-w-0 ${borderClass} ${roundedClasses[rounded]} ${shadowClasses[shadow]} ${toneClasses[tone]}`;
   const paddingClass = padded ? "card-pad" : "";
   const interactiveClass = interactive ? "card-interactive" : "";
   const hoverClass = hoverable ? "transition-all duration-200 hover:shadow-md hover:-translate-y-0.5" : "";
@@ -135,14 +142,14 @@ export function SimpleCard({
   children,
   className = "",
   padding = "md",
-  rounded = "xl",
+  rounded = "card",
   border = true,
   bg = "white",
 }: {
   children: ReactNode;
   className?: string;
   padding?: "none" | "sm" | "md" | "lg" | "xl";
-  rounded?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+  rounded?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "card";
   border?: boolean;
   bg?: "white" | "cream" | "transparent";
 }) {
@@ -161,6 +168,7 @@ export function SimpleCard({
     xl: "rounded-xl",
     "2xl": "rounded-2xl",
     "3xl": "rounded-3xl",
+    card: "rounded-card",
   };
 
   const bgClasses = {

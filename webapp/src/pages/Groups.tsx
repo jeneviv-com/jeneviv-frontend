@@ -195,7 +195,7 @@ export default function Groups() {
               >
                 <Link
                   to={`/groups/${group.id}`}
-                  className="card card-interactive flex h-full flex-col rounded-[18px] border border-ink/15 p-5 no-underline hover:shadow-md"
+                  className="card card-interactive flex h-full flex-col p-5 no-underline"
                 >
                   {/* Identity and logo status */}
                   <div className="flex items-start justify-between gap-3">

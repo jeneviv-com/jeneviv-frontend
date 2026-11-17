@@ -66,7 +66,7 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
         <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
         {title}
       </h2>
-      <div className="overflow-hidden rounded-[18px] border border-line bg-white shadow-sm">
+      <div className="overflow-hidden rounded-card border border-line bg-white shadow-card">
         {children}
       </div>
     </section>
