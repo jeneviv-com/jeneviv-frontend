@@ -217,7 +217,7 @@ export default function DashboardPreview() {
             <div className="mt-5 grid min-h-0 flex-1 grid-cols-[1fr_420px] gap-5">
               {/* Left column - headline, metrics and chart */}
               <div className="flex min-h-0 flex-col gap-5">
-                <section className="shrink-0 rounded-[20px] bg-[#101010] px-6 py-6 text-white">
+                <section className="shrink-0 rounded-card bg-[#101010] px-6 py-6 text-white">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-[18px] font-semibold tracking-tight">Collected</p>
@@ -233,7 +233,7 @@ export default function DashboardPreview() {
                     return (
                       <div
                         key={item.title}
-                        className={`flex min-h-[140px] flex-col justify-between overflow-hidden rounded-[22px] border border-ink/10 p-5 text-ink shadow-[0_1px_2px_rgba(16,16,16,0.04)] ${item.tone}`}
+                        className={`flex min-h-[140px] flex-col justify-between overflow-hidden rounded-card border border-line p-5 text-ink shadow-card ${item.tone}`}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] opacity-60">
@@ -323,7 +323,7 @@ export default function DashboardPreview() {
                     <span className="text-[12.5px] font-semibold text-brand">View all</span>
                   </div>
 
-                  <div className="mt-3 overflow-hidden rounded-2xl border border-line bg-white shadow-sm">
+                  <div className="mt-3 overflow-hidden rounded-card border border-line bg-white shadow-card">
                     <ul className="divide-y divide-line-soft">
                       {RECENT.map((row) => (
                         <li key={row.name} className="flex items-center justify-between gap-3 px-5 py-3.5">
@@ -358,7 +358,7 @@ export default function DashboardPreview() {
                     <span className="text-[12.5px] font-semibold text-brand">All</span>
                   </div>
 
-                  <div className="mt-3 rounded-2xl border border-line bg-white p-5 shadow-sm">
+                  <div className="mt-3 rounded-card border border-line bg-white p-5 shadow-card">
                     <ul className="space-y-4">
                       {COLLECTIONS.map((collection) => (
                         <li key={collection.name}>

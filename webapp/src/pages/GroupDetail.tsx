@@ -629,7 +629,7 @@ export default function GroupDetail() {
             </section>
 
             {/* Danger zone */}
-            <aside className="self-start rounded-[20px] bg-[#ffd6cf] p-6">
+            <aside className="self-start rounded-card bg-[#ffd6cf] p-6">
               <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">
                 Danger zone
               </p>

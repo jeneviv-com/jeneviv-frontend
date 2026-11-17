@@ -331,7 +331,7 @@ export default function PublicPay() {
       </header>
 
       {data.payee ? (
-        <div className="mt-6 rounded-[16px] border border-ink/20 bg-white px-5 py-4">
+        <div className="mt-6 rounded-card border border-line bg-white px-5 py-4 shadow-card">
           <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">Money goes to</p>
           <p className="mt-1.5 text-[16px] font-bold tracking-tight">
             {data.payee.bank_account_name ?? data.payee.display_name ?? "This workspace"}
@@ -457,7 +457,7 @@ export default function PublicPay() {
             {formError ? <InlineNote tone="error">{formError}</InlineNote> : null}
 
             {data.pricing ? (
-              <div className="rounded-[14px] border border-line bg-white px-4 py-4">
+              <div className="rounded-card border border-line bg-white px-4 py-4">
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">What you will pay</p>
                 <dl className="mt-3 space-y-2 text-[13.5px]">
                   <div className="flex justify-between gap-4">
@@ -504,7 +504,7 @@ export default function PublicPay() {
               </p>
             </div>
 
-            <div className="rounded-[20px] bg-ink px-6 py-6 text-cream">
+            <div className="rounded-card bg-ink px-6 py-6 text-cream">
               <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-cream/60">Account number</p>
               <p className="tabular mt-2 text-[34px] font-bold leading-none tracking-[-0.02em]">
                 {result.payment_account.account_number}

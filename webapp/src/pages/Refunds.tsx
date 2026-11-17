@@ -312,7 +312,7 @@ export default function Refunds() {
               {(transactions.data ?? []).slice(0, 25).map((transaction) => (
                 <li
                   key={transaction.id}
-                  className="flex items-center justify-between gap-3 rounded-[16px] border border-line bg-white px-4 py-3"
+                  className="flex items-center justify-between gap-3 rounded-[14px] border border-line bg-cream px-4 py-3"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-[13px] font-semibold">
@@ -361,7 +361,7 @@ export default function Refunds() {
               `If ${gateway.label} cannot route the refund, the payment is marked “Needs attention”. Add the payer's account number and the refund is retried.`,
             ],
           ].map(([title, body]) => (
-            <li key={title} className="rounded-[16px] border border-ink/15 bg-cream px-4 py-3.5">
+            <li key={title} className="rounded-[14px] border border-line bg-cream px-4 py-3.5">
               <p className="text-[13px] font-semibold">{title}</p>
               <p className="muted mt-1">{body}</p>
             </li>

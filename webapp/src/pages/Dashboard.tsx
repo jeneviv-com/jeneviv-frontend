@@ -165,7 +165,7 @@ function HeadlineCard({
   return (
     <section
       aria-label="Collected"
-      className="relative isolate overflow-hidden rounded-[24px] bg-ink px-5 pb-5 pt-5 text-white lg:px-7 lg:pb-6 lg:pt-6"
+      className="relative isolate overflow-hidden rounded-card bg-ink px-5 pb-5 pt-5 text-white lg:px-7 lg:pb-6 lg:pt-6"
     >
       <img
         src={JENEVIV_LOGO}

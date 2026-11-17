@@ -291,7 +291,7 @@ export default function Settings() {
   return (
     <div className="mx-auto w-full max-w-[1040px] pb-10">
       {/* identity */}
-      <div className="relative mb-6 overflow-hidden rounded-[24px] bg-ink p-5 text-cream sm:p-6">
+      <div className="relative mb-6 overflow-hidden rounded-card bg-ink p-5 text-cream sm:p-6">
         <span
           className="pointer-events-none absolute -right-12 -top-14 h-40 w-40 rounded-full bg-brand/25 blur-3xl"
           aria-hidden="true"

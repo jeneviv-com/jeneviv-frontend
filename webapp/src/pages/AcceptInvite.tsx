@@ -50,7 +50,7 @@ export default function AcceptInvite() {
 
   return (
     <div className="grid min-h-screen place-items-center bg-cream px-5">
-      <div className="w-full max-w-[420px] rounded-[22px] border border-line bg-white p-7 text-center shadow-pop">
+      <div className="w-full max-w-[420px] rounded-card border border-line bg-white p-7 text-center shadow-pop">
         {state.kind === "working" ? (
           <>
             <Loader2 size={26} className="mx-auto animate-spin text-brand" />

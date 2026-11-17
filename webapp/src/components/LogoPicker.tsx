@@ -54,7 +54,7 @@ export default function LogoPicker({
   return (
     <div>
       <p className="label">{label}</p>
-      <div className="flex items-center gap-4 rounded-[16px] border border-line bg-cream px-4 py-4">
+      <div className="flex items-center gap-4 rounded-card border border-line bg-cream px-4 py-4">
         <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-[14px] border border-line bg-white">
           {value ? (
             <img src={value} alt="" className="h-full w-full object-contain" />

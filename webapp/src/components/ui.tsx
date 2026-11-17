@@ -1092,7 +1092,7 @@ export function SummaryRow({
 
   const panel = (
     <div
-      className={`relative flex min-h-[112px] flex-col justify-between gap-3 overflow-hidden px-[22px] py-[18px] lg:min-h-[140px] lg:rounded-[22px] lg:border lg:border-ink/10 lg:p-5 lg:shadow-[0_1px_2px_rgba(16,16,16,0.04)] ${toneClass} ${
+      className={`relative flex min-h-[112px] flex-col justify-between gap-3 overflow-hidden px-[22px] py-[18px] lg:min-h-[140px] lg:rounded-card lg:border lg:border-line lg:p-5 lg:shadow-card ${toneClass} ${
         href ? "transition-[filter] duration-150 hover:brightness-[0.985] active:brightness-95" : ""
       }`}
     >

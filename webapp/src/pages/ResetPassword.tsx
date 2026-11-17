@@ -125,7 +125,7 @@ export default function ResetPassword() {
           </>
         }
       >
-        <div className="rounded-[16px] border border-ink/15 bg-white px-5 py-6">
+        <div className="rounded-card border border-line bg-white px-5 py-6 shadow-card">
           <span className="grid h-11 w-11 place-items-center rounded-full bg-[#d5e8c4]">
             <CheckCircle2 size={19} className="text-ink" />
           </span>

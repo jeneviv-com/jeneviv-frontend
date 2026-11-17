@@ -345,7 +345,7 @@ export default function Onboarding() {
           </ol>
         </div>
 
-        <div className="rounded-[20px] bg-ink p-6 text-cream">
+        <div className="rounded-card bg-ink p-6 text-cream">
           <div className="flex items-start gap-3">
             <BadgeCheck size={18} className="mt-0.5 shrink-0 text-brand-peach" />
             <div>

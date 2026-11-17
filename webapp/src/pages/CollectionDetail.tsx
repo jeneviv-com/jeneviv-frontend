@@ -508,7 +508,7 @@ export default function CollectionDetail() {
               </section>
 
               {/* share: one dark block with the link and quick actions */}
-              <section className="mt-12 self-start rounded-[22px] bg-ink p-6 text-cream xl:mt-0">
+              <section className="mt-12 self-start rounded-card bg-ink p-6 text-cream xl:mt-0">
                 <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-cream/60">Share</p>
                 <h2 className="mt-2 text-[21px] font-bold tracking-[-0.03em]">One link for every payer</h2>
                 <div className="mt-5 break-all rounded-[14px] border border-cream/15 bg-cream/5 px-4 py-3.5 font-mono text-[12px] text-cream/85">
@@ -919,7 +919,7 @@ export default function CollectionDetail() {
             </section>
 
             {/* danger zone */}
-            <aside className="self-start rounded-[20px] bg-[#ffd6cf] p-6">
+            <aside className="self-start rounded-card bg-[#ffd6cf] p-6">
               <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">Danger zone</p>
               <h3 className="mt-2 text-[18px] font-bold tracking-tight">Delete this collection</h3>
               <p className="mt-2 text-[13.5px] leading-relaxed text-ink-soft">
