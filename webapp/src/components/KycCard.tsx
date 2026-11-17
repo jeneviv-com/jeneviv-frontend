@@ -10,6 +10,7 @@ import {
   type ToneKind,
 } from "@/components/ui";
 import { useAuth } from "@/context/AuthContext";
+import { useGateway } from "@/lib/gateway";
 import { useToast } from "@/context/ToastContext";
 import { useAction, useBankAccounts, useBanks, useKyc } from "@/hooks/useApi";
 import { APIError, merchantsAPI } from "@/lib/api";
