@@ -36,6 +36,7 @@ import {
   SummaryPanel,
   SummaryRow,
 } from "@/components/ui";
+import { useGateway } from "@/lib/gateway";
 
 /** One summary tile, coloured by meaning. Matches the dashboard. */
 function SummaryTile({
@@ -59,12 +60,13 @@ function SummaryTile({
 }
 
 /**
- * Bank & settlement. Under Paystack's split, every payment is routed to the
+ * Bank & settlement. Under a split gateway (Paystack), every payment is routed to the
  * merchant's bank at the moment it is captured, so this page manages the
  * destination account — there is no platform wallet, no withdrawable balance
  * and no payout approval to wait on.
  */
 export default function Payouts() {
+  const gateway = useGateway();
   const { merchant } = useAuth();
   const { success, error: toastError } = useToast();
 
@@ -120,7 +122,9 @@ export default function Payouts() {
       await accounts.refetch();
       success(
         "Bank account linked",
-        "Paystack settles future collections into this account.",
+        gateway.settles_direct
+          ? `${gateway.label} settles future collections into this account.`
+          : "Future payouts go to this account.",
       );
       setShowAddAccount(false);
       setAccountForm({ bank_code: "", account_number: "", is_default: false });
@@ -134,7 +138,11 @@ export default function Payouts() {
       <PageHeader
         eyebrow="Money"
         title="Bank & settlement"
-        description="Paystack splits every payment as it is captured. Your collection goes straight to your bank — Jeneviv never holds merchant money."
+        description={
+          gateway.settles_direct
+            ? `${gateway.label} splits every payment as it is captured. Your collection goes straight to your bank — Jeneviv never holds merchant money.`
+            : `${gateway.label} confirms every payment into your Jeneviv wallet. Collections are paid out to the bank account you choose here.`
+        }
         actions={
           <Button icon={<Plus size={15} />} onClick={() => setShowAddAccount(true)}>
             Add bank account
@@ -265,19 +273,24 @@ export default function Payouts() {
           <Card>
             <CardHeader
               title="How settlement works"
-              subtitle="No wallet, no payout runs, no waiting"
+              subtitle={gateway.settles_direct ? "No wallet, no payout runs, no waiting" : "From payer to wallet to your bank"}
               icon={<ShieldCheck size={16} />}
             />
             <ol className="space-y-3">
               {[
                 {
                   title: "Payer pays the collection link",
-                  body: "The collection amount, Jeneviv's platform fee and Paystack's processing fee are charged to the payer. The total is shown before they pay.",
+                  body: `The collection amount, Jeneviv's platform fee and ${gateway.label}'s processing fee are charged to the payer. The total is shown before they pay.`,
                 },
-                {
-                  title: "Paystack splits it instantly",
-                  body: "The full collection amount goes to your bank account. Jeneviv's platform fee goes to the platform.",
-                },
+                gateway.settles_direct
+                  ? {
+                      title: `${gateway.label} splits it instantly`,
+                      body: "The full collection amount goes to your bank account. Jeneviv's platform fee goes to the platform.",
+                    }
+                  : {
+                      title: `${gateway.label} credits your wallet`,
+                      body: "The collection amount lands in your Jeneviv wallet and is paid out to your bank account on your payout schedule.",
+                    },
                 {
                   title: "Your dashboard records it",
                   body: "The payment appears here as settled, matched to the payer and reference.",
@@ -372,9 +385,9 @@ export default function Payouts() {
                 {!settlementStatus.data.direct_settlement_active && (
                   <InlineNote tone="warning" title="Settlement not active">
                     {!settlementStatus.data.has_subaccount 
-                      ? "A Paystack subaccount must be created. This happens automatically when you add a verified bank account."
+                      ? `A ${gateway.label} subaccount must be created. This happens automatically when you add a verified bank account.`
                       : !settlementStatus.data.bank_account_verified
-                      ? "Your bank account needs to be verified by Paystack before settlement can begin."
+                      ? `Your bank account needs to be verified by ${gateway.label} before settlement can begin.`
                       : "Complete the setup steps to enable direct settlement."}
                   </InlineNote>
                 )}
@@ -393,7 +406,7 @@ export default function Payouts() {
         open={showAddAccount}
         onClose={() => setShowAddAccount(false)}
         title="Add a bank account"
-        description="Paystack verifies the account name against your workspace before settlement is enabled."
+        description={`${gateway.label} verifies the account name against your workspace before settlement is enabled.`}
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowAddAccount(false)}>

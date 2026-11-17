@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { errorMessage } from "@/hooks/useApi";
 import { Button, Field, InlineNote, Input, TONE_MEANING, Textarea } from "@/components/ui";
+import { useGateway } from "@/lib/gateway";
 
 const WHAT_NEXT = [
   {
@@ -59,6 +60,7 @@ function Block({ label, children }: { label: string; children: ReactNode }) {
 }
 
 export default function Onboarding() {
+  const gateway = useGateway();
   const { merchant, user, refreshMerchant, setMerchant } = useAuth();
   const { success, error: toastError, info, notify } = useToast();
 
@@ -347,10 +349,11 @@ export default function Onboarding() {
           <div className="flex items-start gap-3">
             <BadgeCheck size={18} className="mt-0.5 shrink-0 text-brand-peach" />
             <div>
-              <p className="text-[14px] font-bold text-white">Money never sits with Jeneviv</p>
+              <p className="text-[14px] font-bold text-white">{gateway.settlementSubtitle}</p>
               <p className="mt-1.5 text-[13px] leading-relaxed text-cream/70">
-                Payments are processed by Paystack and settled straight to your verified bank
-                account as each one is captured.
+                {gateway.settles_direct
+                  ? `Payments are processed by ${gateway.label} and settled straight to your verified bank account as each one is captured.`
+                  : `Payments are processed by ${gateway.label} and credited to your Jeneviv wallet, then paid out to your verified bank account.`}
               </p>
             </div>
           </div>

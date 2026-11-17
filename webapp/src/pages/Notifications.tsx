@@ -272,9 +272,9 @@ export default function Notifications() {
             to="/settings"
             className="font-semibold text-ink underline decoration-ink/25 underline-offset-2 hover:text-brand"
           >
-            Settings · Payment notifications
+            Settings · Notifications
           </Link>
-          . Settlement confirmations are always sent.
+          .
         </span>
       </p>
     </div>

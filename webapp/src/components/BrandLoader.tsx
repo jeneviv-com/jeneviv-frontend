@@ -1,4 +1,4 @@
-import { apiConfig } from "@/lib/api";
+import { JENEVIV_LOGO } from "@/lib/brand";
 
 /**
  * The brand loader: the logo arrives in two halves, one from above and one from
@@ -47,7 +47,7 @@ const CSS = `
 `;
 
 export default function BrandLoader({ label = "Opening your workspace…" }: { label?: string }) {
-  const logo = apiConfig.withBase("/assets/images/jeneviv.png");
+  const logo = JENEVIV_LOGO;
 
   return (
     <div className="grid min-h-screen place-items-center bg-cream">

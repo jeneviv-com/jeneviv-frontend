@@ -15,7 +15,7 @@ import {
   Undo2,
   Users,
 } from "lucide-react";
-import { apiConfig } from "@/lib/api";
+import { JENEVIV_LOGO } from "@/lib/brand";
 
 /**
  * A pixel-for-pixel miniature of the signed-in dashboard, drawn at the real
@@ -103,7 +103,7 @@ export default function DashboardPreview() {
       <aside className="flex w-[256px] shrink-0 flex-col border-r border-line bg-white">
         <div className="flex items-center gap-2.5 px-5 pb-3 pt-5">
           <img
-            src={apiConfig.withBase("/assets/images/jeneviv.png")}
+            src={JENEVIV_LOGO}
             alt=""
             width={28}
             height={28}

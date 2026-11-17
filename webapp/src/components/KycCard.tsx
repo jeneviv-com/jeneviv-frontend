@@ -1,18 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
-import {
-  BadgeCheck,
-  Banknote,
-  Fingerprint,
-  Image as ImageIcon,
-  Loader2,
-  Users,
-} from "lucide-react";
-import { APIError, merchantsAPI } from "@/lib/api";
 import LogoPicker from "@/components/LogoPicker";
-import { useAction, useBankAccounts, useBanks, useKyc } from "@/hooks/useApi";
-import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/context/ToastContext";
-import { formatDateTime } from "@/lib/format";
 import {
   Button,
   Field,
@@ -22,13 +8,32 @@ import {
   TONE_MEANING,
   type ToneKind,
 } from "@/components/ui";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
+import { useAction, useBankAccounts, useBanks, useKyc } from "@/hooks/useApi";
+import { APIError, merchantsAPI } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
+import {
+  BadgeCheck,
+  Banknote,
+  Fingerprint,
+  Image as ImageIcon,
+  Loader2,
+  Users,
+} from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useGateway } from "@/lib/gateway";
 
 function messageOf(error: unknown): string {
   if (error instanceof APIError) {
-    const details = (error.data as { error?: { details?: unknown } })?.error?.details;
+    const details = (error.data as { error?: { details?: unknown } })?.error
+      ?.details;
     if (details && typeof details === "object") {
       const record = details as Record<string, unknown>;
-      if (typeof record.account_name === "string" && typeof record.legal_name === "string") {
+      if (
+        typeof record.account_name === "string" &&
+        typeof record.legal_name === "string"
+      ) {
         return `Bank name "${record.account_name}" does not match the NIN name "${record.legal_name}".`;
       }
     }
@@ -100,6 +105,7 @@ function Step({
 }
 
 export default function KycCard() {
+  const gateway = useGateway();
   const kyc = useKyc();
   const banks = useBanks("NG");
   const accounts = useBankAccounts();
@@ -141,7 +147,11 @@ export default function KycCard() {
     await refreshMerchant();
   };
 
-  const run = async (task: () => Promise<unknown>, okTitle: string, okBody: string) => {
+  const run = async (
+    task: () => Promise<unknown>,
+    okTitle: string,
+    okBody: string,
+  ) => {
     try {
       await task();
       await refresh();
@@ -200,7 +210,8 @@ export default function KycCard() {
       </div>
 
       <p className="muted -mt-4 max-w-2xl">
-        Collect from day one. Payments settle once the NIN and bank account names match.
+        Collect from day one. Payments settle once the NIN and bank account
+        names match.
       </p>
 
       {/* the three steps */}
@@ -215,7 +226,9 @@ export default function KycCard() {
             <InlineNote tone="success" title="NIN verified">
               {data?.verified_legal_name}
               {data?.nin_last4 ? ` ·••• ${data.nin_last4}` : ""}
-              {data?.nin_verified_at ? ` · ${formatDateTime(data.nin_verified_at)}` : ""}
+              {data?.nin_verified_at
+                ? ` · ${formatDateTime(data.nin_verified_at)}`
+                : ""}
             </InlineNote>
           ) : (
             <>
@@ -245,8 +258,8 @@ export default function KycCard() {
                   className="mt-1"
                 />
                 <span>
-                  I confirm I have the data subject&apos;s consent to verify this NIN
-                  with Veripine.
+                  I confirm I have the data subject&apos;s consent to verify
+                  this NIN with Veripine.
                 </span>
               </label>
               <Button
@@ -271,11 +284,13 @@ export default function KycCard() {
           number={2}
           done={bankDone}
           title="Link the settlement bank"
-          body="Resolved with Paystack. The account name must match the NIN name."
+          body={`Resolved with ${gateway.label}. The account name must match the NIN name.`}
         >
           {bankDone ? (
             <InlineNote tone="success" title="Bank verified">
-              Paystack now settles collections straight into this account.
+              {gateway.settles_direct
+                ? `${gateway.label} now settles collections straight into this account.`
+                : "Payouts from your Jeneviv wallet now go to this account."}
             </InlineNote>
           ) : (
             <>
@@ -301,7 +316,9 @@ export default function KycCard() {
                     maxLength={10}
                     value={accountNumber}
                     onChange={(event) =>
-                      setAccountNumber(event.target.value.replace(/\D/g, "").slice(0, 10))
+                      setAccountNumber(
+                        event.target.value.replace(/\D/g, "").slice(0, 10),
+                      )
                     }
                     placeholder="0123456789"
                     className="font-mono"
@@ -323,55 +340,72 @@ export default function KycCard() {
                 Verify account name
               </Button>
               {!ninDone ? (
-                <p className="hint">Verify the NIN first — the names must match.</p>
+                <p className="hint">
+                  Verify the NIN first — the names must match.
+                </p>
               ) : null}
             </>
           )}
         </Step>
 
         {data?.escrow_enabled ? (
-        <Step
-          number={3}
-          done={treasurerDone}
-          title="Add the treasurer"
-          body="Every sweep needs their OTP. The rep alone can never move money."
-        >
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Treasurer name" htmlFor="treasurer-name">
-              <Input
-                id="treasurer-name"
-                value={treasurer.name}
-                onChange={(event) => setTreasurer({ ...treasurer, name: event.target.value })}
-                placeholder="Mrs Adeyemi"
-              />
-            </Field>
-            <Field label="Phone number" htmlFor="treasurer-phone" hint="OTP is sent here by SMS.">
-              <Input
-                id="treasurer-phone"
-                inputMode="tel"
-                value={treasurer.phone}
-                onChange={(event) => setTreasurer({ ...treasurer, phone: event.target.value })}
-                placeholder="08012345678"
-                className="font-mono"
-              />
-            </Field>
-          </div>
-          <Button
-            variant="secondary"
-            icon={<Users size={14} />}
-            loading={saveTreasurer.loading}
-            disabled={treasurer.name.trim().length < 2 || treasurer.phone.trim().length < 10}
-            onClick={() =>
-              run(
-                () => saveTreasurer.run(treasurer.name.trim(), treasurer.phone.trim()),
-                "Treasurer saved",
-                "Sweeps will now wait for their approval.",
-              )
-            }
+          <Step
+            number={3}
+            done={treasurerDone}
+            title="Add the treasurer"
+            body="Every sweep needs their OTP. The rep alone can never move money."
           >
-            Save treasurer
-          </Button>
-        </Step>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Treasurer name" htmlFor="treasurer-name">
+                <Input
+                  id="treasurer-name"
+                  value={treasurer.name}
+                  onChange={(event) =>
+                    setTreasurer({ ...treasurer, name: event.target.value })
+                  }
+                  placeholder="Mrs Adeyemi"
+                />
+              </Field>
+              <Field
+                label="Phone number"
+                htmlFor="treasurer-phone"
+                hint="OTP is sent here by SMS."
+              >
+                <Input
+                  id="treasurer-phone"
+                  inputMode="tel"
+                  value={treasurer.phone}
+                  onChange={(event) =>
+                    setTreasurer({ ...treasurer, phone: event.target.value })
+                  }
+                  placeholder="08012345678"
+                  className="font-mono"
+                />
+              </Field>
+            </div>
+            <Button
+              variant="secondary"
+              icon={<Users size={14} />}
+              loading={saveTreasurer.loading}
+              disabled={
+                treasurer.name.trim().length < 2 ||
+                treasurer.phone.trim().length < 10
+              }
+              onClick={() =>
+                run(
+                  () =>
+                    saveTreasurer.run(
+                      treasurer.name.trim(),
+                      treasurer.phone.trim(),
+                    ),
+                  "Treasurer saved",
+                  "Sweeps will now wait for their approval.",
+                )
+              }
+            >
+              Save treasurer
+            </Button>
+          </Step>
         ) : null}
       </ol>
 
@@ -382,8 +416,12 @@ export default function KycCard() {
             <ImageIcon size={16} />
           </span>
           <div>
-            <p className="text-[14px] font-bold tracking-tight">School logo</p>
-            <p className="muted mt-0.5">Appears on the PDF receipt and the public verification page.</p>
+            <p className="text-[14px] font-bold tracking-tight">
+              Organization logo
+            </p>
+            <p className="muted mt-0.5">
+              Appears on the PDF receipt and the public verification page.
+            </p>
           </div>
         </div>
         <LogoPicker
@@ -393,7 +431,9 @@ export default function KycCard() {
             run(
               () => saveLogo.run(url ?? ""),
               url ? "Logo saved" : "Logo removed",
-              url ? "New receipts will use it." : "Receipts will show the default mark.",
+              url
+                ? "New receipts will use it."
+                : "Receipts will show the default mark.",
             );
           }}
         />

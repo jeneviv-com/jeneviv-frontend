@@ -1,7 +1,8 @@
 import { ReactNode } from "react";
 import { ArrowLeft, Check, ShieldCheck } from "lucide-react";
 import LaptopMockup from "@/components/LaptopMockup";
-import { apiConfig } from "@/lib/api";
+import { useGateway } from "@/lib/gateway";
+import { JENEVIV_LOGO } from "@/lib/brand";
 
 const PROOF = [
   "Every naira tied to a name and a reference",
@@ -20,6 +21,7 @@ export default function AuthLayout({
   children: ReactNode;
   footer: ReactNode;
 }) {
+  const gateway = useGateway();
   // The dashboard is served from its own host, where this variable may be unset;
   // "" or "/" would send "Back to site" back into the dashboard.
   const configuredLanding = (import.meta.env.VITE_PUBLIC_APP_URL ?? "").replace(/\/+$/, "");
@@ -56,7 +58,7 @@ export default function AuthLayout({
         <div className="relative flex items-center justify-between">
           <a href={landing} className="flex items-center gap-2.5" aria-label="Jeneviv — back to the website">
             <img
-              src={apiConfig.withBase("/assets/images/jeneviv.png")}
+              src={JENEVIV_LOGO}
               alt=""
               width={30}
               height={30}
@@ -102,7 +104,7 @@ export default function AuthLayout({
         </div>
 
         <p className="relative flex items-center gap-2 text-[11.5px] text-cream/45">
-          <ShieldCheck size={13} /> Payments settled by Paystack · NDPA aligned
+          <ShieldCheck size={13} /> Payments settled by {gateway.label} · NDPA aligned
         </p>
       </aside>
 
@@ -114,7 +116,7 @@ export default function AuthLayout({
             className="flex items-center gap-2 text-[21px] font-extrabold tracking-[-0.05em]"
             aria-label="Jeneviv — back to the website"
           >
-            <img src={apiConfig.withBase("/assets/images/jeneviv.png")} alt="" width={28} height={28} className="h-7 w-7 rounded-[9px] object-cover" />
+            <img src={JENEVIV_LOGO} alt="" width={28} height={28} className="h-7 w-7 rounded-[9px] object-cover" />
             jeneviv<span className="text-brand">.</span>
           </a>
           <a href={landing} className="flex items-center gap-1.5 text-[12.5px] text-ink-muted">

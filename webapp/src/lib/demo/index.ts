@@ -348,6 +348,12 @@ async function route(ctx: Ctx) {
 
   if (path === "/health") return respond(200, { status: "ok", mode: "demo" });
 
+  if (path === "/api/config" && method === "GET") {
+    const name = String(import.meta.env.VITE_PAYMENT_GATEWAY ?? "paystack").toLowerCase();
+    const label = name.charAt(0).toUpperCase() + name.slice(1);
+    return respond(200, { gateway: { name, label, settles_direct: name === "paystack" } });
+  }
+
   if (path === "/api/banks" && method === "GET") {
     return respond(200, {
       banks: [

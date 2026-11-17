@@ -469,6 +469,9 @@ export interface PublicReceipt {
   group_name?: string | null;
   group_logo_url?: string | null;
   details: Array<{ label: string; value: string }>;
+  /** The gateway that took this payment (newer APIs only). */
+  gateway?: string;
+  gateway_label?: string;
   breakdown?: {
     collection: number;
     paystack_fee: number;
@@ -686,8 +689,27 @@ function normalizeCollection(
 
 function normalizeMerchant(raw: unknown): Merchant {
   const row = asRecord(raw);
+  // The API returns preferences as top-level columns; the dashboard reads them
+  // from `settings`. Without this, Settings always showed the defaults after a
+  // reload, whatever had been saved.
+  const nested = asRecord(row.settings);
+  const pick = <T,>(snake: string, camel: string) =>
+    (nested[snake] as T | undefined) ?? pickKey<T>(row, snake, camel);
+  const settings: MerchantSettings = {
+    payout_mode: pick<MerchantSettings["payout_mode"]>("payout_mode", "payoutMode"),
+    email_notification_for_transactions: pick<boolean>(
+      "email_notification_for_transactions",
+      "emailNotificationForTransactions",
+    ),
+    email_notification_period: pick<MerchantSettings["email_notification_period"]>(
+      "email_notification_period",
+      "emailNotificationPeriod",
+    ),
+    default_bank_account_id: pick<string>("default_bank_account_id", "defaultBankAccountId"),
+  };
   return {
     ...(row as unknown as Merchant),
+    settings,
     display_name: pickKey<string>(row, "display_name", "displayName"),
     application_note: pickKey<string>(row, "application_note", "applicationNote"),
     admin_review_note: pickKey<string>(row, "admin_review_note", "adminReviewNote"),
@@ -1026,11 +1048,13 @@ export const merchantsAPI = {
       }),
   },
 
-  updateSettings: (settings: MerchantSettings & { logo_url?: string | null }) =>
-    apiFetch<{ merchant: Merchant }>("/api/merchants/me/settings", {
+  updateSettings: async (settings: MerchantSettings & { logo_url?: string | null }) => {
+    const response = await apiFetch<{ merchant?: unknown }>("/api/merchants/me/settings", {
       method: "PATCH",
       body: settings,
-    }),
+    });
+    return { merchant: normalizeMerchant(response.merchant) };
+  },
 
   getKyc: () => apiFetch<{ kyc: KycView }>("/api/merchants/me/kyc"),
 

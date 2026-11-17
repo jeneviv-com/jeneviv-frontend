@@ -37,6 +37,7 @@ import {
   SummaryPanel,
   SummaryRow,
 } from "@/components/ui";
+import { useGateway } from "@/lib/gateway";
 
 /** One stacked summary tile, coloured by meaning. Matches the dashboard. */
 function SummaryTile({
@@ -58,6 +59,7 @@ function SummaryTile({
 }
 
 export default function Refunds() {
+  const gateway = useGateway();
   const { isAdmin } = useAuth();
   const { success, error: toastError } = useToast();
   const [target, setTarget] = useState<Transaction | null>(null);
@@ -87,7 +89,7 @@ export default function Refunds() {
       await retryRefund.run(bankTarget.id, bankForm.account_number, bankForm.bank_code);
       await refunds.refetch();
       success(
-        "Refund sent back to Paystack",
+        `Refund sent back to ${gateway.label}`,
         "We will mark it complete as soon as the gateway confirms it.",
       );
       setBankTarget(null);
@@ -351,12 +353,12 @@ export default function Refunds() {
               "You confirm the payment and give a reason. The reversal is recorded against the transaction.",
             ],
             [
-              "Returned by Paystack",
+              `Returned by ${gateway.label}`,
               "The reversal leaves your settlement and returns to the original bank account or card, usually within 3–5 business days.",
             ],
             [
               "Payer details needed",
-              "If Paystack cannot route the refund, the payment is marked “Needs attention”. Add the payer's account number and the refund is retried.",
+              `If ${gateway.label} cannot route the refund, the payment is marked “Needs attention”. Add the payer's account number and the refund is retried.`,
             ],
           ].map(([title, body]) => (
             <li key={title} className="rounded-[16px] border border-ink/15 bg-cream px-4 py-3.5">
@@ -371,7 +373,7 @@ export default function Refunds() {
         open={Boolean(bankTarget)}
         onClose={() => setBankTarget(null)}
         title="Where should this refund go?"
-        description="Paystack needs the payer's bank account to complete the reversal."
+        description={`${gateway.label} needs the payer's bank account to complete the reversal.`}
         footer={
           <>
             <Button variant="secondary" onClick={() => setBankTarget(null)}>
@@ -382,7 +384,7 @@ export default function Refunds() {
               disabled={!bankForm.bank_code || bankForm.account_number.length !== 10}
               onClick={submitBankDetails}
             >
-              Send to Paystack
+              Send to {gateway.label}
             </Button>
           </>
         }

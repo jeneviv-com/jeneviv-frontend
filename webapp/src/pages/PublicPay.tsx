@@ -5,6 +5,7 @@ import { APIError, paymentsAPI, verifyAPI, type Collection, type InitPaymentResu
 import { useCollectionByCode, errorMessage } from "@/hooks/useApi";
 import { copyText, currencySymbol, formatMoney, formatTime } from "@/lib/format";
 import { Button, Field, InlineNote, Input, Select, Textarea } from "@/components/ui";
+import { useGateway } from "@/lib/gateway";
 
 type Step = "details" | "pay" | "done";
 const STEPS: Step[] = ["details", "pay", "done"];
@@ -59,6 +60,7 @@ function storeResult(code: string | undefined, value: InitPaymentResult | null) 
 }
 
 export default function PublicPay() {
+  const gateway = useGateway();
   const { code } = useParams<{ code: string }>();
   const collection = useCollectionByCode(code);
 
@@ -467,7 +469,7 @@ export default function PublicPay() {
                     <dd className="tabular">{formatMoney(data.pricing.platform_fee, data.currency)}</dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="text-ink-soft">Paystack processing fee</dt>
+                    <dt className="text-ink-soft">{gateway.feeLabel}</dt>
                     <dd className="tabular">{formatMoney(data.pricing.gateway_fee, data.currency)}</dd>
                   </div>
                   <div className="flex justify-between gap-4 border-t border-line-soft pt-2">
@@ -634,7 +636,7 @@ export default function PublicPay() {
       </div>
 
       <p className="mt-12 border-t border-line pt-5 text-center text-[11.5px] text-ink-muted">
-        Secured by Jeneviv · Payments processed by Paystack · amounts in {currencySymbol(data.currency)} {data.currency}
+        Secured by Jeneviv · {gateway.processedBy} · amounts in {currencySymbol(data.currency)} {data.currency}
       </p>
     </Shell>
   );

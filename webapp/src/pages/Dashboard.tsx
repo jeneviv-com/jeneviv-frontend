@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, Banknote, Plus, ReceiptText, ShieldCheck, Users } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Banknote,
+  Plus,
+  ReceiptText,
+  ShieldCheck,
+  Users,
+  Wallet,
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
   useCollectionStats,
@@ -18,22 +27,21 @@ import {
   timeAgo,
   transactionPayer,
 } from "@/lib/format";
-import { AreaChart, type SeriesPoint } from "@/components/charts";
+import { AreaChart, Sparkline, type SeriesPoint } from "@/components/charts";
+import { useGateway } from "@/lib/gateway";
 import {
   Card,
   SimpleCard,
   CardHeader,
-  SummaryRow,
   EmptyState,
   ErrorState,
   Pill,
   ProgressBar,
-  SegmentedControl,
-  SummaryPanel,
   StatusPill,
   TableSkeleton,
   FilterMenu,
 } from "@/components/ui";
+import { JENEVIV_LOGO } from "@/lib/brand";
 
 type Range = "7d" | "30d" | "90d";
 
@@ -130,6 +138,147 @@ const valueSkeleton = (
   <span aria-hidden="true" className="skeleton inline-block h-5 w-16 rounded-md" />
 );
 
+/* ------------------------------------------------------------------ cards */
+
+/**
+ * The headline: one dark card, one big number. The Jeneviv mark sits in the
+ * corner as a watermark, the only place the orange is allowed to be large.
+ */
+function HeadlineCard({
+  value,
+  loading,
+  count,
+  delta,
+  rangeLabel,
+  series,
+}: {
+  value: string;
+  loading: boolean;
+  count: number;
+  delta: number | null;
+  rangeLabel: string;
+  series: number[];
+}) {
+  const up = (delta ?? 0) >= 0;
+  return (
+    <section
+      aria-label="Collected"
+      className="relative isolate overflow-hidden rounded-[24px] bg-ink px-5 pb-5 pt-5 text-white lg:px-7 lg:pb-6 lg:pt-6"
+    >
+      <img
+        src={JENEVIV_LOGO}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-10 -top-10 -z-10 h-48 w-48 rotate-6 opacity-[0.16] lg:h-60 lg:w-60"
+      />
+      <div className="flex items-center justify-between gap-3">
+        <p className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-white/55">
+          Collected · {rangeLabel}
+        </p>
+        {delta !== null && !loading ? (
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold ${
+              up ? "bg-white/10 text-white" : "bg-brand/20 text-brand-peach"
+            }`}
+            title="Compared with the previous period of the same length"
+          >
+            {up ? <ArrowUpRight size={12} aria-hidden="true" /> : <ArrowDownRight size={12} aria-hidden="true" />}
+            {delta >= 200
+              ? `${(delta / 100 + 1).toFixed(0)}×`
+              : `${Math.abs(delta).toFixed(delta !== 0 && Math.abs(delta) < 10 ? 1 : 0)}%`}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-4 flex items-end justify-between gap-4">
+        <div className="min-w-0">
+          <p className="tabular text-[34px] font-extrabold leading-none tracking-[-0.04em] lg:text-[44px]">
+            {loading ? <span aria-hidden="true" className="skeleton inline-block h-9 w-40 rounded-lg opacity-30" /> : value}
+          </p>
+          <p className="mt-2.5 text-[12.5px] text-white/60">
+            {count} successful payment{count === 1 ? "" : "s"}
+          </p>
+        </div>
+        {series.some((point) => point > 0) ? (
+          <div className="hidden shrink-0 sm:block">
+            <Sparkline values={series} width={132} height={40} tone="#ff4800" />
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * A metric card: label and icon on top, the figure, a line of context, then a
+ * footer that shows *why* the number matters (a target, a rate, a balance).
+ */
+function StatCard({
+  label,
+  icon,
+  value,
+  context,
+  footer,
+  href,
+  loading,
+  accent = false,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  value: React.ReactNode;
+  context: string;
+  footer?: React.ReactNode;
+  href: string;
+  loading: boolean;
+  accent?: boolean;
+}) {
+  return (
+    <Link
+      to={href}
+      className="group relative flex h-full flex-col rounded-[20px] border border-line bg-white p-4 shadow-card transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-ink/20 hover:shadow-pop focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink lg:p-5"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex items-center gap-2">
+          <span
+            className={`grid h-7 w-7 place-items-center rounded-full ${
+              accent ? "bg-brand text-white" : "bg-cream text-ink"
+            }`}
+          >
+            {icon}
+          </span>
+          <span className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">{label}</span>
+        </span>
+        <ArrowUpRight
+          size={15}
+          aria-hidden="true"
+          className="text-ink-faint transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-ink"
+        />
+      </div>
+      <p className="tabular mt-4 text-[26px] font-extrabold leading-none tracking-[-0.035em] lg:text-[28px]">
+        {loading ? valueSkeleton : value}
+      </p>
+      <p className="mt-1.5 truncate text-[12px] text-ink-muted">{context}</p>
+      {footer ? <div className="mt-auto pt-4">{footer}</div> : null}
+    </Link>
+  );
+}
+
+/** A thin labelled meter for card footers. */
+function Meter({ value, label, tone = "ink" }: { value: number; label: string; tone?: "ink" | "brand" }) {
+  const clamped = Math.max(0, Math.min(100, value));
+  return (
+    <div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-cream-deep">
+        <div
+          className={`h-full rounded-full transition-[width] duration-700 ease-out ${tone === "brand" ? "bg-brand" : "bg-ink"}`}
+          style={{ width: `${clamped}%` }}
+        />
+      </div>
+      <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">{label}</p>
+    </div>
+  );
+}
+
 /* ---------------------------------------------------------------- dashboard */
 
 export default function Dashboard() {
@@ -156,8 +305,23 @@ export default function Dashboard() {
 
   const successful = rangedTransactions.filter((t) => t.status === "success");
   const collected = successful.reduce((sum, t) => sum + t.amount, 0);
-  const settled = successful.reduce((sum, t) => sum + t.amount, 0);
   const pendingCount = allTransactions.filter((t) => t.status === "pending").length;
+  const gateway = useGateway();
+
+  // The same-length window before this one, for the headline's change figure.
+  const rangeMs = RANGE_DAYS[range] * 86_400_000;
+  const previousCollected = allTransactions
+    .filter((t) => {
+      const time = new Date(t.created_at).getTime();
+      return t.status === "success" && time >= since - rangeMs && time < since;
+    })
+    .reduce((sum, t) => sum + t.amount, 0);
+  const delta = previousCollected > 0 ? ((collected - previousCollected) / previousCollected) * 100 : null;
+
+  // Settled attempts only: a payment still pending has not succeeded or failed yet.
+  const decided = rangedTransactions.filter((t) => t.status !== "pending").length;
+  const successRate = decided ? Math.round((successful.length / decided) * 100) : 0;
+  const walletBalance = Number(merchant?.wallet_balance_ngn ?? 0);
 
   // Payers are keyed by email when the API has it, otherwise by name. Two
   // people with the same name and no email will count as one.
@@ -237,6 +401,18 @@ export default function Dashboard() {
           <h1 className="mt-1 text-[22px] font-bold tracking-tight lg:text-[28px]">
             Good to see you, {firstName}
           </h1>
+          {merchant ? (
+            <Link
+              to="/settings"
+              className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 py-1 text-[11px] font-semibold text-ink-soft transition-colors hover:border-ink/20"
+            >
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${merchant.status === "approved" ? "bg-success" : "bg-brand"}`}
+                aria-hidden="true"
+              />
+              {statusLabel(merchant.status)} · {gateway.label}
+            </Link>
+          ) : null}
         </div>
         <Link
           to="/collections?new=1"
@@ -265,84 +441,90 @@ export default function Dashboard() {
       <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px]">
         {/* Left column - main metrics and charts */}
         <div className="space-y-5">
-          {/* dark headline card */}
+          {/* headline */}
           <Reveal delay={40}>
-            <section
-              aria-label="Headline"
-              className="rounded-[20px] bg-[#101010] px-5 py-5 text-white shadow-card lg:px-6 lg:py-6"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[16px] font-semibold tracking-tight lg:text-[18px]">Collected</p>
-                  <p className="mt-0.5 text-[12.5px] text-white/65 lg:text-[13px]">
-                    {successful.length} successful payment
-                    {successful.length === 1 ? "" : "s"} in this range
-                  </p>
-                </div>
-                <p className="text-right text-[24px] font-bold tabular lg:text-[32px]">
-                  {loading ? valueSkeleton : formatMoney(Math.round(animatedCollected))}
-                </p>
-              </div>
-            </section>
+            <HeadlineCard
+              value={formatMoney(Math.round(animatedCollected))}
+              loading={loading}
+              count={successful.length}
+              delta={delta}
+              rangeLabel={range === "7d" ? "7 days" : range === "30d" ? "30 days" : "90 days"}
+              series={buckets.map((point) => point.value)}
+            />
           </Reveal>
 
-          {/* Metric cards - single stacked column on mobile (like LemFi), 2x2 grid on laptop */}
-          <SummaryPanel columns={2}>
-            <div className="dash-rise" style={{ animationDelay: "120ms" }}>
-              <SummaryRow
-                title="Payers"
-                subtitle={
-                  payerTarget
-                    ? `${percent(uniquePayers, payerTarget)}% of your target`
-                    : `Across ${formatNumber(stats.length)} collection${stats.length === 1 ? "" : "s"}`
-                }
+          {/* three metric cards; one column on phones, three across from tablet up */}
+          <div className="grid gap-3 sm:grid-cols-3 lg:gap-4">
+            <Reveal delay={120} className="h-full">
+              <StatCard
+                label="Payers"
+                icon={<Users size={14} aria-hidden="true" />}
+                href="/payers"
+                loading={loading}
                 value={
-                  loading
-                    ? valueSkeleton
-                    : payerTarget
-                      ? `${formatNumber(uniquePayers)} / ${formatNumber(payerTarget)}`
-                      : formatNumber(uniquePayers)
+                  payerTarget
+                    ? `${formatNumber(uniquePayers)} / ${formatNumber(payerTarget)}`
+                    : formatNumber(uniquePayers)
                 }
-                icon={<Users size={15} aria-hidden="true" />}
-                tone="lavender"
+                context={`Across ${formatNumber(stats.length)} collection${stats.length === 1 ? "" : "s"}`}
+                footer={
+                  payerTarget ? (
+                    <Meter value={percent(uniquePayers, payerTarget)} label={`${percent(uniquePayers, payerTarget)}% of target`} tone="brand" />
+                  ) : (
+                    <Meter value={uniquePayers ? 100 : 0} label="No target set" />
+                  )
+                }
+              />
+            </Reveal>
+            <Reveal delay={200} className="h-full">
+              <StatCard
+                label="Payments"
+                icon={<ReceiptText size={14} aria-hidden="true" />}
                 href="/transactions"
                 loading={loading}
+                value={formatNumber(successful.length)}
+                context={`${formatNumber(pendingCount)} awaiting confirmation`}
+                footer={<Meter value={successRate} label={`${successRate}% success rate`} />}
               />
-            </div>
-            <div className="dash-rise" style={{ animationDelay: "210ms" }}>
-              <SummaryRow
-                title="Paid"
-                subtitle="Paid straight to your bank"
-                value={loading ? valueSkeleton : formatMoney(settled)}
-                icon={<Banknote size={15} aria-hidden="true" />}
-                tone="mint"
-                href="/transactions"
-                loading={loading}
-              />
-            </div>
-            <div className="dash-rise" style={{ animationDelay: "300ms" }}>
-              <SummaryRow
-                title="Payments"
-                subtitle={`${formatNumber(pendingCount)} awaiting confirmation`}
-                value={loading ? valueSkeleton : formatNumber(successful.length)}
-                icon={<ReceiptText size={15} aria-hidden="true" />}
-                tone="peach"
-                href="/transactions"
-                loading={loading}
-              />
-            </div>
-            <div className="dash-rise" style={{ animationDelay: "390ms" }}>
-              <SummaryRow
-                title="Workspace"
-                subtitle={merchant?.display_name || user?.name || "Your workspace"}
-                value={merchant ? statusLabel(merchant.status) : "—"}
-                icon={<ShieldCheck size={15} aria-hidden="true" />}
-                tone="aqua"
-                href="/settings"
-                loading={loading}
-              />
-            </div>
-          </SummaryPanel>
+            </Reveal>
+            <Reveal delay={280} className="h-full">
+              {gateway.settles_direct ? (
+                <StatCard
+                  label="To your bank"
+                  icon={<Banknote size={14} aria-hidden="true" />}
+                  href="/payouts"
+                  loading={loading}
+                  accent
+                  value={formatMoney(collected)}
+                  context={`Split by ${gateway.label} as it lands`}
+                  footer={
+                    <p className="flex items-center gap-1.5 text-[11.5px] font-semibold text-success">
+                      <ShieldCheck size={13} aria-hidden="true" /> Settled directly
+                    </p>
+                  }
+                />
+              ) : (
+                <StatCard
+                  label="Wallet"
+                  icon={<Wallet size={14} aria-hidden="true" />}
+                  href="/payouts"
+                  loading={loading}
+                  accent
+                  value={formatMoney(walletBalance)}
+                  context={`Confirmed by ${gateway.label}, awaiting payout`}
+                  footer={
+                    <p className="text-[11.5px] font-semibold text-ink-soft">
+                      {merchant?.settings?.payout_mode === "auto_daily"
+                        ? "Paid out daily"
+                        : merchant?.settings?.payout_mode === "auto_weekly"
+                          ? "Paid out weekly"
+                          : "Paid out when you request it"}
+                    </p>
+                  }
+                />
+              )}
+            </Reveal>
+          </div>
 
           <Reveal delay={520} className="lg:hidden">
             <Link
@@ -415,15 +597,12 @@ export default function Dashboard() {
           <Reveal delay={680} className="hidden lg:block">
             <Card className="min-h-[180px]">
               <CardHeader
-                title="Direct settlement"
-                subtitle="Your money never sits with Jeneviv"
+                title={gateway.settlementTitle}
+                subtitle={gateway.settlementSubtitle}
                 icon={<ShieldCheck size={16} />}
               />
               <p className="muted">
-                Each successful payment is split by Paystack when it is captured. The
-                collection amount, less Paystack&apos;s processing fee, goes to your
-                verified bank account. Jeneviv&apos;s platform fee is taken in the same
-                split.
+                {gateway.settlementBody}
               </p>
               <Link to="/payouts" className="btn btn-secondary btn-sm mt-4 w-full">
                 Manage bank account <ArrowUpRight size={14} />
@@ -591,15 +770,12 @@ export default function Dashboard() {
                   <ShieldCheck size={16} />
                 </span>
                 <div>
-                  <h3 className="text-[14px] font-bold tracking-tight">Direct settlement</h3>
-                  <p className="text-[12px] text-ink-muted">Your money never sits with Jeneviv</p>
+                  <h3 className="text-[14px] font-bold tracking-tight">{gateway.settlementTitle}</h3>
+                  <p className="text-[12px] text-ink-muted">{gateway.settlementSubtitle}</p>
                 </div>
               </div>
               <p className="muted">
-                Each successful payment is split by Paystack when it is captured. The
-                collection amount, less Paystack&apos;s processing fee, goes to your
-                verified bank account. Jeneviv&apos;s platform fee is taken in the same
-                split.
+                {gateway.settlementBody}
               </p>
               <Link to="/payouts" className="btn btn-secondary btn-sm mt-4 w-full">
                 Manage bank account <ArrowUpRight size={14} />

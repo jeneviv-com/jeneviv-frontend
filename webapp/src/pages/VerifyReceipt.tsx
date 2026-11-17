@@ -2,9 +2,11 @@ import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { BadgeCheck, Check, CheckCircle2, Copy, Download, Loader2, ShieldCheck, TriangleAlert } from "lucide-react";
-import { APIError, apiConfig, verifyAPI, type PublicReceipt } from "@/lib/api";
+import { APIError, verifyAPI, type PublicReceipt } from "@/lib/api";
 import { copyText, formatMoney } from "@/lib/format";
 import { Button, InlineNote } from "@/components/ui";
+import { useGateway } from "@/lib/gateway";
+import { JENEVIV_LOGO } from "@/lib/brand";
 
 type State =
   | { kind: "loading" }
@@ -42,9 +44,10 @@ function Row({ label, children, mono = false }: { label: string; children: React
 }
 
 function ReceiptBody({ receipt }: { receipt: PublicReceipt }) {
+  const gateway = useGateway();
   const issuer = receipt.group_name ?? receipt.workspace_name ?? receipt.school_name;
   const logo = receipt.group_logo_url ?? receipt.logo_url;
-  const jenevivMark = apiConfig.withBase("/assets/images/jeneviv.png");
+  const jenevivMark = JENEVIV_LOGO;
   const extraDetails = receipt.details.filter((d) => d.label !== "Collection");
   const verifications = [
     ...(receipt.nin_verified ? [{ label: "NIN verified", icon: <BadgeCheck size={11} /> }] : []),
@@ -132,7 +135,7 @@ function ReceiptBody({ receipt }: { receipt: PublicReceipt }) {
                   <dd className="tabular text-ink">{formatMoney(receipt.breakdown.collection, receipt.currency)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-ink-muted">Paystack processing fee</dt>
+                  <dt className="text-ink-muted">{receipt.gateway_label ? `${receipt.gateway_label} processing fee` : gateway.feeLabel}</dt>
                   <dd className="tabular text-ink">{formatMoney(receipt.breakdown.paystack_fee, receipt.currency)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
@@ -168,6 +171,7 @@ function ReceiptBody({ receipt }: { receipt: PublicReceipt }) {
 }
 
 export default function VerifyReceipt() {
+  const gateway = useGateway();
   const { reference } = useParams<{ reference: string }>();
   const [state, setState] = useState<State>({ kind: "loading" });
   const [copied, setCopied] = useState(false);
@@ -199,7 +203,7 @@ export default function VerifyReceipt() {
         <div className="mb-8 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5 text-[21px] font-extrabold tracking-[-0.05em] text-ink">
             <img
-              src={apiConfig.withBase("/assets/images/jeneviv.png")}
+              src={JENEVIV_LOGO}
               alt="Jeneviv"
               width={28}
               height={28}
@@ -241,7 +245,11 @@ export default function VerifyReceipt() {
               </span>
               <div className="min-w-0">
                 <p className="text-[15px] font-bold leading-tight tracking-[-0.02em]">This receipt is valid</p>
-                <p className="text-[12px] text-ink-muted">Confirmed by Paystack</p>
+                <p className="text-[12px] text-ink-muted">
+                  {state.receipt.gateway_label
+                    ? `Confirmed by ${state.receipt.gateway_label}`
+                    : gateway.confirmedBy}
+                </p>
               </div>
             </div>
 
@@ -281,7 +289,7 @@ export default function VerifyReceipt() {
 
         <footer className="mt-12 flex items-center justify-center gap-2 border-t border-line pt-6 text-[12px] text-ink-muted">
           <img
-            src={apiConfig.withBase("/assets/images/jeneviv.png")}
+            src={JENEVIV_LOGO}
             alt=""
             width={16}
             height={16}
