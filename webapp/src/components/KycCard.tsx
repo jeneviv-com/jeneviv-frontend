@@ -14,6 +14,7 @@ import { useToast } from "@/context/ToastContext";
 import { useAction, useBankAccounts, useBanks, useKyc } from "@/hooks/useApi";
 import { APIError, merchantsAPI } from "@/lib/api";
 import { formatDateTime } from "@/lib/format";
+import { useGateway } from "@/lib/gateway";
 import {
   BadgeCheck,
   Banknote,
