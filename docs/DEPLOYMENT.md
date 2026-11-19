@@ -61,7 +61,6 @@ src/
 ├── context/          # React context (Auth, Notifications)
 ├── hooks/            # Custom React hooks
 ├── lib/              # Utility functions and API client
-├── middleware.ts     # Authentication middleware
 └── types/            # TypeScript interfaces
 ```
 
@@ -71,7 +70,7 @@ src/
 
 - Email/Password sign-up and login
 - Session-based authentication with cookies
-- Protected routes with middleware
+- Protected routes via `ProtectedLayout` (no middleware)
 - Auth context for global user state
 
 ### Collections Management

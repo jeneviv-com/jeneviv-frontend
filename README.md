@@ -14,14 +14,14 @@ cp .env.example .env.local
 # Edit .env.local with your API URL
 
 # Run both servers
-# Terminal 1: Next.js (landing + proxy)
+# Terminal 1: Next.js marketing site (:3000)
 npm run dev
 
-# Terminal 2: Vite (dashboard)
+# Terminal 2: Vite dashboard (:5173)
 cd webapp && npm run dev
 ```
 
-Open http://localhost:3000 to start.
+Open http://localhost:3000 for the landing page and http://localhost:5173 for the dashboard.
 
 ## Documentation
 
@@ -36,10 +36,10 @@ Open http://localhost:3000 to start.
 ## Project Structure
 
 ```
-├── src/                    # Next.js (landing + auth)
-│   ├── app/               # Pages (landing, auth)
-│   ├── components/        # Landing components
-│   └── middleware.ts      # Auth middleware
+├── src/                    # Next.js marketing site (separate deployment)
+│   ├── app/               # Landing, /privacy, /terms, robots, sitemap
+│   ├── landing/           # Landing page
+│   └── components/        # Landing components
 │
 └── webapp/                # Vite React (dashboard)
     ├── src/

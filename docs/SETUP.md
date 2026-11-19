@@ -3,10 +3,12 @@
 ## Architecture Overview
 
 ```
-http://localhost:3000/              → Next.js Landing
-http://localhost:3000/auth/login    → Next.js Login
-http://localhost:3000/app/          → Vite Dashboard (proxied)
-http://localhost:5173/              → Vite Dev Server (direct access)
+http://localhost:3000/              → Next.js marketing site (landing, /privacy, /terms)
+http://localhost:5173/              → Vite dashboard (login, signup, dashboard)
+http://localhost:3001/              → Backend API
+
+The two frontends are separate apps with no proxy between them.
+See ARCHITECTURE.md.
 ```
 
 ## Setup Steps
@@ -32,20 +34,22 @@ npm install
 #### Root `.env.local`
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:3001
-NEXT_PUBLIC_VITE_URL=http://localhost:5173
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+# The dashboard's origin, used by "Log in" / "Create an account"
+NEXT_PUBLIC_APP_URL=http://localhost:5173
 ```
 
 #### Webapp `.env.local`
 
 ```env
 VITE_API_URL=http://localhost:3001
+# The marketing site's origin, used by "View landing page"
+VITE_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ### Step 3: Run Both Services
 
-**Open Terminal 1 - Next.js (Landing + Proxy)**
+**Open Terminal 1 - Next.js (marketing site)**
 
 ```bash
 cd c:\Users\USER\jeneviv
@@ -76,32 +80,31 @@ Output will show:
 ### Step 4: Access the Application
 
 - **Landing Page**: http://localhost:3000
-- **Login**: http://localhost:3000/auth/login
-- **Dashboard**: http://localhost:3000/app/dashboard
-- **Webapp Direct**: http://localhost:5173 (during development)
+- **Login**: http://localhost:5173/login
+- **Dashboard**: http://localhost:5173/dashboard
 
 ## 📁 File Structure
 
 ```
 jeneviv/
 │
-├── Landing & Auth (Next.js)
+├── Marketing site (Next.js)
 │   ├── src/app/
-│   │   ├── page.tsx              ← Landing page
-│   │   ├── auth/
-│   │   │   ├── login/page.tsx    ← Login page
-│   │   │   └── signup/page.tsx   ← Signup page
+│   │   ├── page.tsx              ← Renders src/landing/page.tsx
+│   │   ├── privacy/ terms/       ← Legal pages
+│   │   ├── robots.ts sitemap.ts
 │   │   ├── globals.css
 │   │   └── layout.tsx
-│   ├── src/components/           ← Landing components
-│   ├── src/middleware.ts         ← Routes /app/* to Vite
-│   ├── next.config.ts            ← Proxy config
+│   ├── src/landing/page.tsx      ← Landing page
+│   ├── src/components/marketing/ ← Landing components
+│   ├── next.config.ts            ← No rewrites or proxy
 │   └── package.json
 │
 └── Webapp (Vite)
     └── webapp/
         ├── src/
         │   ├── pages/
+        │   │   ├── Login.tsx, Signup.tsx
         │   │   ├── Dashboard.tsx
         │   │   ├── Collections.tsx
         │   │   ├── Transactions.tsx
@@ -125,11 +128,9 @@ jeneviv/
 ## 🔐 Authentication Flow
 
 1. User visits http://localhost:3000 (Next.js landing)
-2. Clicks "Sign In" → Redirected to `/auth/login`
-3. Enters email/password → Backend sets session cookie
-4. Redirected to `/app/dashboard`
-5. Next.js sees `/app/*` → Rewrites to Vite app
-6. Vite loads, reads same session cookie, authenticates user
+2. Clicks "Log in" → goes to the dashboard's `/login` (http://localhost:5173/login)
+3. Enters email/password → the API sets its session cookie
+4. Dashboard loads `/dashboard`; `ProtectedLayout` sends signed-out users back to `/login`
 
 ## 🔗 API Configuration
 
@@ -142,7 +143,7 @@ Change these if your backend is on a different URL.
 
 ## 🚨 Common Issues
 
-### Issue: "Cannot GET /app/dashboard"
+### Issue: Dashboard at http://localhost:5173 does not load
 
 **Cause**: Vite not running
 **Solution**:
@@ -225,15 +226,15 @@ Output will be in `webapp/dist/`
 
 **Option A: Vercel (Recommended)**
 
-1. Deploy Next.js to Vercel
-2. Update `NEXT_PUBLIC_VITE_URL` to production Vite URL
-3. Deploy Vite separately (Netlify, Vercel, etc.)
+1. Deploy the Next.js marketing site; set `NEXT_PUBLIC_SITE_URL` to its URL and `NEXT_PUBLIC_APP_URL` to the dashboard URL
+2. Deploy the Vite dashboard separately; set `VITE_API_URL` and `VITE_PUBLIC_APP_URL` (the marketing site URL)
+3. Add the dashboard origin to the API's `ALLOWED_ORIGINS`
 
 **Option B: Docker/Server**
 
-1. Build both apps
-2. Copy Vite build to Next.js public folder
-3. Configure rewrites to serve from `public/app`
+Serving both from one domain is not set up today. It would need Next.js
+rewrites, `VITE_BASE_PATH`, and a change to `webapp/src/lib/landing.ts`
+(see ARCHITECTURE.md).
 4. Deploy single Next.js container
 
 ## ✨ Next Steps
