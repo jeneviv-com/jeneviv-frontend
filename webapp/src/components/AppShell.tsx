@@ -28,6 +28,7 @@ import { initials } from "@/lib/format";
 import { TONE_MEANING, type ToneKind } from "@/components/ui";
 import Onboarding from "@/pages/Onboarding";
 import { JENEVIV_LOGO } from "@/lib/brand";
+import { landingUrl } from "@/lib/landing";
 
 const NAV = [
   {
@@ -176,7 +177,7 @@ function FootLink({
 }
 
 export default function AppShell() {
-  const landingUrl = import.meta.env.NEXT_PUBLIC_URL || "/";
+  const landing = landingUrl();
   const { user, merchant, connection, logout, isAdmin, loading } = useAuth();
   const { toasts, dismiss, unreadCount, push } = useToast();
   const location = useLocation();
@@ -254,7 +255,7 @@ export default function AppShell() {
       >
         {/* brand */}
         <div className="flex items-center justify-between px-5 pb-3 pt-5">
-          <a href={landingUrl} className="flex items-center gap-2.5" aria-label="Jeneviv... back to the website">
+          <a href={landing} className="flex items-center gap-2.5" aria-label="Jeneviv... back to the website">
             <img
               src={JENEVIV_LOGO}
               alt=""
@@ -338,7 +339,7 @@ export default function AppShell() {
           <FootLink href="mailto:myjeneviv@gmail.com" icon={LifeBuoy}>
             Get support
           </FootLink>
-          <FootLink href={landingUrl} icon={ExternalLink}>
+          <FootLink href={landing} icon={ExternalLink}>
             View landing page
           </FootLink>
         </div>
