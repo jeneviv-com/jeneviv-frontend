@@ -3,6 +3,7 @@ import { JENEVIV_LOGO } from "@/lib/brand";
 import { useGateway } from "@/lib/gateway";
 import { ArrowLeft, Check, ShieldCheck } from "lucide-react";
 import { ReactNode } from "react";
+import { landingUrl } from "@/lib/landing";
 
 const PROOF = [
   "Every naira tied to a name and a reference",
@@ -22,25 +23,8 @@ export default function AuthLayout({
   footer: ReactNode;
 }) {
   const gateway = useGateway();
-  // The dashboard is served from its own host, where this variable may be unset;
-  // "" or "/" would send "Back to site" back into the dashboard.
-  const configuredLanding = (import.meta.env.VITE_PUBLIC_APP_URL ?? "").replace(
-    /\/+$/,
-    "",
-  );
-  const pointsAtThisApp =
-    configuredLanding !== "" &&
-    (() => {
-      try {
-        return new URL(configuredLanding).origin === window.location.origin;
-      } catch {
-        return false;
-      }
-    })();
-  const landing =
-    configuredLanding && configuredLanding !== "/" && !pointsAtThisApp
-      ? configuredLanding
-      : "https://jeneviv.onrender.com";
+  // Never "" or "/": on the dashboard's own host that would reopen the dashboard.
+  const landing = landingUrl();
 
   return (
     // On a laptop the branded side stays under half the width so the form is
