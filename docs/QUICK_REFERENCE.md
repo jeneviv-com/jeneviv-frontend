@@ -19,11 +19,11 @@ Visit: http://localhost:3000
 | **Auth Context**  | `/src/context/AuthContext.tsx`         |
 | **Notifications** | `/src/context/NotificationContext.tsx` |
 | **API Hooks**     | `/src/hooks/useApi.ts`                 |
-| **Dashboard**     | `/src/app/dashboard/page.tsx`          |
-| **Collections**   | `/src/app/collections/page.tsx`        |
+| **Dashboard**     | `/webapp/src/pages/Dashboard.tsx`      |
+| **Collections**   | `/webapp/src/pages/Collections.tsx`    |
 | **Navbar**        | `/src/components/Navbar.tsx`           |
 | **Sidebar**       | `/src/components/DesktopSidebar.tsx`   |
-| **Middleware**    | `/src/middleware.ts`                   |
+| **Route guard**   | `/webapp/src/pages/ProtectedLayout.tsx` |
 
 ---
 
@@ -39,7 +39,7 @@ const { user, isAuthenticated, login, logout } = useAuth();
 
 ### Protected Routes
 
-Protected automatically by `/src/middleware.ts`. Any route starting with `/dashboard`, `/collections`, etc. requires login.
+Signed-in routes are nested under `ProtectedLayout` in `/webapp/src/App.tsx`, which redirects to `/login` without a session. There is no Next.js middleware.
 
 ---
 
@@ -235,7 +235,7 @@ src/
 ├── hooks/            ← Custom API hooks
 ├── lib/              ← API client
 ├── types/            ← TypeScript types
-└── middleware.ts     ← Route protection
+└── (no middleware: routes are guarded by webapp/src/pages/ProtectedLayout.tsx)
 ```
 
 ---
