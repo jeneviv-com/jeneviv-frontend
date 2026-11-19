@@ -24,7 +24,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 | Variable               | Required          | Used by                                         | Purpose                                                                                                                                                                          |
 | ---------------------- | ----------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `NEXT_PUBLIC_APP_URL`  | Yes               | `src/landing/page.tsx`, `SiteNav`, `layout.tsx` | Origin of the Vite dashboard. Every “Create a collection”, “Sign in” and “Open app” link points here.                                                                            |
-| `NEXT_PUBLIC_SITE_URL` | Yes in production | `layout.tsx`, `robots.ts`, `sitemap.ts`         | Public origin of the marketing site. Drives canonical URLs, Open Graph metadata, `robots.txt` and `sitemap.xml`. Defaults to `https://jeneviv.onrender.com`.                     |
+| `NEXT_PUBLIC_SITE_URL` | Yes in production | `layout.tsx`, `robots.ts`, `sitemap.ts`         | Public origin of the marketing site. Drives canonical URLs, Open Graph metadata, `robots.txt` and `sitemap.xml`. Defaults to `https://jeneviv.up.railway.app`.                     |
 | `NEXT_PUBLIC_API_URL`  | No                | `src/lib/api.ts`                                | Reserved for a future server-side API client. The marketing pages do not call the API today, so leaving it unset is safe. Keep it equal to `VITE_API_URL` if you start using it. |
 
 The marketing site needs no auth, payment-gateway or session variables. Its
@@ -95,7 +95,7 @@ Marketing (`NEXT_PUBLIC_*`):
 
 ```env
 NEXT_PUBLIC_APP_URL=https://app.jeneviv.com
-NEXT_PUBLIC_SITE_URL=https://jeneviv.onrender.com
+NEXT_PUBLIC_SITE_URL=https://jeneviv.up.railway.app
 NEXT_PUBLIC_API_URL=https://api.jeneviv.com
 ```
 
