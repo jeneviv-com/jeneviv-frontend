@@ -26,7 +26,7 @@ npm run dev
 
 - Email/Password signup and login
 - Session-based authentication with cookies
-- Protected routes with middleware
+- Protected routes via `ProtectedLayout` (no middleware)
 - Auto-login state management
 - Secure logout
 
@@ -127,7 +127,6 @@ src/
 │   ├── globals.ts              # Global types
 │   └── [other types]
 │
-├── middleware.ts               # Authentication middleware
 ├── globals.css                 # Global Tailwind styles
 └── tailwind.config.ts          # Tailwind configuration
 ```
@@ -279,7 +278,7 @@ export function MyComponent() {
 
 ### Protected Routes
 
-Routes are protected via middleware in `/src/middleware.ts`. Any route starting with `/dashboard`, `/collections`, etc. requires authentication.
+Signed-in routes are nested under `ProtectedLayout` (`/webapp/src/pages/ProtectedLayout.tsx`), which redirects to `/login` without a session. There is no Next.js middleware; see ARCHITECTURE.md.
 
 ## 🔔 Notifications
 

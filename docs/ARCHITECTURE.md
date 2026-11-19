@@ -1,234 +1,112 @@
-# Jeneviv - Split Architecture (Next.js + Vite)
+# Jeneviv frontend architecture
 
-This project uses a **split frontend architecture**:
+This repo holds two separate apps that are built and deployed independently.
+They share nothing at runtime except the backend API.
 
-- **Next.js** (`/`) → Landing page + Authentication
-- **Vite** (`/app`) → Dashboard web application
-- **Same backend API** → Shared authentication via session cookies
+| App | Folder | What it serves | Local URL | Production |
+| --- | --- | --- | --- | --- |
+| Marketing site | `src/` (Next.js) | Landing page, `/privacy`, `/terms`, `robots.txt`, `sitemap.xml` | http://localhost:3000 | https://jeneviv.up.railway.app |
+| Dashboard | `webapp/` (Vite + React) | Login, signup, the dashboard, public pay and receipt pages | http://localhost:5173 | its own deployment (set `NEXT_PUBLIC_APP_URL` to it) |
+| API | `jeneviv-backend` repo (Express) | `/api/*`, auth, webhooks | http://localhost:3001 | set `VITE_API_URL` to it |
 
-## 🚀 Quick Start
+There is **no proxy between them**: no Next.js middleware, no rewrites, no
+`/app` mount. Each app runs on its own origin and links to the other with a
+full URL.
 
-### 1. Install Dependencies
+## How the two apps link to each other
+
+```
+Marketing site (Next.js)                      Dashboard (Vite)
+jeneviv.up.railway.app                        <NEXT_PUBLIC_APP_URL>
+
+"Log in"            ─────────────────────────▶ /login
+"Create an account" ─────────────────────────▶ /signup
+
+                    ◀───────────────────────── "View landing page", sidebar logo,
+                                               "Back to site" on login/signup
+```
+
+- **Marketing site to dashboard:** `src/components/marketing/SiteNav.tsx` and
+  `src/landing/page.tsx` build links from `NEXT_PUBLIC_APP_URL`
+  (default `http://localhost:5173`).
+- **Dashboard to marketing site:** `webapp/src/lib/landing.ts` exports
+  `landingUrl()`, used by `AppShell` and `AuthLayout`. It reads
+  `VITE_PUBLIC_APP_URL` and falls back to `https://jeneviv.up.railway.app`.
+  It never returns `/` or the dashboard's own origin, because on the dashboard
+  `/` redirects to `/dashboard`.
+
+## Authentication
+
+Authentication lives entirely in the dashboard and the API. The marketing site
+has no auth pages or session handling.
+
+1. The user opens `/login` or `/signup` on the dashboard.
+2. The dashboard calls the API (`/api/auth/*`) with `credentials: "include"`.
+   The API sets the better-auth session cookie on its own origin.
+3. Signed-in routes are wrapped in `webapp/src/pages/ProtectedLayout.tsx`,
+   which redirects to `/login` when there is no session.
+
+Because the dashboard and API are on different origins, the API must list the
+dashboard origin in `ALLOWED_ORIGINS`.
+
+## Environment variables
+
+### Marketing site (`.env.local` at the repo root)
+
+| Variable | Purpose |
+| --- | --- |
+| `NEXT_PUBLIC_SITE_URL` | This site's public origin: canonical URLs, Open Graph, `robots.txt`, `sitemap.xml`. Falls back to `https://jeneviv.up.railway.app`. |
+| `NEXT_PUBLIC_APP_URL` | The dashboard's origin, for "Log in" and "Create an account". |
+
+### Dashboard (`webapp/.env.local`)
+
+| Variable | Purpose |
+| --- | --- |
+| `VITE_API_URL` | Backend API origin. |
+| `VITE_PUBLIC_APP_URL` | The marketing site's origin, for "View landing page" and legal links. Falls back to `https://jeneviv.up.railway.app`. |
+| `VITE_BASE_PATH` | Router basename, only if the dashboard is ever mounted under a sub-path. |
+
+Vite only exposes variables that start with `VITE_`, and bakes them in at
+build time, so change them and rebuild. See [ENV_CONFIG.md](./ENV_CONFIG.md)
+for the full list.
+
+## Running locally
 
 ```bash
-# Root (Next.js landing)
+# Terminal 1: marketing site on :3000
 npm install
-
-# Webapp (Vite)
-cd webapp
-npm install
-```
-
-### 2. Setup Environment Variables
-
-#### Root `./.env.local`:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3001
-NEXT_PUBLIC_VITE_URL=http://localhost:5173
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
-
-#### Webapp `.webapp/.env.local`:
-
-```env
-VITE_API_URL=http://localhost:3001
-```
-
-### 3. Run Both Services
-
-**Terminal 1 - Next.js (Landing + Proxy):**
-
-```bash
 npm run dev
-# Runs on http://localhost:3000
-```
 
-**Terminal 2 - Vite (Webapp):**
-
-```bash
+# Terminal 2: dashboard on :5173
 cd webapp
-npm run dev
-# Runs on http://localhost:5173
-```
-
-## 📂 Architecture
-
-```
-jeneviv/
-├── src/
-│   ├── app/
-│   │   ├── page.tsx           ← Landing page
-│   │   ├── auth/
-│   │   │   ├── login/
-│   │   │   └── signup/
-│   │   ├── globals.css
-│   │   └── layout.tsx
-│   ├── components/            ← Landing components
-│   ├── middleware.ts          ← Routes /app/* to Vite
-│   └── ...
-│
-├── webapp/                     ← Vite app
-│   ├── src/
-│   │   ├── pages/             ← Dashboard pages
-│   │   ├── components/        ← Webapp components
-│   │   ├── context/           ← Auth + Notifications
-│   │   ├── hooks/             ← API hooks
-│   │   ├── lib/               ← API client
-│   │   ├── App.tsx
-│   │   └── main.tsx
-│   ├── vite.config.ts
-│   └── package.json
-│
-├── next.config.ts             ← Proxies /app/* → Vite
-└── package.json
-```
-
-## 🔄 How It Works
-
-### User Flow
-
-1. User visits `http://localhost:3000` → Lands on **Next.js landing page**
-2. User clicks "Sign In" → Redirected to `/auth/login` (Next.js)
-3. After login → Cookies set with session token
-4. User clicks "Go to Dashboard" → `/app/dashboard`
-5. Next.js middleware sees `/app/*` → Proxies to Vite app
-6. Vite app loads with authenticated session (shared cookies)
-
-### Authentication Flow
-
-- **Landing/Auth**: Handled by Next.js + backend API
-- **Webapp**: Uses same session cookies from auth
-- **Same domain**: Cookies automatically sent to both Next.js and Vite
-
-## 📝 Environment Variables
-
-### Next.js (Root)
-
-- `NEXT_PUBLIC_API_URL` - Backend API URL
-- `NEXT_PUBLIC_VITE_URL` - Vite development server (for proxying)
-- `NEXT_PUBLIC_APP_URL` - Public URL of Next.js app
-
-### Vite (Webapp)
-
-- `VITE_API_URL` - Backend API URL (must match Next.js)
-
-## 🚀 Building for Production
-
-### Next.js
-
-```bash
-npm run build
-npm start
-```
-
-### Vite
-
-```bash
-cd webapp
-npm run build
-```
-
-### Deployment
-
-For production, you have options:
-
-**Option 1: Separate deployments**
-
-- Deploy Next.js to Vercel/any Node.js host
-- Deploy Vite to Netlify/Vercel/any static host
-- Configure Next.js rewrites to point to Vite production URL
-
-**Option 2: Single deployment**
-
-- Build both: `npm run build && cd webapp && npm run build`
-- Copy Vite build to Next.js `public/app` folder
-- Deploy only Next.js
-- Configure Next.js rewrites to serve from `/public/app`
-
-## 📖 Documentation Files
-
-- `README-FRONTEND.md` - Webapp features and setup
-- `API_INTEGRATION.md` - API endpoints reference
-- `QUICK_REFERENCE.md` - Common tasks
-- `DEPLOYMENT.md` - Deployment guide
-
-## 🔧 File Structure Changes
-
-### Removed from Next.js
-
-- `/src/app/dashboard/` → Moved to `/webapp/src/pages/Dashboard.tsx`
-- `/src/app/collections/` → Moved to `/webapp/src/pages/Collections.tsx`
-- `/src/app/transactions/` → Moved to `/webapp/src/pages/Transactions.tsx`
-- `/src/app/notifications/` → Moved to `/webapp/src/pages/Notifications.tsx`
-- `/src/app/templates/` → Moved to `/webapp/src/pages/Templates.tsx`
-- `/src/app/settings/` → Moved to `/webapp/src/pages/Settings.tsx`
-- `/src/app/refunds/` → Moved to `/webapp/src/pages/`
-- `/src/app/payment-links/` → Moved to `/webapp/src/pages/`
-- `/src/context/` → Moved to `/webapp/src/context/`
-- `/src/hooks/` → Moved to `/webapp/src/hooks/`
-
-### Kept in Next.js
-
-- `/src/app/page.tsx` - Landing page
-- `/src/app/auth/` - Authentication pages
-- `/src/app/globals.css` - Global styles
-- `/src/components/` - Landing components
-- `/src/middleware.ts` - Updated to proxy `/app/*`
-
-## 🎯 Key Benefits
-
-1. **Separation of Concerns** - Landing logic separate from dashboard logic
-2. **Performance** - Each app optimized independently
-3. **Flexibility** - Can deploy separately or together
-4. **Shared Auth** - Single login serves both apps via cookies
-5. **Same Backend** - Both use same API endpoint
-
-## 🆘 Troubleshooting
-
-**Issue: "Cannot GET /app/dashboard"**
-
-- Ensure Vite is running on `localhost:5173`
-- Check `NEXT_PUBLIC_VITE_URL` in `.env.local`
-
-**Issue: "Not authenticated in webapp"**
-
-- Ensure cookies are being sent (check DevTools > Application > Cookies)
-- Verify `VITE_API_URL` matches `NEXT_PUBLIC_API_URL`
-
-**Issue: "API calls failing with 401"**
-
-- Verify session is valid in Next.js auth
-- Check backend is running and accessible
-
-**Issue: Vite dev server crashing**
-
-```bash
-cd webapp
-rm -rf node_modules
 npm install
 npm run dev
 ```
 
-## 📞 Development
+Open http://localhost:3000 for the landing page and http://localhost:5173 for
+the dashboard. The backend should be running on :3001.
 
-### Adding a New Page to Webapp
+## Building and deploying
 
-1. Create component in `/webapp/src/pages/NewPage.tsx`
-2. Import in `/webapp/src/App.tsx`
-3. Add route to `<Routes>`
+Build and deploy each app on its own:
 
-### Adding a New API Endpoint
+```bash
+npm run build && npm start         # marketing site (Node server)
+cd webapp && npm run build         # dashboard (static files in webapp/dist)
+```
 
-1. Add to `/webapp/src/lib/api.ts`
-2. Create hook in `/webapp/src/hooks/useApi.ts`
-3. Use in components
+If you ever serve both from one domain (for example the dashboard under
+`/app`), set `VITE_BASE_PATH=/app` and point `VITE_PUBLIC_APP_URL` at the
+marketing site's full URL. `landingUrl()` refuses same-origin links on
+purpose, so update it at that point too.
 
-### Updating Landing Page
+## Where things live
 
-1. Edit `/src/app/page.tsx`
-2. Changes auto-reload via Next.js dev server
-
----
-
-**Ready to go! Start both services and navigate to `http://localhost:3000`** 🎉
+| Task | Where |
+| --- | --- |
+| Landing page content | `src/landing/page.tsx`, `src/components/marketing/` |
+| Legal pages | `src/app/privacy/`, `src/app/terms/` |
+| Dashboard routes | `webapp/src/App.tsx` |
+| New dashboard page | add to `webapp/src/pages/`, then a `<Route>` in `App.tsx` |
+| API client and endpoints | `webapp/src/lib/api.ts`, hooks in `webapp/src/hooks/useApi.ts` |
+| Auth state | `webapp/src/context/AuthContext.tsx` |

@@ -665,5 +665,5 @@ interface User {
 
 - **API Issues** → Check backend logs
 - **Type Errors** → Update `/src/lib/api.ts`
-- **Auth Issues** → Check middleware.ts
+- **Auth Issues** → Check `webapp/src/context/AuthContext.tsx` and the API's `ALLOWED_ORIGINS`
 - **Performance** → Profile with DevTools
