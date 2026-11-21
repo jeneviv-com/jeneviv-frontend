@@ -359,7 +359,7 @@
 
     .wallet-stack > :last-child .wallet-card,
     .wallet-stack > .wallet-card:last-child {
-      @apply flex flex-col justify-between pb-5;
+      @apply flex flex-col justify-center pb-5;
       padding-top: 13px;
       min-height: 248px;
     }
@@ -373,8 +373,7 @@
     .wallet-stack > :last-child .wallet-hero,
     .wallet-stack > .wallet-card:last-child .wallet-hero {
       display: block;
-      margin-top: auto;
-      padding-top: 20px;
+      padding-top: 14px;
     }
 
     .wallet-stack > :last-child .wallet-side,
@@ -382,7 +381,13 @@
       display: none;
     }
 
-    /* Open card: title stays top left, everything under it is centred. */
+    /* Open card: everything centred, title included. */
+    .wallet-stack > :last-child .wallet-card > div:first-child,
+    .wallet-stack > .wallet-card:last-child > div:first-child {
+      justify-content: center;
+      text-align: center;
+    }
+
     .wallet-stack > :last-child .wallet-hero,
     .wallet-stack > .wallet-card:last-child .wallet-hero {
       text-align: center;
