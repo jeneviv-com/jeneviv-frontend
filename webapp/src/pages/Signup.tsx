@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { errorMessage } from "@/hooks/useApi";
 import AuthLayout from "@/components/AuthLayout";
 import { Button, Field, Input } from "@/components/ui";
+import { landingOrigin } from "@/lib/landing";
 
 /**
  * The two outcomes of this form get a card of their own: an account that was
@@ -224,14 +225,14 @@ export default function Signup() {
           <span>
             I agree to the{" "}
             <a
-              href={`${import.meta.env.VITE_PUBLIC_APP_URL || ""}/terms`}
+              href={`${landingOrigin()}/terms`}
               className="font-semibold text-ink underline decoration-ink/25 underline-offset-2 hover:text-brand"
             >
               terms of service
             </a>{" "}
             and{" "}
             <a
-              href={`${import.meta.env.VITE_PUBLIC_APP_URL || ""}/privacy`}
+              href={`${landingOrigin()}/privacy`}
               className="font-semibold text-ink underline decoration-ink/25 underline-offset-2 hover:text-brand"
             >
               privacy policy

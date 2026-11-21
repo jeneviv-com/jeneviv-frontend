@@ -5,12 +5,12 @@ import { GeistPixelSquare } from "geist/font/pixel";
 import "./globals.css";
 import "./marketing.css";
 import "./bachs.css";
+import { appUrl, siteUrl } from "@/lib/urls";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://jeneviv.up.railway.app",
+    siteUrl,
   ),
   title: {
     default: "jeneviv | Group collections, finally under control",

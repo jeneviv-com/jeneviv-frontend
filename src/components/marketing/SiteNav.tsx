@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { appUrl } from "@/lib/urls";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173";
 
 type MenuItem = { title: string; sub: string; href: string };
 

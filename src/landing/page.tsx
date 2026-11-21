@@ -25,8 +25,8 @@ import LandingNav, { Wordmark } from "./LandingNav";
 import ProductTabs from "./ProductTabs";
 import UseCaseTabs from "./UseCaseTabs";
 import Reveal from "@/components/marketing/Reveal";
+import { appUrl } from "@/lib/urls";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173";
 
 /* ------------------------------------------------------------------ icons */
 
