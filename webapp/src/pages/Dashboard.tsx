@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   Banknote,
   Plus,
+  Layers,
   ReceiptText,
   ShieldCheck,
   Users,
@@ -39,6 +40,7 @@ import {
   ProgressBar,
   StatusPill,
   SummaryPanel,
+  CollectionStatusPill,
   SummaryRow,
   TableSkeleton,
   FilterMenu,
@@ -213,7 +215,7 @@ function StatCard({
   footer?: React.ReactNode;
   href: string;
   loading: boolean;
-  tone: "people" | "attention" | "money";
+  tone: "people" | "attention" | "money" | "neutral";
 }) {
   return (
     <SummaryRow
@@ -409,7 +411,7 @@ export default function Dashboard() {
         {/* Left column - main metrics and charts */}
         <div className="space-y-5">
           {/* the wallet stack: headline on top, metrics tucked beneath */}
-          <SummaryPanel columns={3}>
+          <SummaryPanel columns={2}>
           <Reveal delay={40} className="wallet-span">
             <HeadlineCard
               value={formatMoney(Math.round(animatedCollected))}
@@ -452,6 +454,17 @@ export default function Dashboard() {
                 value={formatNumber(successful.length)}
                 context={`${formatNumber(pendingCount)} awaiting confirmation`}
                 footer={<Meter value={successRate} label={`${successRate}% success rate`} />}
+              />
+            </Reveal>
+            <Reveal delay={240} className="h-full">
+              <StatCard
+                label="Collections"
+                tone="neutral"
+                icon={<Layers size={14} aria-hidden="true" />}
+                href="/collections"
+                loading={loading}
+                value={formatNumber(stats.filter((c) => c.is_active).length)}
+                context={`${formatNumber(stats.filter((c) => !c.is_active).length)} paused`}
               />
             </Reveal>
             <Reveal delay={280} className="h-full">
@@ -507,11 +520,6 @@ export default function Dashboard() {
             <Card>
               <CardHeader
                 title="Collections over time"
-                subtitle={
-                  range === "7d"
-                    ? "Successful payments per day"
-                    : "Successful payments per period"
-                }
                 action={
                   <FilterMenu
                     label={range === "7d" ? "Last 7 days" : range === "30d" ? "Last 30 days" : "Last 90 days"}
@@ -701,9 +709,7 @@ export default function Dashboard() {
                               {paid}
                               {target ? ` / ${target}` : ""} payers
                             </p>
-                            <Pill tone={statusTone(collection.is_active ? "active" : "paused")}>
-                              {collection.is_active ? "Accepting" : "Paused"}
-                            </Pill>
+                            <CollectionStatusPill active={collection.is_active} />
                           </div>
                         </li>
                       );
