@@ -140,6 +140,12 @@ export function transactionPayer(t: {
   return (firstValue as string) || t.reference || "Unknown payer";
 }
 
+/** "full_name" -> "Full name", "matric_no" -> "Matric no". */
+export function fieldLabel(key: string) {
+  const words = key.replace(/[_-]+/g, " ").trim();
+  return words ? words[0].toUpperCase() + words.slice(1) : key;
+}
+
 export function transactionIdentifier(t: {
   field_values?: Record<string, unknown>;
   reference?: string;

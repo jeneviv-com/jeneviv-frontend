@@ -318,6 +318,25 @@
     @apply bg-[#101010] text-white;
   }
 
+  /* Wallet stack: summary cards overlap like a deck, each one tucking under
+     the next so only its top band shows. The last card sits fully open. */
+  .wallet-stack {
+    @apply flex flex-col;
+  }
+
+  .wallet-stack > * + * {
+    margin-top: -24px;
+  }
+
+  .wallet-card {
+    @apply relative rounded-[24px] border-[1.5px] border-ink px-5 pb-[42px] pt-4 lg:px-6;
+  }
+
+  .wallet-stack > *:last-child .wallet-card,
+  .wallet-stack > .wallet-card:last-child {
+    @apply pb-5;
+  }
+
   /* Fix for laptop view - ensure cards don't stack on lg screens */
   @media (min-width: 1024px) {
     .lg\:grid .dash-rise {

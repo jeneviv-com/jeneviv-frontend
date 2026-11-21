@@ -27,6 +27,7 @@ import {
   statusLabel,
   transactionIdentifier,
   transactionPayer,
+  fieldLabel,
 } from "@/lib/format";
 import {
   Button,
@@ -334,9 +335,12 @@ export default function Transactions() {
                     </div>
                     {transaction.field_values && Object.keys(transaction.field_values).length > 0 ? (
                       <div className="mt-2 space-y-1 text-[11px] text-ink-muted">
-                        {Object.entries(transaction.field_values).slice(0, 2).map(([key, value]) => (
+                        {Object.entries(transaction.field_values)
+                          .filter(([, value]) => String(value) !== transactionPayer(transaction))
+                          .slice(0, 2)
+                          .map(([key, value]) => (
                           <p key={key} className="truncate">
-                            <span className="font-medium">{key.replace(/_/g, " ")}:</span> {String(value)}
+                            <span className="font-medium">{fieldLabel(key)}:</span> {String(value)}
                           </p>
                         ))}
                         {Object.keys(transaction.field_values).length > 2 ? (
@@ -399,19 +403,9 @@ export default function Transactions() {
                       <td>
                         <button type="button" className="text-left" onClick={() => setOpen(transaction)}>
                           <span className="block font-semibold">{transactionPayer(transaction)}</span>
-                          {transaction.field_values && Object.keys(transaction.field_values).length > 0 ? (
-                            <span className="block text-3xs text-ink-muted">
-                              {Object.entries(transaction.field_values)
-                                .slice(0, 1)
-                                .map(([key, value]) => `${key}: ${value}`)
-                                .join(", ")}
-                              {Object.keys(transaction.field_values).length > 1 ? " +" : ""}
-                            </span>
-                          ) : (
-                            <span className="block font-mono text-3xs text-ink-muted">
-                              {transaction.reference}
-                            </span>
-                          )}
+                          <span className="block font-mono text-3xs text-ink-muted">
+                            {transactionIdentifier(transaction)}
+                          </span>
                         </button>
                       </td>
                       <td className="text-ink-soft">
@@ -557,7 +551,7 @@ export default function Transactions() {
               {open.field_values && Object.keys(open.field_values).length ? (
                 <dl className="rounded-[18px] border border-line bg-white px-4">
                   {Object.entries(open.field_values).map(([key, value]) => (
-                    <KeyValue key={key} label={key.replace(/_/g, " ")} value={String(value)} />
+                    <KeyValue key={key} label={fieldLabel(key)} value={String(value)} />
                   ))}
                 </dl>
               ) : (

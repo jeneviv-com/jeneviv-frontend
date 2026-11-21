@@ -68,6 +68,7 @@ import {
   type ToneCardTone,
   SummaryPanel,
   SummaryRow,
+  CollectionStatusPill,
 } from "@/components/ui";
 
 type Tab = "overview" | "fields" | "payments" | "settings";
@@ -392,9 +393,7 @@ export default function CollectionDetail() {
             <h1 className="text-[24px] font-extrabold tracking-tight sm:text-[28px]">
               {data.name}
             </h1>
-            <Pill tone={statusTone(data.is_active ? "active" : "paused")}>
-              {data.is_active ? "Accepting payments" : "Paused"}
-            </Pill>
+            <CollectionStatusPill active={data.is_active} />
           </div>
           <p className="muted mt-2 max-w-2xl">
             {data.description || "No description yet — add one so payers know what this covers."}

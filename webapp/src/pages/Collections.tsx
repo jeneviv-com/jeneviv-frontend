@@ -57,6 +57,7 @@ import {
   TONE_CARD,
   SummaryPanel,
   SummaryRow,
+  CollectionStatusPill,
 } from "@/components/ui";
 
 type CollectionStatus = "all" | "active" | "paused";
@@ -465,7 +466,7 @@ export default function Collections() {
                     <div className="min-w-0">
                       <Link
                         to={`/collections/${collection.id}`}
-                        className="block truncate text-[15.5px] font-semibold tracking-tight underline-offset-2 hover:underline"
+                        className="line-clamp-2 block text-[15.5px] font-semibold leading-snug tracking-tight underline-offset-2 hover:underline"
                       >
                         {collection.name}
                       </Link>
@@ -476,21 +477,8 @@ export default function Collections() {
                       </p>
                     </div>
 
-                    <span
-                      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] ${
-                        active
-                          ? "bg-ink text-cream"
-                          : "border border-ink/20 bg-cream text-ink-soft"
-                      }`}
-                    >
-                      <span
-                        className={`h-1.5 w-1.5 rounded-full ${
-                          active
-                            ? "bg-cream"
-                            : "bg-ink-faint"
-                        }`}
-                      />
-                      {active ? "Accepting" : "Paused"}
+                    <span className="shrink-0">
+                      <CollectionStatusPill active={active} />
                     </span>
                   </div>
 

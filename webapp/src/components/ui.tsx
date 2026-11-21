@@ -751,8 +751,12 @@ export function Toolbar({
  * the one-line description and the actions. The title stays for screen readers
  * so every page still has a single, ordered heading.
  */
+/** One look for a collection's state, on the list and on its own page. */
+export function CollectionStatusPill({ active }: { active: boolean }) {
+  return <Pill tone={active ? "green" : "amber"}>{active ? "Accepting payments" : "Paused"}</Pill>;
+}
+
 export function PageHeader({
-  eyebrow,
   title,
   description,
   actions,
@@ -766,14 +770,10 @@ export function PageHeader({
     <header className="mb-5 flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         <h1 className="sr-only">{title}</h1>
-        {eyebrow ? (
-          <p className="eyebrow flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
-            {eyebrow}
-          </p>
-        ) : null}
+        {/* The top bar already names the page, so the section eyebrow is not
+            repeated here. `eyebrow` stays in the props so callers compile. */}
         {description ? (
-          <p className="mt-1 max-w-2xl text-[13px] leading-relaxed text-ink-muted">
+          <p className="max-w-2xl text-[14px] leading-relaxed text-ink-soft">
             {description}
           </p>
         ) : null}
@@ -1025,21 +1025,14 @@ export function StackedCard({
  */
 export function SummaryPanel({
   children,
-  columns = 2,
   className = "",
 }: {
   children: ReactNode;
+  /** Ignored: summary cards always render as one stack. Kept so callers compile. */
   columns?: 1 | 2 | 3;
   className?: string;
 }) {
-  const gridColumns = {
-    1: "grid-cols-1",
-    2: "grid-cols-1 sm:grid-cols-2",
-    3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
-  }[columns];
-  return (
-    <div className={`grid gap-3 lg:gap-4 ${gridColumns} ${className}`}>{children}</div>
-  );
+  return <div className={`wallet-stack ${className}`}>{children}</div>;
 }
 
 /** Same as SummaryPanel, with the older `gridLayout` switch. Kept so existing callers work. */
@@ -1067,7 +1060,6 @@ export function SummaryRow({
   subtitle,
   value,
   tone = "lavender",
-  icon,
   href,
   loading = false,
   footer,
@@ -1091,36 +1083,31 @@ export function SummaryRow({
 
   const panel = (
     <div
-      className={`relative flex min-h-[140px] flex-col justify-between gap-3 overflow-hidden rounded-[18px] border border-ink p-5 ${toneClass} ${
+      className={`wallet-card ${toneClass} ${
         href
-          ? "transition-[filter,transform,box-shadow] duration-150 hover:-translate-y-0.5 hover:brightness-[0.985] hover:shadow-card active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
+          ? "transition-[filter] duration-150 hover:brightness-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
           : ""
       } ${className}`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <p className="font-mono text-[10.5px] font-normal uppercase tracking-[0.14em] opacity-60">
+      <div className="flex items-start justify-between gap-4">
+        <p className="min-w-0 pt-0.5 text-[19px] font-bold leading-tight tracking-[-0.02em] lg:text-[21px]">
           {title}
+          {href ? (
+            <ArrowUpRight size={15} aria-hidden="true" className="ml-1 hidden align-[-1px] opacity-50 sm:inline-block" />
+          ) : null}
         </p>
-        {icon ? (
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/60">{icon}</span>
-        ) : href ? (
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/45 opacity-70">
-            <ArrowUpRight size={13} aria-hidden="true" />
-          </span>
-        ) : null}
+        <div className="min-w-0 shrink-0 text-right">
+          <p className="tabular whitespace-nowrap text-[21px] font-extrabold leading-tight tracking-[-0.03em] lg:text-[24px]">
+            {loading ? (
+              <span aria-hidden="true" className="skeleton inline-block h-6 w-20 rounded-md" />
+            ) : (
+              value
+            )}
+          </p>
+          <p className="mt-0.5 max-w-[22ch] truncate text-[12.5px] opacity-75 sm:max-w-[32ch]">{subtitle}</p>
+        </div>
       </div>
-
-      <div className="min-w-0">
-        <p className="tabular text-[30px] font-extrabold leading-none tracking-[-0.03em]">
-          {loading ? (
-            <span aria-hidden="true" className="skeleton inline-block h-6 w-20 rounded-md" />
-          ) : (
-            value
-          )}
-        </p>
-        <p className="mt-2 truncate text-[12px] opacity-65">{subtitle}</p>
-        {footer ? <div className="mt-4">{footer}</div> : null}
-      </div>
+      {footer ? <div className="mt-4">{footer}</div> : null}
     </div>
   );
 
@@ -1147,13 +1134,14 @@ export function useDebounced<T>(value: T, delay = 300) {
 
 /* ------------------------------------------------------------- tone cards */
 
-/** The pastel palette used by the dashboard summary cards. */
+/** The wallet-stack palette used by every summary card. */
 export const TONE_CARD = {
-  ink: "bg-[#101010] text-white",
-  lavender: "bg-[#dcd5f3] text-ink",
-  peach: "bg-[#f9d3b0] text-ink",
-  mint: "bg-[#d5e8c4] text-ink",
-  aqua: "bg-[#d3e9ee] text-ink",
+  ink: "bg-[#111111] text-white",
+  lavender: "bg-[#CBBEEF] text-ink",
+  peach: "bg-[#FDB882] text-ink",
+  mint: "bg-[#B1F373] text-ink",
+  aqua: "bg-[#76EAE8] text-ink",
+  coral: "bg-[#F68C8B] text-ink",
 } as const;
 
 export type ToneCardTone = keyof typeof TONE_CARD;

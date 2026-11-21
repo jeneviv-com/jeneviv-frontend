@@ -163,7 +163,7 @@ function HeadlineCard({
   return (
     <section
       aria-label="Collected"
-      className="relative isolate overflow-hidden rounded-[18px] border border-ink bg-ink px-5 pb-5 pt-5 text-white lg:px-7 lg:pb-6 lg:pt-6"
+      className="wallet-card isolate overflow-hidden bg-ink text-white"
     >
       <img
         src={JENEVIV_LOGO}
@@ -252,13 +252,13 @@ function Meter({ value, label, tone = "ink" }: { value: number; label: string; t
   const clamped = Math.max(0, Math.min(100, value));
   return (
     <div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-cream-deep">
+      <div className="h-1.5 overflow-hidden rounded-full bg-ink/10">
         <div
           className={`h-full rounded-full transition-[width] duration-700 ease-out ${tone === "brand" ? "bg-brand" : "bg-ink"}`}
           style={{ width: `${clamped}%` }}
         />
       </div>
-      <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">{label}</p>
+      <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-ink/60">{label}</p>
     </div>
   );
 }
@@ -425,7 +425,8 @@ export default function Dashboard() {
       <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px]">
         {/* Left column - main metrics and charts */}
         <div className="space-y-5">
-          {/* headline */}
+          {/* the wallet stack: headline on top, metrics tucked beneath */}
+          <SummaryPanel>
           <Reveal delay={40}>
             <HeadlineCard
               value={formatMoney(Math.round(animatedCollected))}
@@ -436,9 +437,6 @@ export default function Dashboard() {
               series={buckets.map((point) => point.value)}
             />
           </Reveal>
-
-          {/* three metric cards; one column on phones, three across from tablet up */}
-          <SummaryPanel columns={3}>
             <Reveal delay={120} className="h-full">
               <StatCard
                 label="Payers"
@@ -484,7 +482,7 @@ export default function Dashboard() {
                   value={formatMoney(collected)}
                   context={`Split by ${gateway.label} as it lands`}
                   footer={
-                    <p className="flex items-center gap-1.5 text-[11.5px] font-semibold text-success">
+                    <p className="flex items-center gap-1.5 text-[11.5px] font-semibold text-ink">
                       <ShieldCheck size={13} aria-hidden="true" /> Settled directly
                     </p>
                   }

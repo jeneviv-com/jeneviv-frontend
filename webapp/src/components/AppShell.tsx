@@ -80,6 +80,12 @@ const TITLES: Record<string, string> = {
   "/admin": "Admin",
 };
 
+/** Detail pages: the top bar names the section and the kind of record. */
+const DETAIL_TITLES = [
+  { prefix: "/collections/", parent: "Collections", title: "Collection" },
+  { prefix: "/groups/", parent: "Groups", title: "Group" },
+];
+
 /** Maps merchant status to the shared colour meanings. */
 function statusKind(status: string | undefined): { kind: ToneKind; label: string } {
   switch (status) {
@@ -234,7 +240,9 @@ export default function AppShell() {
     ];
   }, [isAdmin]);
 
-  const current = TITLES[location.pathname] ?? "Jeneviv";
+  const detail = DETAIL_TITLES.find((d) => location.pathname.startsWith(d.prefix));
+  const current = TITLES[location.pathname] ?? detail?.title ?? "Jeneviv";
+  const parent = TITLES[location.pathname] ? "Workspace" : detail?.parent ?? "Workspace";
   const status = statusKind(merchant?.status);
   const displayName = merchant?.display_name || user?.name || "Your workspace";
 
@@ -369,7 +377,7 @@ export default function AppShell() {
             {/* page title: the breadcrumb is now a calm heading */}
             <div className="min-w-0">
               <p className="hidden font-mono text-[10px] uppercase tracking-[0.16em] text-ink-muted sm:block">
-                Workspace
+                {parent}
               </p>
               <p className="truncate text-[16px] font-bold tracking-tight text-ink sm:mt-0.5">{current}</p>
             </div>

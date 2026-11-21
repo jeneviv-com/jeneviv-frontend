@@ -270,6 +270,10 @@ export function Sparkline({
   );
 }
 
+/**
+ * Daily payment counts as small bars: the height carries the size, the number
+ * above says it exactly, and today's bar is the one in brand orange.
+ */
 export function HeatStrip({
   values,
   labels,
@@ -278,29 +282,31 @@ export function HeatStrip({
   labels?: string[];
 }) {
   const max = Math.max(...values, 1);
+  const last = values.length - 1;
   return (
-    <div>
-      <div className="flex h-8 items-stretch gap-1">
+    <div role="img" aria-label={values.map((v, i) => `${labels?.[i] ?? i}: ${v}`).join(", ")}>
+      <div className="flex h-28 items-end gap-1 sm:gap-1.5" aria-hidden="true">
         {values.map((value, index) => (
-          <div
-            key={index}
-            title={`${labels?.[index] ?? index}: ${value}`}
-            className="flex-1 rounded-[3px]"
-            style={{
-              background:
-                value === 0
-                  ? "#efefef"
-                  : `rgba(16, 16, 16, ${0.14 + (value / max) * 0.8})`,
-            }}
-          />
+          <div key={index} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
+            <span className="tabular font-mono text-[10px] text-ink-muted">{value > 0 ? value : ""}</span>
+            <div
+              title={`${labels?.[index] ?? index}: ${value}`}
+              className={`w-full rounded-t-[4px] ${
+                value === 0 ? "bg-line" : index === last ? "bg-brand" : "bg-ink"
+              }`}
+              style={{ height: value === 0 ? 3 : `${Math.max(8, (value / max) * 80)}%` }}
+            />
+          </div>
         ))}
       </div>
       {labels ? (
-        <div className="mt-2 flex gap-1">
+        <div className="mt-2 flex gap-1 sm:gap-1.5" aria-hidden="true">
           {labels.map((label, index) => (
             <span
               key={`${label}-${index}`}
-              className="flex-1 text-center font-mono text-3xs text-ink-muted"
+              className={`flex-1 text-center font-mono text-3xs text-ink-muted ${
+                index % 2 === 1 && index !== last ? "invisible sm:visible" : ""
+              }`}
             >
               {label}
             </span>
