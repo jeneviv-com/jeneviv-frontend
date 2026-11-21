@@ -1114,7 +1114,7 @@ export function SummaryRow({
         </p>
         <p className="mt-2 truncate text-[12.5px] opacity-70">{subtitle}</p>
       </div>
-      {footer ? <div className="mt-4 lg:mt-0">{footer}</div> : null}
+      {footer ? <div className="wallet-foot mt-4 lg:mt-0">{footer}</div> : null}
     </div>
   );
 

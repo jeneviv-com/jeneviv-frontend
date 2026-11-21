@@ -381,6 +381,18 @@
     .wallet-stack > .wallet-card:last-child .wallet-side {
       display: none;
     }
+
+    /* Open card: title stays top left, everything under it is centred. */
+    .wallet-stack > :last-child .wallet-hero,
+    .wallet-stack > .wallet-card:last-child .wallet-hero {
+      text-align: center;
+    }
+
+    .wallet-stack > :last-child .wallet-foot,
+    .wallet-stack > .wallet-card:last-child .wallet-foot {
+      display: flex;
+      justify-content: center;
+    }
   }
 
   @media (min-width: 1024px) {
