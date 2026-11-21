@@ -22,7 +22,10 @@ const Chevron = () => (
 export function Wordmark({ light = false }: { light?: boolean }) {
   return (
     <span className={`b-wordmark${light ? " light" : ""}`}>
-      jeneviv<em>.</em>
+      <img src="/assets/images/jeneviv.png" alt="" width={30} height={30} className="b-wordmark-mark" />
+      <span>
+        jeneviv<em>.</em>
+      </span>
     </span>
   );
 }
