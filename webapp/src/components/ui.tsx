@@ -777,6 +777,30 @@ export function StatusMark({ active }: { active: boolean }) {
   );
 }
 
+/**
+ * Muted surfaces for the dashboard's stacked cards. Each is a light tint of the
+ * jeneviv neutrals (cream, line, ink) with one quiet hue per meaning. The
+ * headline stays ink.
+ */
+export const DASHBOARD_CARD = {
+  headline: "bg-ink text-white",
+  money: "bg-[#e9efe8] text-ink",
+  people: "bg-[#ebeaf1] text-ink",
+  attention: "bg-[#f6ede4] text-ink",
+  neutral: "bg-[#e7eded] text-ink",
+} as const;
+export type DashboardCardTone = keyof typeof DASHBOARD_CARD;
+
+/** Older palette names that still reach SummaryRow, mapped onto the muted set. */
+const LEGACY_CARD_TONE: Record<string, DashboardCardTone> = {
+  ink: "headline",
+  lavender: "people",
+  peach: "attention",
+  coral: "attention",
+  mint: "money",
+  aqua: "neutral",
+};
+
 /** "3/4 people to pay" under a collection's name. Replaces the progress bars. */
 export function PeopleToPay({ paid, total, className = "" }: { paid: number; total?: number | null; className?: string }) {
   const text = total ? `${paid}/${total} people to pay` : `${paid} ${paid === 1 ? "person" : "people"} paid`;
@@ -1085,7 +1109,7 @@ export function SummaryRow({
   title,
   subtitle,
   value,
-  tone = "lavender",
+  tone = "neutral",
   href,
   loading = false,
   footer,
@@ -1095,18 +1119,15 @@ export function SummaryRow({
   subtitle: string;
   value: ReactNode;
   /** A colour from the shared palette, or a meaning such as "money" or "attention". */
-  tone?: ToneCardTone | ToneKind;
+  tone?: DashboardCardTone | ToneCardTone | ToneKind;
   icon?: ReactNode;
   href?: string;
   loading?: boolean;
   footer?: ReactNode;
   className?: string;
 }) {
-  // Each card takes its colour from the shared palette. Meaning tones map onto
-  // the palette so money, people, attention and neutral cards each keep a colour.
-  const palette: Record<string, string> = { money: "mint", people: "lavender", attention: "peach", neutral: "aqua" };
-  const key = (tone in TONE_CARD ? tone : palette[tone]) as ToneCardTone;
-  const surface = TONE_CARD[key] ?? TONE_CARD.lavender;
+  // Each card takes a muted surface from DASHBOARD_CARD, chosen by its meaning.
+  const surface = DASHBOARD_CARD[LEGACY_CARD_TONE[tone] ?? (tone as DashboardCardTone)] ?? DASHBOARD_CARD.neutral;
 
   const panel = (
     <div
