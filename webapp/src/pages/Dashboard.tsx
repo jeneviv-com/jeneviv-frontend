@@ -165,6 +165,7 @@ function HeadlineCard({
   return (
     <SummaryRow
       title="Collected"
+      tone="headline"
       value={value}
       loading={loading}
       subtitle={`${count} payment${count === 1 ? "" : "s"} · ${rangeLabel}`}
