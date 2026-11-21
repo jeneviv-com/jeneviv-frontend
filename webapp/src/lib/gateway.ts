@@ -100,11 +100,11 @@ export function gatewayCopy(info: GatewayInfo): GatewayCopy {
     settlementChip: direct ? "Direct" : "Wallet + payout",
     settlementTitle: direct ? "Direct settlement" : "Wallet settlement",
     settlementSubtitle: direct
-      ? "Your money never sits with Jeneviv"
+      ? "Your money never sits with jeneviv"
       : "Held in your wallet until it is paid out",
     settlementBody: direct
-      ? `Each successful payment is split by ${L} when it is captured. The collection amount, less ${L}'s processing fee, goes to your verified bank account. Jeneviv's platform fee is taken in the same split.`
-      : `Each successful payment is confirmed by ${L} and credited to your Jeneviv wallet. The collection amount is paid out to your verified bank account on your payout schedule; ${L}'s processing fee and Jeneviv's platform fee are charged to the payer.`,
+      ? `Each successful payment is split by ${L} when it is captured. The collection amount, less ${L}'s processing fee, goes to your verified bank account. jeneviv's platform fee is taken in the same split.`
+      : `Each successful payment is confirmed by ${L} and credited to your jeneviv wallet. The collection amount is paid out to your verified bank account on your payout schedule; ${L}'s processing fee and jeneviv's platform fee are charged to the payer.`,
   };
 }
 

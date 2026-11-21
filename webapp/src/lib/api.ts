@@ -1,5 +1,5 @@
 /**
- * Jeneviv API client.
+ * jeneviv API client.
  *
  * One place where every backend endpoint lives. Handles auth (session cookie +
  * bearer token), JSON parsing, timeouts, and normalises errors into APIError.

@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { createPortal } from "react-dom";
 import {
+  Children,
+  type CSSProperties,
   ButtonHTMLAttributes,
   InputHTMLAttributes,
   ReactNode,
@@ -758,7 +760,6 @@ export function CollectionStatusPill({ active }: { active: boolean }) {
 
 export function PageHeader({
   title,
-  description,
   actions,
 }: {
   eyebrow?: string;
@@ -770,13 +771,6 @@ export function PageHeader({
     <header className="mb-5 flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         <h1 className="sr-only">{title}</h1>
-        {/* The top bar already names the page, so the section eyebrow is not
-            repeated here. `eyebrow` stays in the props so callers compile. */}
-        {description ? (
-          <p className="max-w-2xl text-[14px] leading-relaxed text-ink-soft">
-            {description}
-          </p>
-        ) : null}
       </div>
       {actions ? (
         <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
@@ -1025,14 +1019,21 @@ export function StackedCard({
  */
 export function SummaryPanel({
   children,
+  columns,
   className = "",
 }: {
   children: ReactNode;
-  /** Ignored: summary cards always render as one stack. Kept so callers compile. */
-  columns?: 1 | 2 | 3;
+  /** Columns on laptops. Defaults to one column per card. */
+  columns?: number;
   className?: string;
 }) {
-  return <div className={`wallet-stack ${className}`}>{children}</div>;
+  const count = Children.toArray(children).filter(Boolean).length;
+  const style = { "--wallet-cols": columns ?? Math.max(1, count) } as CSSProperties;
+  return (
+    <div className={`wallet-stack ${className}`} style={style}>
+      {children}
+    </div>
+  );
 }
 
 /** Same as SummaryPanel, with the older `gridLayout` switch. Kept so existing callers work. */
@@ -1076,38 +1077,44 @@ export function SummaryRow({
   footer?: ReactNode;
   className?: string;
 }) {
-  const toneClass =
-    tone in TONE_CARD
-      ? TONE_CARD[tone as ToneCardTone]
-      : TONE_MEANING[tone as ToneKind];
+  // Colour now comes from the card's place in the stack (first black, the
+  // rest white), so `tone` is accepted but no longer changes the surface.
+  void tone;
 
   const panel = (
     <div
-      className={`wallet-card ${toneClass} ${
+      className={`wallet-card ${
         href
-          ? "transition-[filter] duration-150 hover:brightness-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
+          ? "transition-[filter] duration-150 hover:brightness-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
           : ""
       } ${className}`}
     >
-      <div className="flex items-start justify-between gap-4">
-        <p className="min-w-0 pt-0.5 text-[19px] font-bold leading-tight tracking-[-0.02em] lg:text-[21px]">
+      <div className="flex items-center justify-between gap-4 lg:flex-col lg:items-start lg:gap-3">
+        <p className="min-w-0 text-[18px] font-bold leading-tight tracking-[-0.02em] lg:text-[15px] lg:font-semibold">
           {title}
           {href ? (
-            <ArrowUpRight size={15} aria-hidden="true" className="ml-1 hidden align-[-1px] opacity-50 sm:inline-block" />
+            <ArrowUpRight size={14} aria-hidden="true" className="ml-1 hidden align-[-1px] text-brand lg:inline-block" />
           ) : null}
         </p>
-        <div className="min-w-0 shrink-0 text-right">
-          <p className="tabular whitespace-nowrap text-[21px] font-extrabold leading-tight tracking-[-0.03em] lg:text-[24px]">
+        <div className="wallet-side min-w-0 shrink-0 text-right lg:text-left">
+          <p className="tabular whitespace-nowrap text-[18px] font-bold leading-tight tracking-[-0.02em] lg:text-[24px] lg:font-extrabold lg:tracking-[-0.03em] xl:text-[28px]">
             {loading ? (
-              <span aria-hidden="true" className="skeleton inline-block h-6 w-20 rounded-md" />
+              <span aria-hidden="true" className="skeleton inline-block h-5 w-20 rounded-md" />
             ) : (
               value
             )}
           </p>
-          <p className="mt-0.5 max-w-[22ch] truncate text-[12.5px] opacity-75 sm:max-w-[32ch]">{subtitle}</p>
+          <p className="mt-0.5 max-w-[24ch] truncate text-[12px] opacity-70 sm:max-w-[32ch]">{subtitle}</p>
         </div>
       </div>
-      {footer ? <div className="mt-4">{footer}</div> : null}
+      {/* The open (last) card on phones shows the figure large, LemFi style. */}
+      <div className="wallet-hero">
+        <p className="tabular whitespace-nowrap text-[34px] font-extrabold leading-none tracking-[-0.04em]">
+          {loading ? <span aria-hidden="true" className="skeleton inline-block h-8 w-28 rounded-md" /> : value}
+        </p>
+        <p className="mt-2 truncate text-[12.5px] opacity-70">{subtitle}</p>
+      </div>
+      {footer ? <div className="mt-4 lg:mt-0">{footer}</div> : null}
     </div>
   );
 

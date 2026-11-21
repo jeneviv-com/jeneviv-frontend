@@ -44,7 +44,7 @@ export default function ForgotPassword() {
     return (
       <AuthLayout
         title="Check your inbox"
-        subtitle="If that address belongs to a Jeneviv workspace, a reset link is on its way."
+        subtitle="If that address belongs to a jeneviv workspace, a reset link is on its way."
         footer={
           <>
             Remembered your password?{" "}

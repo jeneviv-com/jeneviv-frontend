@@ -141,7 +141,7 @@ function Reveal({
 /* ------------------------------------------------------------------ cards */
 
 /**
- * The headline: one dark card, one big number. The Jeneviv mark sits in the
+ * The headline: one dark card, one big number. The jeneviv mark sits in the
  * corner as a watermark, the only place the orange is allowed to be large.
  */
 function HeadlineCard({
@@ -161,51 +161,34 @@ function HeadlineCard({
 }) {
   const up = (delta ?? 0) >= 0;
   return (
-    <section
-      aria-label="Collected"
-      className="wallet-card isolate overflow-hidden bg-ink text-white"
-    >
-      <img
-        src={JENEVIV_LOGO}
-        alt=""
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-10 -top-10 -z-10 h-48 w-48 rotate-6 opacity-[0.16] lg:h-60 lg:w-60"
-      />
-      <div className="flex items-center justify-between gap-3">
-        <p className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-white/55">
-          Collected · {rangeLabel}
-        </p>
-        {delta !== null && !loading ? (
-          <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold ${
-              up ? "bg-white/10 text-white" : "bg-brand/20 text-brand-peach"
-            }`}
-            title="Compared with the previous period of the same length"
-          >
-            {up ? <ArrowUpRight size={12} aria-hidden="true" /> : <ArrowDownRight size={12} aria-hidden="true" />}
-            {delta >= 200
-              ? `${(delta / 100 + 1).toFixed(0)}×`
-              : `${Math.abs(delta).toFixed(delta !== 0 && Math.abs(delta) < 10 ? 1 : 0)}%`}
-          </span>
-        ) : null}
-      </div>
-
-      <div className="mt-4 flex items-end justify-between gap-4">
-        <div className="min-w-0">
-          <p className="tabular text-[34px] font-extrabold leading-none tracking-[-0.04em] lg:text-[44px]">
-            {loading ? <span aria-hidden="true" className="skeleton inline-block h-9 w-40 rounded-lg opacity-30" /> : value}
-          </p>
-          <p className="mt-2.5 text-[12.5px] text-white/60">
-            {count} successful payment{count === 1 ? "" : "s"}
-          </p>
+    <SummaryRow
+      title="Collected"
+      value={value}
+      loading={loading}
+      subtitle={`${count} payment${count === 1 ? "" : "s"} · ${rangeLabel}`}
+      footer={
+        <div className="flex items-end justify-between gap-4">
+          {delta !== null && !loading ? (
+            <span
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold ${
+                up ? "bg-white/10 text-white" : "bg-brand/20 text-brand-peach"
+              }`}
+              title="Compared with the previous period of the same length"
+            >
+              {up ? <ArrowUpRight size={12} aria-hidden="true" /> : <ArrowDownRight size={12} aria-hidden="true" />}
+              {delta >= 200
+                ? `${(delta / 100 + 1).toFixed(0)}×`
+                : `${Math.abs(delta).toFixed(delta !== 0 && Math.abs(delta) < 10 ? 1 : 0)}%`}
+            </span>
+          ) : (
+            <span />
+          )}
+          {series.some((point) => point > 0) ? (
+            <Sparkline values={series} width={160} height={40} tone="#ff4800" />
+          ) : null}
         </div>
-        {series.some((point) => point > 0) ? (
-          <div className="hidden shrink-0 sm:block">
-            <Sparkline values={series} width={132} height={40} tone="#ff4800" />
-          </div>
-        ) : null}
-      </div>
-    </section>
+      }
+    />
   );
 }
 
@@ -426,8 +409,8 @@ export default function Dashboard() {
         {/* Left column - main metrics and charts */}
         <div className="space-y-5">
           {/* the wallet stack: headline on top, metrics tucked beneath */}
-          <SummaryPanel>
-          <Reveal delay={40}>
+          <SummaryPanel columns={3}>
+          <Reveal delay={40} className="wallet-span">
             <HeadlineCard
               value={formatMoney(Math.round(animatedCollected))}
               loading={loading}
@@ -578,22 +561,6 @@ export default function Dashboard() {
             </Card>
           </Reveal>
 
-          {/* settlement note - moved below chart on laptop */}
-          <Reveal delay={680} className="hidden lg:block">
-            <Card className="min-h-[180px]">
-              <CardHeader
-                title={gateway.settlementTitle}
-                subtitle={gateway.settlementSubtitle}
-                icon={<ShieldCheck size={16} />}
-              />
-              <p className="muted">
-                {gateway.settlementBody}
-              </p>
-              <Link to="/payouts" className="btn btn-secondary btn-sm mt-4 w-full">
-                Manage bank account <ArrowUpRight size={14} />
-              </Link>
-            </Card>
-          </Reveal>
         </div>
 
         {/* Right column - full width blocks on mobile, cards on desktop */}
@@ -747,26 +714,6 @@ export default function Dashboard() {
             </section>
           </Reveal>
 
-          {/* settlement note - shown on mobile below collections */}
-          <Reveal delay={800} className="lg:hidden">
-            <SimpleCard padding="lg" bg="white">
-              <div className="mb-3 flex items-center gap-2">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-cream">
-                  <ShieldCheck size={16} />
-                </span>
-                <div>
-                  <h3 className="text-[14px] font-bold tracking-tight">{gateway.settlementTitle}</h3>
-                  <p className="text-[12px] text-ink-muted">{gateway.settlementSubtitle}</p>
-                </div>
-              </div>
-              <p className="muted">
-                {gateway.settlementBody}
-              </p>
-              <Link to="/payouts" className="btn btn-secondary btn-sm mt-4 w-full">
-                Manage bank account <ArrowUpRight size={14} />
-              </Link>
-            </SimpleCard>
-          </Reveal>
         </div>
       </div>
     </div>

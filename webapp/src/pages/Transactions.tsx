@@ -605,7 +605,7 @@ export default function Transactions() {
           />
         </Field>
         <p className="hint mt-2 flex items-center gap-1.5">
-          <RotateCcw size={12} /> Jeneviv fees on refunded payments are not returned.
+          <RotateCcw size={12} /> jeneviv fees on refunded payments are not returned.
         </p>
         <div className="mt-3">
           <Pill tone="amber">Admin action</Pill>

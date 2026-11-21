@@ -1,5 +1,5 @@
 /**
- * Jeneviv platform fee, shown to merchants and payers.
+ * jeneviv platform fee, shown to merchants and payers.
  *
  * Mirrors the backend schedule in src/lib/fees.ts. If that schedule changes,
  * change it here too so the wording and the maths stay in step.

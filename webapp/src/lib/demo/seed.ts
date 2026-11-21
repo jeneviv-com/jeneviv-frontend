@@ -1,5 +1,5 @@
 /**
- * Demo dataset for the Jeneviv dashboard.
+ * Demo dataset for the jeneviv dashboard.
  *
  * Used only when the real API cannot be reached (see ./index.ts). The data is
  * deliberately realistic — Nigerian names, courses, banks and amounts — so
@@ -238,7 +238,7 @@ export function seedDatabase(): DemoDatabase {
       bank_code: "035",
       bank_name: "Wema Bank",
       account_number: "0123456789",
-      account_name: "Jeneviv Demo Workspace",
+      account_name: "jeneviv Demo Workspace",
       currency: "NGN",
       is_default: true,
       createdAt: isoDaysAgo(118),

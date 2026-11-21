@@ -643,7 +643,7 @@ export default function Collections() {
         open={showCreate}
         onClose={closeCreateModal}
         title="Create a collection"
-        description="One amount per payer. You can add more fields after you create it."
+        
         width={560}
         footer={
           <>

@@ -83,11 +83,6 @@ export default function PaymentLinks() {
         ))}
       </SummaryPanel>
 
-      <InlineNote tone="info" title="No app for payers, ever">
-        Links open in any browser — WhatsApp, Instagram or Chrome. Payers enter
-        the details you asked for, transfer to the account shown, and receive a
-        receipt by email.
-      </InlineNote>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <SearchInput
@@ -264,15 +259,6 @@ export default function PaymentLinks() {
           </span>
           <div>
             <h2 className="section-title">Printing a poster or a flyer?</h2>
-            <p className="muted mt-1.5">
-              The payer page works on any device with a browser. Paste the link
-              into your flyer or class group — there is nothing to install and no
-              account for payers to create.
-            </p>
-            <p className="hint mt-2">
-              Tip: use a short, clear message with the amount and the deadline.
-              Collections that state the deadline get paid faster.
-            </p>
           </div>
         </div>
       </Card>

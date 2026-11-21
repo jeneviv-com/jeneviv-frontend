@@ -69,13 +69,13 @@ function toneFor(key: string) {
   return AVATAR_TONES[Math.abs(hash) % AVATAR_TONES.length];
 }
 
-/** The Jeneviv mark and wordmark, as on the sidebar. */
+/** The jeneviv mark and wordmark, as on the sidebar. */
 function BrandLockup() {
   return (
     <span className="inline-flex items-center gap-2">
       <img
         src={JENEVIV_LOGO}
-        alt="Jeneviv"
+        alt="jeneviv"
         width={32}
         height={32}
         className="h-8 w-8 rounded-[10px] bg-white object-cover shadow-[0_1px_2px_rgba(18,16,14,0.12)]"
@@ -232,9 +232,6 @@ export default function Payers() {
           <div className="min-w-0">
             <BrandLockup />
             <h1 className="mt-4 text-[24px] font-extrabold tracking-[-0.035em] sm:text-[30px]">Payers</h1>
-            <p className="mt-1 max-w-xl text-[13px] leading-relaxed text-ink-muted">
-              Everyone who has paid into your collections, one row per person, with what they paid and when.
-            </p>
           </div>
           <Button variant="secondary" icon={<Download size={14} />} onClick={exportCsv} disabled={rows.length === 0}>
             Export CSV
@@ -486,7 +483,7 @@ export default function Payers() {
                   aria-hidden="true"
                   className="h-4 w-4"
                 />
-                Records kept by Jeneviv
+                Records kept by jeneviv
               </span>
             </div>
           </>

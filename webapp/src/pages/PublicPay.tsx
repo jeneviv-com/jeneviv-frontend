@@ -266,7 +266,7 @@ export default function PublicPay() {
               "The link may be mistyped or the collection may have been removed. Ask your coordinator for a fresh link."}
           </p>
           <Link to="/" className="mt-8 inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink underline underline-offset-2">
-            <ArrowLeft size={13} /> Go to Jeneviv
+            <ArrowLeft size={13} /> Go to jeneviv
           </Link>
         </div>
       </Shell>
@@ -465,7 +465,7 @@ export default function PublicPay() {
                     <dd className="tabular font-semibold">{formatMoney(data.pricing.amount, data.currency)}</dd>
                   </div>
                   <div className="flex justify-between gap-4">
-                    <dt className="text-ink-soft">Jeneviv platform fee</dt>
+                    <dt className="text-ink-soft">jeneviv platform fee</dt>
                     <dd className="tabular">{formatMoney(data.pricing.platform_fee, data.currency)}</dd>
                   </div>
                   <div className="flex justify-between gap-4">
@@ -636,7 +636,7 @@ export default function PublicPay() {
       </div>
 
       <p className="mt-12 border-t border-line pt-5 text-center text-[11.5px] text-ink-muted">
-        Secured by Jeneviv · {gateway.processedBy} · amounts in {currencySymbol(data.currency)} {data.currency}
+        Secured by jeneviv · {gateway.processedBy} · amounts in {currencySymbol(data.currency)} {data.currency}
       </p>
     </Shell>
   );

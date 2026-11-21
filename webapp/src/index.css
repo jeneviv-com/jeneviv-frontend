@@ -318,23 +318,80 @@
     @apply bg-[#101010] text-white;
   }
 
-  /* Wallet stack: summary cards overlap like a deck, each one tucking under
-     the next so only its top band shows. The last card sits fully open. */
+  /* Wallet stack (phones and tablets): cards overlap like a deck. Every card
+     but the last shows only its top band; the last card sits open and taller.
+     The first card is black, the rest are white. On laptops the same cards
+     sit side by side in columns. */
   .wallet-stack {
     @apply flex flex-col;
   }
 
-  .wallet-stack > * + * {
-    margin-top: -24px;
-  }
-
   .wallet-card {
-    @apply relative rounded-[24px] border-[1.5px] border-ink px-5 pb-[42px] pt-4 lg:px-6;
+    @apply relative rounded-[20px] border-[1.5px] border-ink bg-white px-4 text-ink sm:px-5;
   }
 
-  .wallet-stack > *:last-child .wallet-card,
-  .wallet-stack > .wallet-card:last-child {
-    @apply pb-5;
+  .wallet-stack > :first-child .wallet-card,
+  .wallet-stack > .wallet-card:first-child {
+    @apply border-ink bg-ink text-white;
+  }
+
+  @media (max-width: 1023px) {
+    .wallet-stack > * + * {
+      margin-top: -22px;
+    }
+
+    .wallet-stack > :not(:last-child) .wallet-card,
+    .wallet-stack > .wallet-card:not(:last-child) {
+      height: 82px;
+      overflow: hidden;
+      padding-top: 13px;
+      padding-bottom: 0;
+    }
+
+    .wallet-stack > :last-child .wallet-card,
+    .wallet-stack > .wallet-card:last-child {
+      @apply flex flex-col justify-between pb-5;
+      padding-top: 13px;
+      min-height: 184px;
+    }
+  }
+
+  .wallet-hero {
+    display: none;
+  }
+
+  @media (max-width: 1023px) {
+    .wallet-stack > :last-child .wallet-hero,
+    .wallet-stack > .wallet-card:last-child .wallet-hero {
+      display: block;
+      margin-top: auto;
+      padding-top: 20px;
+    }
+
+    .wallet-stack > :last-child .wallet-side,
+    .wallet-stack > .wallet-card:last-child .wallet-side {
+      display: none;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .wallet-stack {
+      display: grid;
+      grid-template-columns: repeat(var(--wallet-cols, 3), minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .wallet-stack > * {
+      height: 100%;
+    }
+
+    .wallet-card {
+      @apply flex h-full flex-col justify-between gap-6 py-5;
+    }
+
+    .wallet-span {
+      grid-column: 1 / -1;
+    }
   }
 
   /* Fix for laptop view - ensure cards don't stack on lg screens */

@@ -1,5 +1,5 @@
 /**
- * Formatting and small shared helpers for the Jeneviv dashboard.
+ * Formatting and small shared helpers for the jeneviv dashboard.
  */
 
 export const CURRENCY_SYMBOLS: Record<string, string> = {
