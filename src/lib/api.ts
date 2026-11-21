@@ -1,5 +1,5 @@
 /**
- * Jeneviv API client.
+ * jeneviv API client.
  *
  * One place where every backend endpoint lives. Handles auth (session cookie +
  * bearer token), JSON parsing, timeouts, and normalises errors into APIError.
@@ -146,7 +146,7 @@ export async function apiFetch<T>(
       0,
       aborted
         ? "The request took too long. Check your connection and try again."
-        : "Cannot reach the Jeneviv API. Check your connection or API URL.",
+        : "Cannot reach the jeneviv API. Check your connection or API URL.",
       { error },
       endpoint,
     );

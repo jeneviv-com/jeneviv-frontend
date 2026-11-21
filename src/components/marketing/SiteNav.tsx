@@ -189,7 +189,7 @@ export default function SiteNav() {
     <div className="m-nav-shell" data-scrolled={scrolled}>
       <div className="m-wrap">
         <nav className="m-nav" aria-label="Main">
-          <Link href="/" className="m-logo" aria-label="Jeneviv home">
+          <Link href="/" className="m-logo" aria-label="jeneviv home">
             <img
               src="/assets/images/jeneviv.png"
               alt=""

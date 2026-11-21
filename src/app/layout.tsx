@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import { GeistPixelSquare } from "geist/font/pixel";
 import "./globals.css";
 import "./marketing.css";
+import "./bachs.css";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
@@ -9,11 +13,11 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL || "https://jeneviv.up.railway.app",
   ),
   title: {
-    default: "Jeneviv | Group collections, finally under control",
-    template: "%s · Jeneviv",
+    default: "jeneviv | Group collections, finally under control",
+    template: "%s · jeneviv",
   },
   description:
-    "Jeneviv gives course reps, PTAs, cooperatives and associations a payment link, a live dashboard and a verified payer list. Every naira confirmed, every payer accounted for.",
+    "jeneviv gives course reps, PTAs, cooperatives and associations a payment link, a live dashboard and a verified payer list. Every naira confirmed, every payer accounted for.",
   keywords: [
     "group collections Nigeria",
     "school fees collection",
@@ -21,23 +25,23 @@ export const metadata: Metadata = {
     "payment link Nigeria",
     "cooperative dues",
     "PTA levies",
-    "Jeneviv",
+    "jeneviv",
   ],
-  applicationName: "Jeneviv",
+  applicationName: "jeneviv",
   authors: [{ name: "Acadeva Limited" }],
-  creator: "Jeneviv",
+  creator: "jeneviv",
   openGraph: {
     type: "website",
     locale: "en_NG",
     url: "/",
-    siteName: "Jeneviv",
-    title: "Jeneviv | Group collections, finally under control",
+    siteName: "jeneviv",
+    title: "jeneviv | Group collections, finally under control",
     description:
       "One payment link. A live dashboard. A verified payer list. Built for the way Nigerian groups actually collect money.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Jeneviv | Group collections, finally under control",
+    title: "jeneviv | Group collections, finally under control",
     description:
       "One payment link. A live dashboard. A verified payer list. Built for the way Nigerian groups actually collect money.",
   },
@@ -57,7 +61,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      className={`${GeistSans.variable} ${GeistMono.variable} ${GeistPixelSquare.variable}`}
+    >
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
