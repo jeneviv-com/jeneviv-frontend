@@ -474,3 +474,280 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================================================
+   Sign-in pages: the landing page's look (Geist, white, ink, orange accents)
+   ========================================================================== */
+
+@font-face {
+  font-family: "Geist";
+  src: url("./assets/fonts/Geist-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("./assets/fonts/GeistMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Pixel Square";
+  src: url("./assets/fonts/GeistPixel-Square.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.auth {
+  font-family: "Geist", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.auth-title {
+  font-size: clamp(34px, 5vw, 44px);
+  line-height: 1.04;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  color: #0a0a0a;
+}
+
+.auth .input {
+  height: 48px;
+  border-radius: 10px;
+  border-color: #e8e8e5;
+  font-size: 15px;
+}
+
+.auth textarea.input {
+  height: auto;
+}
+
+.auth .btn {
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.auth .btn-primary {
+  background: #0a0a0a;
+}
+
+.auth .btn-primary:hover {
+  background: #262626;
+}
+
+.auth label {
+  font-weight: 500;
+}
+
+/* right side */
+
+.auth-side {
+  background:
+    radial-gradient(55% 45% at 70% 30%, rgba(254, 73, 0, 0.08), transparent 70%),
+    #f6f6f4;
+  border-left: 1px solid #e8e8e5;
+}
+
+.auth-headline {
+  font-size: clamp(40px, 3.8vw, 56px);
+  line-height: 1.04;
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  color: #0a0a0a;
+}
+
+.auth-pixel {
+  font-family: "Geist Pixel Square", "Geist Mono", monospace;
+  font-weight: 400;
+  font-size: 0.8em;
+  letter-spacing: -0.02em;
+}
+
+.auth-pixel em,
+.auth-roll em {
+  font-style: normal;
+  color: #fe4900;
+}
+
+/* rolling words: one line tall, the track steps up a line at a time */
+.auth-roll {
+  display: block;
+  height: 1.15em;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+.auth-roll-track {
+  display: flex;
+  flex-direction: column;
+  animation: auth-roll 10s cubic-bezier(0.7, 0, 0.3, 1) infinite;
+}
+
+.auth-roll-track > span {
+  display: block;
+  height: 1.15em;
+  line-height: 1.15em;
+  white-space: nowrap;
+}
+
+@keyframes auth-roll {
+  0%, 20% { transform: translateY(0); }
+  25%, 45% { transform: translateY(-1.15em); }
+  50%, 70% { transform: translateY(-2.3em); }
+  75%, 95% { transform: translateY(-3.45em); }
+  100% { transform: translateY(-4.6em); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-roll-track {
+    animation: none;
+  }
+}
+
+/* receipt printer, as on the landing page */
+.auth-printer {
+  width: 100%;
+  max-width: 340px;
+}
+
+.auth-printer-slot {
+  position: relative;
+  z-index: 2;
+  height: 50px;
+  border-radius: 16px 16px 10px 10px;
+  background: linear-gradient(#1c1c1c, #0a0a0a);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 18px 30px -18px rgba(0, 0, 0, 0.6);
+}
+
+.auth-printer-slot::after {
+  content: "";
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 11px;
+  height: 4px;
+  border-radius: 4px;
+  background: #000;
+}
+
+.auth-printer-slot::before {
+  content: "";
+  position: absolute;
+  right: 20px;
+  top: 13px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fe4900;
+  box-shadow: 0 0 10px #fe4900;
+}
+
+.auth-paper-clip {
+  margin: -8px 24px 0;
+  overflow: hidden;
+  padding-bottom: 12px;
+}
+
+.auth-paper {
+  position: relative;
+  padding: 34px 20px 20px;
+  background: #fff;
+  font-family: "Geist Mono", monospace;
+  font-size: 12px;
+  color: #262626;
+  box-shadow: 0 30px 50px -30px rgba(0, 0, 0, 0.35);
+  animation: auth-print 2.4s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+.auth-paper::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -10px;
+  height: 10px;
+  background:
+    linear-gradient(-45deg, transparent 7px, #fff 0) 0 0 / 14px 10px repeat-x,
+    linear-gradient(45deg, transparent 7px, #fff 0) 0 0 / 14px 10px repeat-x;
+}
+
+@keyframes auth-print {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-paper {
+    animation: none;
+  }
+}
+
+.auth-paper-head,
+.auth-paper-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10.5px;
+  color: #8a8a86;
+}
+
+.auth-paper-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Geist", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: #0a0a0a;
+}
+
+.auth-paper-brand i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: #fe4900;
+}
+
+.auth-paper-ref {
+  margin-top: 6px;
+  font-size: 10.5px;
+  color: #8a8a86;
+}
+
+.auth-rule {
+  margin: 12px 0;
+  border-top: 1px dashed #d4d4d0;
+}
+
+.auth-line,
+.auth-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 3px 0;
+}
+
+.auth-total {
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+
+.auth-total b {
+  font-size: 16px;
+}
+
+.auth-paper-foot {
+  margin-top: 16px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0ee;
+}
+
+.auth-ok {
+  color: #12805a;
+}
