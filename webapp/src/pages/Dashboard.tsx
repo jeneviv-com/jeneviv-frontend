@@ -354,18 +354,6 @@ export default function Dashboard() {
           <h1 className="mt-1 text-[22px] font-bold tracking-tight lg:text-[28px]">
             Good to see you, {firstName}
           </h1>
-          {merchant ? (
-            <Link
-              to="/settings"
-              className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 py-1 text-[11px] font-semibold text-ink-soft transition-colors hover:border-ink/20"
-            >
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${merchant.status === "approved" ? "bg-success" : "bg-brand"}`}
-                aria-hidden="true"
-              />
-              {statusLabel(merchant.status)} · {gateway.label}
-            </Link>
-          ) : null}
         </div>
         <Link
           to="/collections?new=1"
