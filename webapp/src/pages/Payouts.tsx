@@ -140,8 +140,8 @@ export default function Payouts() {
         title="Bank & settlement"
         description={
           gateway.settles_direct
-            ? `${gateway.label} splits every payment as it is captured. Your collection goes straight to your bank — Jeneviv never holds merchant money.`
-            : `${gateway.label} confirms every payment into your Jeneviv wallet. Collections are paid out to the bank account you choose here.`
+            ? `${gateway.label} splits every payment as it is captured. Your collection goes straight to your bank — jeneviv never holds merchant money.`
+            : `${gateway.label} confirms every payment into your jeneviv wallet. Collections are paid out to the bank account you choose here.`
         }
         actions={
           <Button icon={<Plus size={15} />} onClick={() => setShowAddAccount(true)}>
@@ -270,44 +270,6 @@ export default function Payouts() {
         </Card>
 
         <div className="space-y-5">
-          <Card>
-            <CardHeader
-              title="How settlement works"
-              subtitle={gateway.settles_direct ? "No wallet, no payout runs, no waiting" : "From payer to wallet to your bank"}
-              icon={<ShieldCheck size={16} />}
-            />
-            <ol className="space-y-3">
-              {[
-                {
-                  title: "Payer pays the collection link",
-                  body: `The collection amount, Jeneviv's platform fee and ${gateway.label}'s processing fee are charged to the payer. The total is shown before they pay.`,
-                },
-                gateway.settles_direct
-                  ? {
-                      title: `${gateway.label} splits it instantly`,
-                      body: "The full collection amount goes to your bank account. Jeneviv's platform fee goes to the platform.",
-                    }
-                  : {
-                      title: `${gateway.label} credits your wallet`,
-                      body: "The collection amount lands in your Jeneviv wallet and is paid out to your bank account on your payout schedule.",
-                    },
-                {
-                  title: "Your dashboard records it",
-                  body: "The payment appears here as settled, matched to the payer and reference.",
-                },
-              ].map((step, index) => (
-                <li key={step.title} className="flex gap-3">
-                  <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-cream text-3xs font-bold text-ink-soft">
-                    {index + 1}
-                  </span>
-                  <div>
-                    <p className="text-[13px] font-semibold">{step.title}</p>
-                    <p className="muted mt-0.5">{step.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </Card>
 
           <Card>
             <CardHeader
@@ -335,10 +297,6 @@ export default function Payouts() {
                 {verified ? "Verified" : kyc.data?.kyc_status ?? "unverified"}
               </Pill>
             </div>
-            <p className="muted mt-3">
-              Only a successful collection route needs this — you can build
-              collections while the review is pending.
-            </p>
           </Card>
 
           <Card>
@@ -463,10 +421,7 @@ export default function Payouts() {
               description="Every new collection settles into this account."
             />
           </div>
-          <InlineNote tone="info">
-            Settlement only works to an account in the same name as your
-            workspace — this is how the gateway protects against fraud.
-          </InlineNote>
+          <p className="hint">The account name must match your workspace name.</p>
         </div>
       </Modal>
 

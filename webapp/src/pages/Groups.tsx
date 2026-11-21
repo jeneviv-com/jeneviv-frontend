@@ -287,7 +287,7 @@ export default function Groups() {
         open={Boolean(draft)}
         onClose={() => setDraft(null)}
         title={draft?.id ? "Edit group" : "New group"}
-        description="Collections filed under this group show its name and logo to payers."
+        
         width={560}
         footer={
           <>

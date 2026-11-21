@@ -46,7 +46,7 @@ export default function Login() {
       subtitle="Pick up where your collections left off."
       footer={
         <>
-          New to Jeneviv?{" "}
+          New to jeneviv?{" "}
           <Link to="/signup" className="font-semibold text-ink underline decoration-ink/25 underline-offset-2 hover:text-brand">
             Create an account
           </Link>

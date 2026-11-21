@@ -76,7 +76,7 @@ export default function BrandLoader({ label = "Opening your workspace…" }: { l
         </div>
 
         <p className="mt-6 text-[13px] font-semibold tracking-tight text-ink">{label}</p>
-        <p className="mt-1 font-mono text-3xs uppercase tracking-[0.16em] text-ink-faint">Jeneviv</p>
+        <p className="mt-1 font-mono text-3xs uppercase tracking-[0.16em] text-ink-faint">jeneviv</p>
       </div>
     </div>
   );

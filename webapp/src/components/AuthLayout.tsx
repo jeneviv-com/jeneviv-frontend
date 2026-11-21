@@ -46,7 +46,7 @@ export default function AuthLayout({
           <a
             href={landing}
             className="flex items-center gap-2.5"
-            aria-label="Jeneviv — back to the website"
+            aria-label="jeneviv — back to the website"
           >
             <img
               src={JENEVIV_LOGO}
@@ -112,7 +112,7 @@ export default function AuthLayout({
           <a
             href={landing}
             className="flex items-center gap-2 text-[21px] font-extrabold tracking-[-0.05em]"
-            aria-label="Jeneviv — back to the website"
+            aria-label="jeneviv — back to the website"
           >
             <img
               src={JENEVIV_LOGO}

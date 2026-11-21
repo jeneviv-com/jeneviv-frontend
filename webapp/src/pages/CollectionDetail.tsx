@@ -68,6 +68,7 @@ import {
   type ToneCardTone,
   SummaryPanel,
   SummaryRow,
+  CollectionStatusPill,
 } from "@/components/ui";
 
 type Tab = "overview" | "fields" | "payments" | "settings";
@@ -392,9 +393,7 @@ export default function CollectionDetail() {
             <h1 className="text-[24px] font-extrabold tracking-tight sm:text-[28px]">
               {data.name}
             </h1>
-            <Pill tone={statusTone(data.is_active ? "active" : "paused")}>
-              {data.is_active ? "Accepting payments" : "Paused"}
-            </Pill>
+            <CollectionStatusPill active={data.is_active} />
           </div>
           <p className="muted mt-2 max-w-2xl">
             {data.description || "No description yet — add one so payers know what this covers."}
@@ -534,10 +533,6 @@ export default function CollectionDetail() {
                     <ExternalLink size={14} /> Open payer page
                   </a>
                 </div>
-                <p className="mt-6 border-t border-cream/10 pt-5 text-[12.5px] leading-relaxed text-cream/60">
-                  Payers see a form built from your payer fields, your amount, and a dedicated account to transfer to.
-                  Payments are confirmed by webhook, not by narration.
-                </p>
               </section>
             </div>
           </div>
@@ -638,7 +633,7 @@ export default function CollectionDetail() {
               open={exportOpen}
               onClose={() => setExportOpen(false)}
               title="Export payments"
-              description="Choose the columns to include, then download a CSV or a PDF."
+              
               pageTitle="Export payments"
               icon={<Download size={16} />}
               footer={
@@ -719,10 +714,6 @@ export default function CollectionDetail() {
                   </div>
                 </div>
 
-                <p className="text-[12px] leading-relaxed text-ink-muted">
-                  The PDF carries the Jeneviv mark, the collection name, its group and logo, and the
-                  workspace name.
-                </p>
               </div>
             </Modal>
 

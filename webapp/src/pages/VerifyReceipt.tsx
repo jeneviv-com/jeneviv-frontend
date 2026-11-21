@@ -96,7 +96,7 @@ function ReceiptBody({ receipt }: { receipt: PublicReceipt }) {
 
           <div className="mt-6 rounded-[12px] bg-cream px-4 py-3 text-left text-[12px] leading-relaxed text-ink-muted">
             Payments settle straight to <span className="font-semibold text-ink">{issuer}</span>&rsquo;s bank account,
-            usually the next working day. Jeneviv never holds the money.
+            usually the next working day. jeneviv never holds the money.
           </div>
         </Card>
 
@@ -139,7 +139,7 @@ function ReceiptBody({ receipt }: { receipt: PublicReceipt }) {
                   <dd className="tabular text-ink">{formatMoney(receipt.breakdown.paystack_fee, receipt.currency)}</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-ink-muted">Jeneviv platform fee</dt>
+                  <dt className="text-ink-muted">jeneviv platform fee</dt>
                   <dd className="tabular text-ink">{formatMoney(receipt.breakdown.jeneviv_fee, receipt.currency)}</dd>
                 </div>
               </dl>
@@ -204,7 +204,7 @@ export default function VerifyReceipt() {
           <Link to="/" className="flex items-center gap-2.5 text-[21px] font-extrabold tracking-[-0.05em] text-ink">
             <img
               src={JENEVIV_LOGO}
-              alt="Jeneviv"
+              alt="jeneviv"
               width={28}
               height={28}
               className="h-7 w-7 rounded-[9px] object-cover"
@@ -295,7 +295,7 @@ export default function VerifyReceipt() {
             height={16}
             className="h-4 w-4 rounded-[4px] object-cover"
           />
-          Powered by <span className="font-semibold text-ink">Jeneviv</span>
+          Powered by <span className="font-semibold text-ink">jeneviv</span>
         </footer>
       </div>
     </div>

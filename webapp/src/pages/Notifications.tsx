@@ -17,7 +17,7 @@ import { EmptyState, FilterMenu } from "@/components/ui";
 
 /**
  * Notifications read like a message list: a dated heading, then one row per
- * event with a small mark, the message and the time it arrived. Jeneviv's
+ * event with a small mark, the message and the time it arrived. jeneviv's
  * orange is kept for the unread marks and the delete action.
  */
 

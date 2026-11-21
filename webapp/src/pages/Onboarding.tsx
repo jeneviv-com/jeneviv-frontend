@@ -353,7 +353,7 @@ export default function Onboarding() {
               <p className="mt-1.5 text-[13px] leading-relaxed text-cream/70">
                 {gateway.settles_direct
                   ? `Payments are processed by ${gateway.label} and settled straight to your verified bank account as each one is captured.`
-                  : `Payments are processed by ${gateway.label} and credited to your Jeneviv wallet, then paid out to your verified bank account.`}
+                  : `Payments are processed by ${gateway.label} and credited to your jeneviv wallet, then paid out to your verified bank account.`}
               </p>
             </div>
           </div>

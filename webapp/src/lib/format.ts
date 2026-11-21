@@ -1,5 +1,5 @@
 /**
- * Formatting and small shared helpers for the Jeneviv dashboard.
+ * Formatting and small shared helpers for the jeneviv dashboard.
  */
 
 export const CURRENCY_SYMBOLS: Record<string, string> = {
@@ -138,6 +138,12 @@ export function transactionPayer(t: {
     (value) => typeof value === "string",
   );
   return (firstValue as string) || t.reference || "Unknown payer";
+}
+
+/** "full_name" -> "Full name", "matric_no" -> "Matric no". */
+export function fieldLabel(key: string) {
+  const words = key.replace(/[_-]+/g, " ").trim();
+  return words ? words[0].toUpperCase() + words.slice(1) : key;
 }
 
 export function transactionIdentifier(t: {

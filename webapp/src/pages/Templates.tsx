@@ -78,11 +78,6 @@ export default function Templates() {
       />
 
       <div className="mb-6">
-        <InlineNote tone="info" title="What a template does">
-          A template stores the questions you ask payers — name, matric number,
-          class, phone. Pick one when creating a collection and the fields are
-          copied in, editable afterwards.
-        </InlineNote>
       </div>
 
       <div className="mb-2 flex flex-wrap items-center gap-3 border-b border-line pb-4">
@@ -206,7 +201,7 @@ export default function Templates() {
         open={showCreate}
         onClose={() => setShowCreate(false)}
         title="New template"
-        description="Name it after the collection you run most often."
+        
         footer={
           <>
             <Button variant="secondary" onClick={() => setShowCreate(false)}>
@@ -246,7 +241,7 @@ export default function Templates() {
         open={Boolean(editing)}
         onClose={() => setEditing(null)}
         title={editing ? `${editing.name} · payer fields` : "Payer fields"}
-        description="These fields are copied into any collection created from this template."
+        
         width={720}
       >
         {editing ? (

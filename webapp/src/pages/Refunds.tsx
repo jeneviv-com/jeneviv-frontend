@@ -123,7 +123,7 @@ export default function Refunds() {
         {!isAdmin ? (
           <div className="relative -mt-6 first:mt-0 lg:col-span-3 lg:mt-0">
             <InlineNote tone="warning" title="Admin access required">
-              Refunds are an administrative action on the Jeneviv API. Ask a
+              Refunds are an administrative action on the jeneviv API. Ask a
               workspace admin to issue one — everyone else can still see the refund
               history below.
             </InlineNote>
@@ -423,11 +423,6 @@ export default function Refunds() {
               placeholder="0123456789"
             />
           </Field>
-          <InlineNote tone="info">
-            The refund is funded from the original payment's settlement, so
-            Jeneviv never fronts merchant money. The ₦75 platform fee stays with
-            Jeneviv.
-          </InlineNote>
           {bankTarget ? (
             <p className="hint">
               Refund {bankTarget.id.slice(0, 10)} · {formatMoney(bankTarget.amount)}

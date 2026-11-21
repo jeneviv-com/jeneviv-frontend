@@ -80,6 +80,12 @@ const TITLES: Record<string, string> = {
   "/admin": "Admin",
 };
 
+/** Detail pages: the top bar names the section and the kind of record. */
+const DETAIL_TITLES = [
+  { prefix: "/collections/", parent: "Collections", title: "Collection" },
+  { prefix: "/groups/", parent: "Groups", title: "Group" },
+];
+
 /** Maps merchant status to the shared colour meanings. */
 function statusKind(status: string | undefined): { kind: ToneKind; label: string } {
   switch (status) {
@@ -234,7 +240,9 @@ export default function AppShell() {
     ];
   }, [isAdmin]);
 
-  const current = TITLES[location.pathname] ?? "Jeneviv";
+  const detail = DETAIL_TITLES.find((d) => location.pathname.startsWith(d.prefix));
+  const current = TITLES[location.pathname] ?? detail?.title ?? "jeneviv";
+  const parent = TITLES[location.pathname] ? "Workspace" : detail?.parent ?? "Workspace";
   const status = statusKind(merchant?.status);
   const displayName = merchant?.display_name || user?.name || "Your workspace";
 
@@ -255,7 +263,7 @@ export default function AppShell() {
       >
         {/* brand */}
         <div className="flex items-center justify-between px-5 pb-3 pt-5">
-          <a href={landing} className="flex items-center gap-2.5" aria-label="Jeneviv... back to the website">
+          <a href={landing} className="flex items-center gap-2.5" aria-label="jeneviv... back to the website">
             <img
               src={JENEVIV_LOGO}
               alt=""
@@ -369,7 +377,7 @@ export default function AppShell() {
             {/* page title: the breadcrumb is now a calm heading */}
             <div className="min-w-0">
               <p className="hidden font-mono text-[10px] uppercase tracking-[0.16em] text-ink-muted sm:block">
-                Workspace
+                {parent}
               </p>
               <p className="truncate text-[16px] font-bold tracking-tight text-ink sm:mt-0.5">{current}</p>
             </div>
@@ -466,16 +474,6 @@ export default function AppShell() {
             </div>
           </div>
 
-          {connection === "demo" ? (
-            <div className="flex flex-wrap items-center gap-2 border-t border-line bg-white px-4 py-2.5 text-[12px] text-ink-muted sm:px-6 lg:px-8">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
-              <span>
-                The Jeneviv backend host is not responding, so the dashboard is running on seeded demo data. Point{" "}
-                <code className="font-mono text-[11.5px] text-ink">VITE_API_URL</code> at a running API and set{" "}
-                <code className="font-mono text-[11.5px] text-ink">VITE_DEMO_MODE=false</code> to switch to live data.
-              </span>
-            </div>
-          ) : null}
         </header>
 
         <main className="px-4 pb-16 pt-6 sm:px-6 lg:px-8">

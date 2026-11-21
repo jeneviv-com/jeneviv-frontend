@@ -311,11 +311,6 @@ export default function People() {
         </section>
       ) : null}
 
-      <p className="flex items-start gap-2 px-1 text-[11.5px] leading-relaxed text-ink-muted">
-        <Users size={13} className="mt-0.5 shrink-0" />
-        Roles decide what people can do, never which money they see: everyone in
-        this workspace sees the same collections and payments.
-      </p>
     </div>
   );
 }

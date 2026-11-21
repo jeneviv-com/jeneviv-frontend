@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   Banknote,
   Plus,
+  Layers,
   ReceiptText,
   ShieldCheck,
   Users,
@@ -39,6 +40,7 @@ import {
   ProgressBar,
   StatusPill,
   SummaryPanel,
+  CollectionStatusPill,
   SummaryRow,
   TableSkeleton,
   FilterMenu,
@@ -141,7 +143,7 @@ function Reveal({
 /* ------------------------------------------------------------------ cards */
 
 /**
- * The headline: one dark card, one big number. The Jeneviv mark sits in the
+ * The headline: one dark card, one big number. The jeneviv mark sits in the
  * corner as a watermark, the only place the orange is allowed to be large.
  */
 function HeadlineCard({
@@ -161,51 +163,34 @@ function HeadlineCard({
 }) {
   const up = (delta ?? 0) >= 0;
   return (
-    <section
-      aria-label="Collected"
-      className="relative isolate overflow-hidden rounded-[18px] border border-ink bg-ink px-5 pb-5 pt-5 text-white lg:px-7 lg:pb-6 lg:pt-6"
-    >
-      <img
-        src={JENEVIV_LOGO}
-        alt=""
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-10 -top-10 -z-10 h-48 w-48 rotate-6 opacity-[0.16] lg:h-60 lg:w-60"
-      />
-      <div className="flex items-center justify-between gap-3">
-        <p className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-white/55">
-          Collected · {rangeLabel}
-        </p>
-        {delta !== null && !loading ? (
-          <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold ${
-              up ? "bg-white/10 text-white" : "bg-brand/20 text-brand-peach"
-            }`}
-            title="Compared with the previous period of the same length"
-          >
-            {up ? <ArrowUpRight size={12} aria-hidden="true" /> : <ArrowDownRight size={12} aria-hidden="true" />}
-            {delta >= 200
-              ? `${(delta / 100 + 1).toFixed(0)}×`
-              : `${Math.abs(delta).toFixed(delta !== 0 && Math.abs(delta) < 10 ? 1 : 0)}%`}
-          </span>
-        ) : null}
-      </div>
-
-      <div className="mt-4 flex items-end justify-between gap-4">
-        <div className="min-w-0">
-          <p className="tabular text-[34px] font-extrabold leading-none tracking-[-0.04em] lg:text-[44px]">
-            {loading ? <span aria-hidden="true" className="skeleton inline-block h-9 w-40 rounded-lg opacity-30" /> : value}
-          </p>
-          <p className="mt-2.5 text-[12.5px] text-white/60">
-            {count} successful payment{count === 1 ? "" : "s"}
-          </p>
+    <SummaryRow
+      title="Collected"
+      value={value}
+      loading={loading}
+      subtitle={`${count} payment${count === 1 ? "" : "s"} · ${rangeLabel}`}
+      footer={
+        <div className="flex items-end justify-between gap-4">
+          {delta !== null && !loading ? (
+            <span
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold ${
+                up ? "bg-white/10 text-white" : "bg-brand/20 text-brand-peach"
+              }`}
+              title="Compared with the previous period of the same length"
+            >
+              {up ? <ArrowUpRight size={12} aria-hidden="true" /> : <ArrowDownRight size={12} aria-hidden="true" />}
+              {delta >= 200
+                ? `${(delta / 100 + 1).toFixed(0)}×`
+                : `${Math.abs(delta).toFixed(delta !== 0 && Math.abs(delta) < 10 ? 1 : 0)}%`}
+            </span>
+          ) : (
+            <span />
+          )}
+          {series.some((point) => point > 0) ? (
+            <Sparkline values={series} width={160} height={40} tone="#ff4800" />
+          ) : null}
         </div>
-        {series.some((point) => point > 0) ? (
-          <div className="hidden shrink-0 sm:block">
-            <Sparkline values={series} width={132} height={40} tone="#ff4800" />
-          </div>
-        ) : null}
-      </div>
-    </section>
+      }
+    />
   );
 }
 
@@ -230,7 +215,7 @@ function StatCard({
   footer?: React.ReactNode;
   href: string;
   loading: boolean;
-  tone: "people" | "attention" | "money";
+  tone: "people" | "attention" | "money" | "neutral";
 }) {
   return (
     <SummaryRow
@@ -244,22 +229,6 @@ function StatCard({
       footer={footer}
       className="h-full"
     />
-  );
-}
-
-/** A thin labelled meter for card footers. */
-function Meter({ value, label, tone = "ink" }: { value: number; label: string; tone?: "ink" | "brand" }) {
-  const clamped = Math.max(0, Math.min(100, value));
-  return (
-    <div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-cream-deep">
-        <div
-          className={`h-full rounded-full transition-[width] duration-700 ease-out ${tone === "brand" ? "bg-brand" : "bg-ink"}`}
-          style={{ width: `${clamped}%` }}
-        />
-      </div>
-      <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">{label}</p>
-    </div>
   );
 }
 
@@ -425,8 +394,9 @@ export default function Dashboard() {
       <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px]">
         {/* Left column - main metrics and charts */}
         <div className="space-y-5">
-          {/* headline */}
-          <Reveal delay={40}>
+          {/* the wallet stack: headline on top, metrics tucked beneath */}
+          <SummaryPanel columns={2}>
+          <Reveal delay={40} className="wallet-span">
             <HeadlineCard
               value={formatMoney(Math.round(animatedCollected))}
               loading={loading}
@@ -436,9 +406,6 @@ export default function Dashboard() {
               series={buckets.map((point) => point.value)}
             />
           </Reveal>
-
-          {/* three metric cards; one column on phones, three across from tablet up */}
-          <SummaryPanel columns={3}>
             <Reveal delay={120} className="h-full">
               <StatCard
                 label="Payers"
@@ -452,13 +419,6 @@ export default function Dashboard() {
                     : formatNumber(uniquePayers)
                 }
                 context={`Across ${formatNumber(stats.length)} collection${stats.length === 1 ? "" : "s"}`}
-                footer={
-                  payerTarget ? (
-                    <Meter value={percent(uniquePayers, payerTarget)} label={`${percent(uniquePayers, payerTarget)}% of target`} tone="brand" />
-                  ) : (
-                    <Meter value={uniquePayers ? 100 : 0} label="No target set" />
-                  )
-                }
               />
             </Reveal>
             <Reveal delay={200} className="h-full">
@@ -470,7 +430,17 @@ export default function Dashboard() {
                 loading={loading}
                 value={formatNumber(successful.length)}
                 context={`${formatNumber(pendingCount)} awaiting confirmation`}
-                footer={<Meter value={successRate} label={`${successRate}% success rate`} />}
+              />
+            </Reveal>
+            <Reveal delay={240} className="h-full">
+              <StatCard
+                label="Collections"
+                tone="neutral"
+                icon={<Layers size={14} aria-hidden="true" />}
+                href="/collections"
+                loading={loading}
+                value={formatNumber(stats.filter((c) => c.is_active).length)}
+                context={`${formatNumber(stats.filter((c) => !c.is_active).length)} paused`}
               />
             </Reveal>
             <Reveal delay={280} className="h-full">
@@ -484,7 +454,7 @@ export default function Dashboard() {
                   value={formatMoney(collected)}
                   context={`Split by ${gateway.label} as it lands`}
                   footer={
-                    <p className="flex items-center gap-1.5 text-[11.5px] font-semibold text-success">
+                    <p className="flex items-center gap-1.5 text-[11.5px] font-semibold text-ink">
                       <ShieldCheck size={13} aria-hidden="true" /> Settled directly
                     </p>
                   }
@@ -526,11 +496,6 @@ export default function Dashboard() {
             <Card>
               <CardHeader
                 title="Collections over time"
-                subtitle={
-                  range === "7d"
-                    ? "Successful payments per day"
-                    : "Successful payments per period"
-                }
                 action={
                   <FilterMenu
                     label={range === "7d" ? "Last 7 days" : range === "30d" ? "Last 30 days" : "Last 90 days"}
@@ -580,22 +545,6 @@ export default function Dashboard() {
             </Card>
           </Reveal>
 
-          {/* settlement note - moved below chart on laptop */}
-          <Reveal delay={680} className="hidden lg:block">
-            <Card className="min-h-[180px]">
-              <CardHeader
-                title={gateway.settlementTitle}
-                subtitle={gateway.settlementSubtitle}
-                icon={<ShieldCheck size={16} />}
-              />
-              <p className="muted">
-                {gateway.settlementBody}
-              </p>
-              <Link to="/payouts" className="btn btn-secondary btn-sm mt-4 w-full">
-                Manage bank account <ArrowUpRight size={14} />
-              </Link>
-            </Card>
-          </Reveal>
         </div>
 
         {/* Right column - full width blocks on mobile, cards on desktop */}
@@ -736,9 +685,7 @@ export default function Dashboard() {
                               {paid}
                               {target ? ` / ${target}` : ""} payers
                             </p>
-                            <Pill tone={statusTone(collection.is_active ? "active" : "paused")}>
-                              {collection.is_active ? "Accepting" : "Paused"}
-                            </Pill>
+                            <CollectionStatusPill active={collection.is_active} />
                           </div>
                         </li>
                       );
@@ -749,26 +696,6 @@ export default function Dashboard() {
             </section>
           </Reveal>
 
-          {/* settlement note - shown on mobile below collections */}
-          <Reveal delay={800} className="lg:hidden">
-            <SimpleCard padding="lg" bg="white">
-              <div className="mb-3 flex items-center gap-2">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-cream">
-                  <ShieldCheck size={16} />
-                </span>
-                <div>
-                  <h3 className="text-[14px] font-bold tracking-tight">{gateway.settlementTitle}</h3>
-                  <p className="text-[12px] text-ink-muted">{gateway.settlementSubtitle}</p>
-                </div>
-              </div>
-              <p className="muted">
-                {gateway.settlementBody}
-              </p>
-              <Link to="/payouts" className="btn btn-secondary btn-sm mt-4 w-full">
-                Manage bank account <ArrowUpRight size={14} />
-              </Link>
-            </SimpleCard>
-          </Reveal>
         </div>
       </div>
     </div>

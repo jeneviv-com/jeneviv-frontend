@@ -360,7 +360,7 @@ export default function KycCard() {
             <InlineNote tone="success" title="Bank verified">
               {gateway.settles_direct
                 ? `${gateway.label} now settles collections straight into this account.`
-                : "Payouts from your Jeneviv wallet now go to this account."}
+                : "Payouts from your jeneviv wallet now go to this account."}
             </InlineNote>
           ) : (
             <>
