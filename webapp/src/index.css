@@ -371,30 +371,26 @@
       display: none;
     }
 
-    /* Open card: the block sits centred in the card, and its text is left aligned. */
+    /* Open card: everything is left aligned. */
     .wallet-stack > :last-child .wallet-card > div:first-child,
     .wallet-stack > .wallet-card:last-child > div:first-child {
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      width: fit-content;
-      margin-inline: auto;
+      width: 100%;
       text-align: left;
     }
 
     .wallet-stack > :last-child .wallet-hero,
     .wallet-stack > .wallet-card:last-child .wallet-hero {
       text-align: left;
-      width: fit-content;
-      margin-inline: auto;
     }
 
     .wallet-stack > :last-child .wallet-foot,
     .wallet-stack > .wallet-card:last-child .wallet-foot {
       display: flex;
       justify-content: flex-start;
-      width: fit-content;
-      margin-inline: auto;
+      text-align: left;
     }
   }
 
