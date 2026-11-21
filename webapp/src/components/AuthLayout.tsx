@@ -1,4 +1,3 @@
-import LaptopMockup from "@/components/LaptopMockup";
 import { JENEVIV_LOGO } from "@/lib/brand";
 import { useGateway } from "@/lib/gateway";
 import { ArrowLeft, Check, ShieldCheck } from "lucide-react";
@@ -8,8 +7,67 @@ import { landingUrl } from "@/lib/landing";
 const PROOF = [
   "Every naira tied to a name and a reference",
   "Payments settle straight to your own bank",
-  "No screenshots needed — payments are verified",
+  "Verified by the gateway, never by screenshot",
 ];
+
+/** The rolling words from the landing headline. The first repeats at the end
+    so the loop restarts without a jump. */
+const ROLL = ["accounted for", "settled", "verified", "reconciled", "accounted for"];
+
+function Wordmark() {
+  return (
+    <span className="inline-flex items-center gap-2">
+      <img
+        src={JENEVIV_LOGO}
+        alt=""
+        width={30}
+        height={30}
+        className="h-[30px] w-[30px] rounded-[9px] bg-white object-cover shadow-[0_1px_2px_rgba(18,16,14,0.14)]"
+      />
+      <span className="text-[21px] font-bold leading-none tracking-[-0.05em] text-ink">
+        jeneviv<span className="text-brand">.</span>
+      </span>
+    </span>
+  );
+}
+
+/** The landing page's receipt printer, at rest. */
+function Receipt() {
+  return (
+    <div className="auth-printer" aria-hidden="true">
+      <div className="auth-printer-slot" />
+      <div className="auth-paper-clip">
+        <div className="auth-paper">
+          <div className="auth-paper-head">
+            <span className="auth-paper-brand">
+              <i /> jeneviv
+            </span>
+            <span>21 Nov · 12:04</span>
+          </div>
+          <div className="auth-paper-ref">Ref JNV4471</div>
+          <div className="auth-rule" />
+          <div className="auth-line">
+            <span>CSC 311 handout</span>
+            <b>₦2,500.00</b>
+          </div>
+          <div className="auth-line">
+            <span>Lab manual</span>
+            <b>₦1,500.00</b>
+          </div>
+          <div className="auth-rule" />
+          <div className="auth-total">
+            <span>TOTAL</span>
+            <b>₦4,000.00</b>
+          </div>
+          <div className="auth-paper-foot">
+            <span>Adaeze O. · 20/ENG/001</span>
+            <span className="auth-ok">✓ confirmed · 3s</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AuthLayout({
   title,
@@ -27,125 +85,73 @@ export default function AuthLayout({
   const landing = landingUrl();
 
   return (
-    // On a laptop the branded side stays under half the width so the form is
-    // the thing you look at; the laptop preview never drops out.
-    <div className="min-h-screen bg-cream lg:grid lg:grid-cols-[minmax(0,46%)_minmax(0,1fr)]">
-      {/* brand panel: black like the landing band, laptop preview kept, and
-          still under half the screen on a laptop */}
-      <aside className="relative hidden overflow-hidden bg-ink px-10 py-8 text-cream lg:flex lg:flex-col xl:px-14">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-60 [background-image:linear-gradient(to_right,rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.05)_1px,transparent_1px)] [background-size:26px_26px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_78%)]"
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-16 top-1/4 h-72 w-72 rounded-full bg-brand/15 blur-3xl"
-        />
-
-        <div className="relative flex items-center justify-between">
-          <a
-            href={landing}
-            className="flex items-center gap-2.5"
-            aria-label="jeneviv — back to the website"
-          >
-            <img
-              src={JENEVIV_LOGO}
-              alt=""
-              width={30}
-              height={30}
-              className="h-[30px] w-[30px] rounded-[9px] object-cover shadow-[0_1px_2px_rgba(18,16,14,0.14)]"
-            />
-            <span className="flex items-baseline gap-0.5">
-              <span className="text-[21px] font-extrabold leading-none tracking-[-0.055em] text-cream">
-                jeneviv
-              </span>
-              <span className="text-[24px] leading-none text-brand">.</span>
-            </span>
+    <div className="auth min-h-screen bg-white lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,46%)]">
+      {/* form side */}
+      <main className="flex min-h-screen flex-col px-5 py-6 sm:px-10 lg:px-14">
+        <div className="flex items-center justify-between">
+          <a href={landing} aria-label="jeneviv, back to the website">
+            <Wordmark />
           </a>
           <a
             href={landing}
-            className="group flex items-center gap-1.5 text-[12.5px] font-medium text-cream/55 transition-colors hover:text-cream"
+            className="group inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-muted transition-colors hover:text-ink"
           >
-            <ArrowLeft
-              size={13}
-              className="transition-transform duration-200 group-hover:-translate-x-0.5"
-            />
+            <ArrowLeft size={13} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
             Back to site
           </a>
         </div>
 
-        <div className="relative my-auto w-full max-w-[560px] self-center py-8">
-          <LaptopMockup className="animate-rise-in" />
-
-          <div className="mt-9 animate-rise-in [animation-delay:120ms]">
-            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-cream/50">
-              One link. Every payer.
-            </p>
-            <h2 className="mt-3 text-[30px] font-bold leading-[1.05] tracking-[-0.045em] text-cream xl:text-[36px]">
-              The dashboard you sign in to looks exactly like this.
-            </h2>
-            <ul className="mt-5 space-y-2.5">
-              {PROOF.map((item) => (
-                <li
-                  key={item}
-                  className="flex items-center gap-2.5 text-[13px] text-cream/70"
-                >
-                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand text-white">
-                    <Check size={11} />
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <p className="relative flex items-center gap-2 text-[11.5px] text-cream/45">
-          <ShieldCheck size={13} /> Payments settled by {gateway.label} · NDPA
-          aligned
-        </p>
-      </aside>
-
-      {/* form panel */}
-      <main className="flex min-h-screen flex-col px-5 py-8 sm:px-10 lg:px-14">
-        <div className="flex items-center justify-between lg:hidden">
-          <a
-            href={landing}
-            className="flex items-center gap-2 text-[21px] font-extrabold tracking-[-0.05em]"
-            aria-label="jeneviv — back to the website"
-          >
-            <img
-              src={JENEVIV_LOGO}
-              alt=""
-              width={28}
-              height={28}
-              className="h-7 w-7 rounded-[9px] object-cover"
-            />
-            jeneviv<span className="text-brand">.</span>
-          </a>
-          <a
-            href={landing}
-            className="flex items-center gap-1.5 text-[12.5px] text-ink-muted"
-          >
-            <ArrowLeft size={13} /> Site
-          </a>
-        </div>
-
-        <div className="mx-auto my-auto w-full max-w-[420px] py-12">
+        <div className="mx-auto my-auto w-full max-w-[400px] py-12">
           <div className="animate-rise-in">
-            <h1 className="text-[32px] font-bold leading-[1.04] tracking-[-0.045em] text-ink sm:text-[42px]">
-              {title}
-            </h1>
-            <p className="muted mt-3 text-[14.5px]">{subtitle}</p>
+            <h1 className="auth-title">{title}</h1>
+            <p className="mt-3 text-[15.5px] leading-relaxed text-ink-muted">{subtitle}</p>
           </div>
-          <div className="mt-9 animate-rise-in [animation-delay:80ms]">
-            {children}
-          </div>
-          <div className="mt-8 border-t border-line pt-6 text-[13px] text-ink-muted">
-            {footer}
-          </div>
+          <div className="mt-9 animate-rise-in [animation-delay:80ms]">{children}</div>
+          <div className="mt-8 border-t border-line pt-6 text-[13.5px] text-ink-muted">{footer}</div>
         </div>
       </main>
+
+      {/* landing side: same headline, same receipt, same quiet tint */}
+      <aside className="auth-side relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-center">
+        <div className="relative mx-auto w-full max-w-[460px] px-10 py-12">
+          <h2 className="auth-headline">
+            Group money,
+            <br />
+            <span className="auth-pixel">
+              finally
+              <span className="auth-roll" aria-label="accounted for.">
+                <span className="auth-roll-track" aria-hidden="true">
+                  {ROLL.map((word, index) => (
+                    <span key={`${word}-${index}`}>
+                      {word}
+                      <em>.</em>
+                    </span>
+                  ))}
+                </span>
+              </span>
+            </span>
+          </h2>
+
+          <div className="mt-10">
+            <Receipt />
+          </div>
+
+          <ul className="mt-10 space-y-3">
+            {PROOF.map((item) => (
+              <li key={item} className="flex items-center gap-2.5 text-[14px] text-ink-soft">
+                <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand text-white">
+                  <Check size={11} />
+                </span>
+                {item}
+              </li>
+            ))}
+          </ul>
+
+          <p className="mt-10 flex items-center gap-2 text-[12px] text-ink-muted">
+            <ShieldCheck size={13} /> Payments settled by {gateway.label} · NDPA aligned
+          </p>
+        </div>
+      </aside>
     </div>
   );
 }

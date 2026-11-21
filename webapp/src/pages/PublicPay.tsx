@@ -6,21 +6,28 @@ import { useCollectionByCode, errorMessage } from "@/hooks/useApi";
 import { copyText, currencySymbol, formatMoney, formatTime } from "@/lib/format";
 import { Button, Field, InlineNote, Input, Select, Textarea } from "@/components/ui";
 import { useGateway } from "@/lib/gateway";
+import { JENEVIV_LOGO } from "@/lib/brand";
 
 type Step = "details" | "pay" | "done";
-const STEPS: Step[] = ["details", "pay", "done"];
-const STEP_LABEL: Record<Step, string> = { details: "Your details", pay: "Pay", done: "Done" };
 
-/** Plain page shell for payers: brand, a quiet label, then the content column. */
-function Shell({ children }: { children: ReactNode }) {
+/** Page shell for payers: the jeneviv logo, a secure badge, then the content. */
+function Shell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   return (
-    <div className="min-h-screen bg-cream px-5 py-8 sm:py-14">
-      <div className="mx-auto max-w-[560px]">
-        <div className="mb-10 flex items-center justify-between">
-          <Link to="/" className="text-[21px] font-extrabold tracking-[-0.05em] text-ink">
-            jeneviv<span className="text-brand">.</span>
+    <div className="min-h-screen bg-cream px-4 pb-10 pt-5 sm:px-6 sm:pt-8">
+      <div className={`mx-auto ${wide ? "max-w-[1040px]" : "max-w-[560px]"}`}>
+        <div className="mb-6 flex items-center justify-between sm:mb-10">
+          <Link to="/" className="inline-flex items-center gap-2" aria-label="jeneviv">
+            <img
+              src={JENEVIV_LOGO}
+              alt=""
+              width={34}
+              height={34}
+              className="h-[34px] w-[34px] rounded-[10px] bg-white object-cover shadow-[0_1px_2px_rgba(18,16,14,0.12)]"
+            />
+            <span className="text-[20px] font-extrabold tracking-[-0.05em] text-ink">
+              jeneviv<span className="text-brand">.</span>
+            </span>
           </Link>
-          <span className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">secure payment</span>
         </div>
         {children}
       </div>
@@ -28,10 +35,14 @@ function Shell({ children }: { children: ReactNode }) {
   );
 }
 
+/** White surface used for the summary and the form. */
+const card =
+  "rounded-[24px] bg-white shadow-[0_1px_2px_rgba(17,17,17,0.04),0_18px_40px_-24px_rgba(17,17,17,0.25)]";
+
 /** A label on the left, a value on the right, separated by a hairline. */
 function Line({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-line py-3.5 last:border-0">
+    <div className="flex items-center justify-between gap-4 border-b border-dashed border-line py-3.5 last:border-0">
       <span className="text-[13px] text-ink-muted">{label}</span>
       <span className="min-w-0 text-right text-[14px] font-semibold">{children}</span>
     </div>
@@ -289,88 +300,82 @@ export default function PublicPay() {
     );
   }
 
-  const currentIndex = STEPS.indexOf(step);
+  const group = data.group;
 
   return (
-    <Shell>
-      {/* heading */}
-      <header>
-        {/* The entity this collection belongs to, so payers recognise who is asking. */}
-        {data.group ? (
-          <div className="mb-6 flex items-center gap-3 border-b border-line pb-5">
-            {data.group.logo_url ? (
-              <img
-                src={data.group.logo_url}
-                alt=""
-                className="h-12 w-12 shrink-0 rounded-[12px] border border-line bg-white object-contain"
-              />
-            ) : null}
-            <div className="min-w-0">
-              <p className="truncate text-[15px] font-bold tracking-tight">{data.group.name}</p>
-              {data.group.description ? (
-                <p className="mt-0.5 truncate text-[12.5px] text-ink-muted">
-                  {data.group.description}
-                </p>
-              ) : null}
+    <Shell wide>
+      <div className="grid items-start gap-5 lg:grid-cols-[400px_minmax(0,1fr)] lg:gap-8">
+        {/* what is being paid for: a receipt-like card */}
+        <aside className={`${card} p-5 sm:p-6 lg:sticky lg:top-8`}>
+          {group ? (
+            <div className="mb-5 flex items-center gap-3">
+              {group.logo_url ? (
+                <img
+                  src={group.logo_url}
+                  alt=""
+                  className="h-12 w-12 shrink-0 rounded-[14px] border border-line bg-white object-contain"
+                />
+              ) : (
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[14px] bg-ink text-[14px] font-bold text-white">
+                  {group.name
+                    .split(" ")
+                    .map((part) => part[0])
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase()}
+                </span>
+              )}
+              <div className="min-w-0">
+                <p className="truncate text-[15px] font-bold tracking-tight">{group.name}</p>
+                {group.description ? (
+                  <p className="mt-0.5 truncate text-[12.5px] text-ink-muted">{group.description}</p>
+                ) : null}
+              </div>
             </div>
-          </div>
-        ) : null}
-
-        <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">Payment request</p>
-        <h1 className="mt-3 text-[34px] font-bold leading-[1.02] tracking-[-0.045em] sm:text-[40px]">{data.name}</h1>
-        {data.description ? <p className="muted mt-3">{data.description}</p> : null}
-        <div className="mt-6 flex flex-wrap items-end justify-between gap-4 border-y border-line py-5">
-          <div>
-            <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">Per payer</p>
-            <p className="tabular mt-1.5 text-[32px] font-bold leading-none tracking-[-0.03em]">
-              {formatMoney(data.amount, data.currency)}
-            </p>
-          </div>
-          <span className="font-mono text-[11px] text-ink-muted">ref · {data.short_code}</span>
-        </div>
-      </header>
-
-      {data.payee ? (
-        <div className="mt-6 rounded-card border border-line bg-white px-5 py-4 shadow-card">
-          <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">Money goes to</p>
-          <p className="mt-1.5 text-[16px] font-bold tracking-tight">
-            {data.payee.bank_account_name ?? data.payee.display_name ?? "This workspace"}
-          </p>
-          {data.payee.legal_name ? (
-            <p className="mt-1 text-[12.5px] text-ink-muted">Verified: {data.payee.legal_name}</p>
           ) : null}
-          <p className="mt-2 text-[12px] text-ink-muted">
-            Check this name before you pay. If it isn't the group you expect, don't pay.
-          </p>
-        </div>
-      ) : null}
 
-      {/* steps: a quiet line, not a card */}
-      <ol className="mt-7 flex items-center gap-2" aria-label="Progress">
-        {STEPS.map((item, index) => {
-          const complete = index < currentIndex || step === "done";
-          const active = item === step;
-          return (
-            <li key={item} className="flex flex-1 items-center gap-2">
-              <span
-                className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[12px] font-bold ${
-                  complete ? "bg-ink text-cream" : active ? "border-2 border-ink bg-white" : "bg-line text-ink-muted"
-                }`}
-              >
-                {complete ? <Check size={13} /> : index + 1}
-              </span>
-              <span className={`text-[12.5px] font-semibold ${active ? "text-ink" : "text-ink-muted"}`}>
-                {STEP_LABEL[item]}
-              </span>
-              {index < STEPS.length - 1 ? <span className="mx-1 h-px flex-1 bg-line" aria-hidden="true" /> : null}
-            </li>
-          );
-        })}
-      </ol>
+          <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-brand">Payment request</p>
+          <h1 className="mt-2 text-[28px] font-bold leading-[1.05] tracking-[-0.04em] sm:text-[32px]">{data.name}</h1>
+          {data.description ? <p className="muted mt-2">{data.description}</p> : null}
 
-      <div className="mt-9">
-        {/* details */}
-        {step === "details" ? (
+          <div className="my-5 border-t border-dashed border-line" />
+
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-[12.5px] text-ink-muted">Per payer</p>
+              <p className="tabular mt-1 text-[36px] font-extrabold leading-none tracking-[-0.04em]">
+                {formatMoney(data.amount, data.currency)}
+              </p>
+            </div>
+            <span className="rounded-full bg-cream px-2.5 py-1 font-mono text-[11px] text-ink-muted">{data.short_code}</span>
+          </div>
+
+          {data.payee ? (
+            <div className="mt-5 flex gap-3 rounded-[18px] bg-[#ffeee3] p-4">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-brand">
+                <ShieldCheck size={17} aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[12px] text-ink-muted">Money goes to</p>
+                <p className="truncate text-[15px] font-bold tracking-tight">
+                  {data.payee.bank_account_name ?? data.payee.display_name ?? "This workspace"}
+                </p>
+                {data.payee.legal_name ? (
+                  <p className="mt-0.5 truncate text-[12px] text-ink-soft">Verified: {data.payee.legal_name}</p>
+                ) : null}
+                <p className="mt-1.5 text-[11.5px] leading-relaxed text-ink-muted">
+                  Check this name before you pay. If it isn't the group you expect, don't pay.
+                </p>
+              </div>
+            </div>
+          ) : null}
+        </aside>
+
+        {/* the steps */}
+        <section className={`${card} p-5 sm:p-7`}>
+
+          {/* details */}
+          {step === "details" ? (
           <div className="space-y-5">
             {fields.length === 0 ? (
               <InlineNote tone="info">
@@ -457,8 +462,8 @@ export default function PublicPay() {
             {formError ? <InlineNote tone="error">{formError}</InlineNote> : null}
 
             {data.pricing ? (
-              <div className="rounded-card border border-line bg-white px-4 py-4">
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-muted">What you will pay</p>
+              <div className="rounded-[18px] bg-[#ffeee3] px-4 py-4">
+                <p className="text-[13px] font-semibold text-ink">What you will pay</p>
                 <dl className="mt-3 space-y-2 text-[13.5px]">
                   <div className="flex justify-between gap-4">
                     <dt className="text-ink-soft">Collection (to the school)</dt>
@@ -472,17 +477,13 @@ export default function PublicPay() {
                     <dt className="text-ink-soft">{gateway.feeLabel}</dt>
                     <dd className="tabular">{formatMoney(data.pricing.gateway_fee, data.currency)}</dd>
                   </div>
-                  <div className="flex justify-between gap-4 border-t border-line-soft pt-2">
+                  <div className="flex justify-between gap-4 border-t border-dashed border-ink/15 pt-2.5">
                     <dt className="font-semibold">Total to transfer</dt>
                     <dd className="tabular font-bold text-brand">{formatMoney(data.pricing.total, data.currency)}</dd>
                   </div>
                 </dl>
               </div>
             ) : null}
-
-            <p className="text-[13px] leading-relaxed text-ink-muted">
-              The fees are confirmed again on the next step, before you transfer anything.
-            </p>
 
             <Button size="lg" className="h-[52px] w-full rounded-[12px] text-[15px]" loading={submitting} onClick={submit}>
               Continue to payment
@@ -504,7 +505,13 @@ export default function PublicPay() {
               </p>
             </div>
 
-            <div className="rounded-card bg-ink px-6 py-6 text-cream">
+            <div className="relative isolate overflow-hidden rounded-[22px] bg-ink px-6 py-6 text-cream">
+              <img
+                src={JENEVIV_LOGO}
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-8 -top-8 -z-10 h-36 w-36 rotate-6 opacity-[0.14]"
+              />
               <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-cream/60">Account number</p>
               <p className="tabular mt-2 text-[34px] font-bold leading-none tracking-[-0.02em]">
                 {result.payment_account.account_number}
@@ -525,7 +532,7 @@ export default function PublicPay() {
               </button>
             </div>
 
-            <div>
+            <div className="rounded-[18px] border border-line px-4">
               <Line label="Amount to send">
                 <span className="tabular text-[16px] font-bold text-brand">
                   {formatMoney(payAmount, data.currency)}
@@ -584,17 +591,17 @@ export default function PublicPay() {
 
         {/* done */}
         {step === "done" && result ? (
-          <div className="py-4">
-            <span className="grid h-14 w-14 place-items-center rounded-full bg-[#d5e8c4] text-ink">
-              <BadgeCheck size={24} />
+          <div className="text-center">
+            <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#d5e8c4] text-ink">
+              <BadgeCheck size={28} />
             </span>
-            <h2 className="mt-6 text-[32px] font-bold leading-[1.05] tracking-[-0.04em]">Payment confirmed</h2>
-            <p className="muted mt-3 max-w-md">
+            <h2 className="mt-5 text-[30px] font-bold leading-[1.05] tracking-[-0.04em]">Payment confirmed</h2>
+            <p className="muted mx-auto mt-3 max-w-md">
               {formatMoney(result.transaction.amount, result.transaction.currency)} for {data.name} has been received.
               A copy of your receipt has been emailed to you.
             </p>
 
-            <div className="mt-8 border-t border-line">
+            <div className="mt-7 rounded-[18px] border border-line px-4 text-left">
               <Line label="Reference">
                 <span className="font-mono text-[12.5px]">{result.transaction.reference}</span>
               </Line>
@@ -628,14 +635,16 @@ export default function PublicPay() {
               </button>
             </div>
 
-            <p className="mt-8 flex items-center gap-2 text-[12px] text-ink-muted">
+            <p className="mt-6 flex items-center justify-center gap-2 text-[12px] text-ink-muted">
               <ShieldCheck size={14} /> Verified by the payment gateway. No screenshot needed.
             </p>
           </div>
         ) : null}
+        </section>
       </div>
 
-      <p className="mt-12 border-t border-line pt-5 text-center text-[11.5px] text-ink-muted">
+      <p className="mt-8 text-center text-[11.5px] leading-relaxed text-ink-muted">
+        <img src={JENEVIV_LOGO} alt="" aria-hidden="true" className="mr-1.5 inline-block h-4 w-4 rounded-[4px] align-[-3px]" />
         Secured by jeneviv · {gateway.processedBy} · amounts in {currencySymbol(data.currency)} {data.currency}
       </p>
     </Shell>
