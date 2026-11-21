@@ -292,7 +292,17 @@ export default function LandingPage() {
               Group money,
               <br />
               <span className="b-pixel">
-                finally accounted for<em>.</em>
+                finally{" "}
+                <span className="b-roll" aria-label="accounted for.">
+                  <span className="b-roll-track" aria-hidden="true">
+                    {["accounted for", "settled", "verified", "reconciled", "accounted for"].map((word, index) => (
+                      <span key={`${word}-${index}`}>
+                        {word}
+                        <em>.</em>
+                      </span>
+                    ))}
+                  </span>
+                </span>
               </span>
             </h1>
             <p className="b-lede">

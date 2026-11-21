@@ -1630,3 +1630,44 @@
     padding: 26px 22px;
   }
 }
+
+/* rolling words in the hero: one line tall, steps up a line at a time.
+   The first word repeats at the end so the loop restarts without a jump. */
+.b-roll {
+  display: inline-block;
+  height: 1.15em;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+.b-roll-track {
+  display: flex;
+  flex-direction: column;
+  animation: b-roll 10s cubic-bezier(0.7, 0, 0.3, 1) infinite;
+}
+
+.b-roll-track > span {
+  display: block;
+  height: 1.15em;
+  line-height: 1.15em;
+  white-space: nowrap;
+}
+
+.b-roll em {
+  font-style: normal;
+  color: var(--b-orange);
+}
+
+@keyframes b-roll {
+  0%, 20% { transform: translateY(0); }
+  25%, 45% { transform: translateY(-1.15em); }
+  50%, 70% { transform: translateY(-2.3em); }
+  75%, 95% { transform: translateY(-3.45em); }
+  100% { transform: translateY(-4.6em); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .b-roll-track {
+    animation: none;
+  }
+}
