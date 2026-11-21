@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Terms of service",
   description:
-    "The terms that govern the use of Jeneviv by coordinators and payers, including refunds and settlement.",
+    "The terms that govern the use of jeneviv by coordinators and payers, including refunds and settlement.",
   alternates: { canonical: "/terms" },
 };
 
@@ -34,15 +34,15 @@ export default function TermsPage() {
         <main className="m-legal">
           <div className="m-legal-body">
             <p>
-              These terms govern your use of Jeneviv, operated by Acadeva
+              These terms govern your use of jeneviv, operated by Acadeva
               Limited. By creating an account, creating a collection, or paying
               through a collection link, you agree to them. If you do not agree,
               do not use the service.
             </p>
 
-            <h2>1. What Jeneviv does</h2>
+            <h2>1. What jeneviv does</h2>
             <p>
-              Jeneviv is a collection management platform. It lets a coordinator
+              jeneviv is a collection management platform. It lets a coordinator
               create a collection, share a payment link, and track payments. It
               is not a bank and does not hold your money as a deposit. Payments
               are processed by Flutterwave, a licensed payment service provider,
@@ -63,7 +63,7 @@ export default function TermsPage() {
               As a coordinator, you are responsible for the purpose and legality
               of what you collect, the accuracy of the amount and description,
               and for handling payer information lawfully. You must not use
-              Jeneviv for fraud, money laundering, prohibited goods or services,
+              jeneviv for fraud, money laundering, prohibited goods or services,
               or any purpose that violates Nigerian law. Payers are responsible
               for entering accurate details and transferring the correct amount;
               a payment is only confirmed when the gateway confirms it.
@@ -71,10 +71,10 @@ export default function TermsPage() {
 
             <h2>4. Fees</h2>
             <p>
-              Jeneviv charges 1.5% + ₦100 per successful payment, capped at
+              jeneviv charges 1.5% + ₦100 per successful payment, capped at
               ₦2,000, unless a separate written agreement applies. Fees are
               deducted from the collection and are not charged to payers.
-              Failed or reversed payments do not attract a Jeneviv fee. Gateway
+              Failed or reversed payments do not attract a jeneviv fee. Gateway
               fees are included in the fee shown to you.
             </p>
 
@@ -93,7 +93,7 @@ export default function TermsPage() {
               A coordinator may request a refund of a successful transaction
               from the dashboard. Refunds are made to the original payment
               method through the gateway and are subject to gateway rules and
-              the availability of settled funds. Jeneviv fees on refunded
+              the availability of settled funds. jeneviv fees on refunded
               transactions are not automatically returned. We aim to process
               approved refunds within 5–10 business days, though the receiving
               bank controls when the funds become visible.
@@ -101,7 +101,7 @@ export default function TermsPage() {
 
             <h2>7. Availability and changes</h2>
             <p>
-              We work to keep Jeneviv available but do not guarantee
+              We work to keep jeneviv available but do not guarantee
               uninterrupted service. Features may change, and we may suspend an
               account that breaches these terms or creates a security or
               regulatory risk. Where practical, we will give notice and allow
@@ -114,7 +114,7 @@ export default function TermsPage() {
               liable for indirect or consequential loss, or for loss arising
               from inaccurate information supplied by a coordinator or payer. Our
               aggregate liability for a claim relating to the service is limited
-              to the fees Jeneviv earned on the transactions giving rise to the
+              to the fees jeneviv earned on the transactions giving rise to the
               claim in the three months before the claim.
             </p>
 

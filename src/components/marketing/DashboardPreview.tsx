@@ -228,7 +228,7 @@ export default function DashboardPreview() {
 
           {/* settlement note */}
           <p className="flex shrink-0 items-center gap-1 text-[5px] text-ink-faint">
-            <ShieldCheck size={6} /> Settled straight to your bank. Never held by Jeneviv.
+            <ShieldCheck size={6} /> Settled straight to your bank. Never held by jeneviv.
           </p>
         </div>
       </div>

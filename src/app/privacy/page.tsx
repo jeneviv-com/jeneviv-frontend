@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Privacy policy",
   description:
-    "How Jeneviv collects, uses and protects personal data for coordinators and payers.",
+    "How jeneviv collects, uses and protects personal data for coordinators and payers.",
   alternates: { canonical: "/privacy" },
 };
 
@@ -34,9 +34,9 @@ export default function PrivacyPage() {
         <main className="m-legal">
           <div className="m-legal-body">
             <p>
-              Jeneviv is operated by Acadeva Limited (&ldquo;Jeneviv&rdquo;,
+              jeneviv is operated by Acadeva Limited (&ldquo;jeneviv&rdquo;,
               &ldquo;we&rdquo;, &ldquo;us&rdquo;). This policy explains what we
-              collect when you use jeneviv.com and the Jeneviv application, why
+              collect when you use jeneviv.com and the jeneviv application, why
               we collect it, and the choices you have. It applies to
               coordinators who create collections and to payers who use a
               collection link.
@@ -84,7 +84,7 @@ export default function PrivacyPage() {
             <h2>3. Payment processing</h2>
             <p>
               Card and bank payment data is handled by Flutterwave, a licensed
-              payment service provider. Jeneviv does not receive or store card
+              payment service provider. jeneviv does not receive or store card
               numbers. Payment account details generated for a collection are
               stored so that we can match incoming transfers to the correct
               payer.
