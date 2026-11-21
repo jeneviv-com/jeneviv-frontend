@@ -37,10 +37,10 @@ import {
   EmptyState,
   ErrorState,
   Pill,
-  ProgressBar,
   StatusPill,
   SummaryPanel,
   CollectionStatusPill,
+  PeopleToPay,
   SummaryRow,
   TableSkeleton,
   FilterMenu,
@@ -186,7 +186,7 @@ function HeadlineCard({
             <span />
           )}
           {series.some((point) => point > 0) ? (
-            <Sparkline values={series} width={160} height={40} tone="#ff4800" />
+            <Sparkline values={series} width={160} height={40} tone="#101010" />
           ) : null}
         </div>
       }
@@ -379,9 +379,9 @@ export default function Dashboard() {
       ) : null}
 
       {/* Main content grid - single column on mobile, two columns on laptop */}
-      <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px]">
+      <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px]">
         {/* Left column - main metrics and charts */}
-        <div className="space-y-5">
+        <div className="space-y-8">
           {/* the wallet stack: headline on top, metrics tucked beneath */}
           <SummaryPanel columns={2}>
           <Reveal delay={40} className="wallet-span">
@@ -644,7 +644,6 @@ export default function Dashboard() {
                       const paid = collection.stats?.paid ?? 0;
                       const target = collection.target_payers;
                       const collectedSum = collection.stats?.collected ?? 0;
-                      const progress = target ? percent(paid, target) : Math.min(100, paid);
                       return (
                         <li
                           key={collection.id}
@@ -663,16 +662,9 @@ export default function Dashboard() {
                             </span>
                           </div>
                           <div className="mt-2">
-                            <ProgressBar
-                              value={progress}
-                              tone={collection.is_active ? "brand" : "ink"}
-                            />
+                            <PeopleToPay paid={paid} total={target || null} />
                           </div>
-                          <div className="mt-1.5 flex items-center justify-between">
-                            <p className="font-mono text-3xs text-ink-muted">
-                              {paid}
-                              {target ? ` / ${target}` : ""} payers
-                            </p>
+                          <div className="mt-1.5 flex items-center justify-end">
                             <CollectionStatusPill active={collection.is_active} />
                           </div>
                         </li>

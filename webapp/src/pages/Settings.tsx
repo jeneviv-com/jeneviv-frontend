@@ -300,7 +300,7 @@ export default function Settings() {
 
   return (
     <div className="mx-auto w-full max-w-[640px] pb-10">
-      <div className="rounded-[28px] bg-gradient-to-b from-[#ffe2d3] via-[#fff3ec] to-[#faf8f5] px-3.5 pb-6 pt-4 sm:px-5 sm:pt-5">
+      <div className="rounded-[28px] bg-cream px-3.5 pb-6 pt-4 sm:px-5 sm:pt-5">
         <input
           ref={fileInput}
           type="file"

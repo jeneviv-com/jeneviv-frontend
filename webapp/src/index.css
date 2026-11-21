@@ -326,19 +326,9 @@
     @apply flex flex-col;
   }
 
+  /* Surface and text colour come from the card's tone (see SummaryRow). */
   .wallet-card {
-    @apply relative rounded-[20px] border-[1.5px] border-ink bg-white px-4 text-ink sm:px-5;
-  }
-
-  .wallet-stack > :first-child .wallet-card,
-  .wallet-stack > .wallet-card:first-child {
-    @apply border-ink bg-ink text-white;
-  }
-
-  /* Mild orange on every other card after the black one. */
-  .wallet-stack > :nth-child(2n) .wallet-card,
-  .wallet-stack > .wallet-card:nth-child(2n) {
-    background: #ffeee3;
+    @apply relative rounded-[20px] border-[1.5px] border-ink px-4 sm:px-5;
   }
 
   @media (max-width: 1023px) {
@@ -381,22 +371,30 @@
       display: none;
     }
 
-    /* Open card: everything centred, title included. */
+    /* Open card: the block sits centred in the card, and its text is left aligned. */
     .wallet-stack > :last-child .wallet-card > div:first-child,
     .wallet-stack > .wallet-card:last-child > div:first-child {
-      justify-content: center;
-      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      width: fit-content;
+      margin-inline: auto;
+      text-align: left;
     }
 
     .wallet-stack > :last-child .wallet-hero,
     .wallet-stack > .wallet-card:last-child .wallet-hero {
-      text-align: center;
+      text-align: left;
+      width: fit-content;
+      margin-inline: auto;
     }
 
     .wallet-stack > :last-child .wallet-foot,
     .wallet-stack > .wallet-card:last-child .wallet-foot {
       display: flex;
-      justify-content: center;
+      justify-content: flex-start;
+      width: fit-content;
+      margin-inline: auto;
     }
   }
 
@@ -750,4 +748,30 @@
 
 .auth-ok {
   color: #12805a;
+}
+
+/* Pay page: black and white only. Without these, focus rings pick up the brand
+   orange and browser autofill paints its blue over the white fields. Scoped to
+   .pay-mono so the dashboard keeps its accent. */
+.pay-mono :focus-visible {
+  --tw-ring-color: rgb(16 16 16 / 0.45);
+  --tw-ring-offset-color: #f4f4f4;
+}
+.pay-mono .input:focus {
+  --tw-ring-color: rgb(16 16 16 / 0.15);
+}
+.pay-mono .btn-secondary:hover {
+  background: #f2f2f2;
+}
+.pay-mono input:-webkit-autofill,
+.pay-mono input:-webkit-autofill:hover,
+.pay-mono input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  box-shadow: 0 0 0 1000px #ffffff inset;
+  -webkit-text-fill-color: #101010;
+  caret-color: #101010;
+  transition: background-color 9999s ease-out 0s;
+}
+body:has(.pay-mono) {
+  background: #f4f4f4;
 }

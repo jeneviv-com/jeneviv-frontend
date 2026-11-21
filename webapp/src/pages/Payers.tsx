@@ -76,15 +76,6 @@ function toneFor(key: string) {
   return Math.abs(hash) % 2 === 0 ? "bg-ink text-white" : "bg-[#ffeee3] text-brand-dark";
 }
 
-function Avatar({ payer, size = "md" }: { payer: Payer; size?: "md" | "lg" }) {
-  const dims = size === "lg" ? "h-16 w-16 text-[19px] ring-4 ring-white" : "h-10 w-10 text-[12px]";
-  return (
-    <span className={`grid shrink-0 place-items-center rounded-full font-bold ${dims} ${toneFor(payer.key)}`}>
-      {initialsOf(payer.name)}
-    </span>
-  );
-}
-
 const isRepeat = (payer: Payer) => payer.payments > 1 || payer.collections.size > 1;
 
 /** One payer as a white row, the same shape as the settings list. */
@@ -94,10 +85,8 @@ function PayerRow({ payer, onOpen }: { payer: Payer; onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-3 rounded-[16px] bg-white px-3.5 py-3 text-left shadow-[0_1px_2px_rgba(17,17,17,0.04),0_6px_18px_-10px_rgba(17,17,17,0.12)] transition-transform duration-150 hover:-translate-y-px active:scale-[0.99] md:grid-cols-[auto_minmax(0,1.6fr)_minmax(0,1.4fr)_110px_auto] md:gap-4 md:px-4"
+      className="grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded-[16px] bg-white px-3.5 py-3 text-left shadow-[0_1px_2px_rgba(17,17,17,0.04),0_6px_18px_-10px_rgba(17,17,17,0.12)] transition-transform duration-150 hover:-translate-y-px active:scale-[0.99] md:grid-cols-[minmax(0,1.6fr)_minmax(0,1.4fr)_110px_auto] md:gap-4 md:px-4"
     >
-      <Avatar payer={payer} />
-
       <span className="min-w-0">
         <span className="flex items-center gap-1.5">
           <span className="truncate text-[14px] font-semibold text-ink">{payer.name}</span>
@@ -169,7 +158,6 @@ function PayerSheet({ payer }: { payer: Payer }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4 rounded-[18px] bg-gradient-to-br from-[#ffeee3] to-[#fff8f3] p-4">
-        <Avatar payer={payer} size="lg" />
         <div className="min-w-0">
           <p className="truncate text-[18px] font-bold tracking-[-0.02em] text-ink">{payer.name}</p>
           <p className="truncate text-[12.5px] text-ink-muted">{payer.email || payer.identifier || "No contact saved"}</p>

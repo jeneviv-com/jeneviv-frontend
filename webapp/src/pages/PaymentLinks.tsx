@@ -13,6 +13,7 @@ import {
   InlineNote,
   PageHeader,
   SearchInput,
+  StatusMark,
   SummaryPanel,
   TableSkeleton,
   TONE_CARD,
@@ -152,10 +153,7 @@ export default function PaymentLinks() {
                       {collection.short_code}
                     </p>
                   </div>
-                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-ink px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-cream">
-                    <span className="h-1.5 w-1.5 rounded-full bg-cream" />
-                    Accepting
-                  </span>
+                  <StatusMark active />
                 </div>
 
                 {/* figures: match groups collection card styling */}

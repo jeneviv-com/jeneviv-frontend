@@ -128,14 +128,6 @@ export default function Refunds() {
               history below.
             </InlineNote>
           </div>
-        ) : refunds.data && refunds.data.length === 0 && !refunds.loading ? (
-          <div className="relative -mt-6 first:mt-0 lg:col-span-3 lg:mt-0">
-            <InlineNote tone="info" title="Feature availability">
-              The refunds feature is available in demo mode or when the backend refunds
-              table is fully configured. If you're seeing this message in production,
-              contact your system administrator to complete the database setup.
-            </InlineNote>
-          </div>
         ) : null}
       </div>
 

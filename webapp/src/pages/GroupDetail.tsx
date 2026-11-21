@@ -39,7 +39,8 @@ import {
   Modal,
   PageHeader,
   Pill,
-  ProgressBar,
+  PeopleToPay,
+  StatusMark,
   FilterMenu,
   SearchInput,
   StackedCards,
@@ -346,18 +347,7 @@ export default function GroupDetail() {
                                 {collection.description || "No description added."}
                               </p>
                             </div>
-                            <span
-                              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] ${
-                                collection.is_active
-                                  ? "bg-ink text-cream"
-                                  : "border border-ink/20 bg-cream text-ink-soft"
-                              }`}
-                            >
-                              <span
-                                className={`h-1.5 w-1.5 rounded-full ${collection.is_active ? "bg-cream" : "bg-ink-faint"}`}
-                              />
-                              {collection.is_active ? "Accepting" : "Paused"}
-                            </span>
+                            <StatusMark active={collection.is_active} />
                           </div>
 
                           <div className="mt-5 flex items-end justify-between gap-4 border-b border-line-soft pb-4">
@@ -390,10 +380,7 @@ export default function GroupDetail() {
                               </p>
                             </div>
                             <div className="mt-2.5">
-                              <ProgressBar
-                                value={percent(paid, Math.max(1, paid + pending))}
-                                tone="ink"
-                              />
+                              <PeopleToPay paid={paid} total={paid + pending} />
                             </div>
                           </div>
 
@@ -507,18 +494,7 @@ export default function GroupDetail() {
                               {collection.description || "No description added."}
                             </p>
                           </div>
-                          <span
-                            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] ${
-                              collection.is_active
-                                ? "bg-ink text-cream"
-                                : "border border-ink/20 bg-cream text-ink-soft"
-                            }`}
-                          >
-                            <span
-                              className={`h-1.5 w-1.5 rounded-full ${collection.is_active ? "bg-cream" : "bg-ink-faint"}`}
-                            />
-                            {collection.is_active ? "Accepting" : "Paused"}
-                          </span>
+                          <StatusMark active={collection.is_active} />
                         </div>
 
                         <div className="mt-5 flex items-end justify-between gap-4 border-b border-line-soft pb-4">
@@ -551,10 +527,7 @@ export default function GroupDetail() {
                             </p>
                           </div>
                           <div className="mt-2.5">
-                            <ProgressBar
-                              value={percent(paid, Math.max(1, paid + pending))}
-                              tone="ink"
-                            />
+                            <PeopleToPay paid={paid} total={paid + pending} />
                           </div>
                         </div>
 
