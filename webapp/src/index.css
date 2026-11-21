@@ -335,6 +335,12 @@
     @apply border-ink bg-ink text-white;
   }
 
+  /* Mild orange on every other card after the black one. */
+  .wallet-stack > :nth-child(2n) .wallet-card,
+  .wallet-stack > .wallet-card:nth-child(2n) {
+    background: #ffeee3;
+  }
+
   @media (max-width: 1023px) {
     .wallet-stack > * + * {
       margin-top: -22px;
@@ -346,13 +352,16 @@
       overflow: hidden;
       padding-top: 13px;
       padding-bottom: 0;
+      /* Only the top shows, so the bottom corners stay square. */
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
     }
 
     .wallet-stack > :last-child .wallet-card,
     .wallet-stack > .wallet-card:last-child {
       @apply flex flex-col justify-between pb-5;
       padding-top: 13px;
-      min-height: 184px;
+      min-height: 248px;
     }
   }
 

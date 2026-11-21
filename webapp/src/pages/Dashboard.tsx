@@ -232,22 +232,6 @@ function StatCard({
   );
 }
 
-/** A thin labelled meter for card footers. */
-function Meter({ value, label, tone = "ink" }: { value: number; label: string; tone?: "ink" | "brand" }) {
-  const clamped = Math.max(0, Math.min(100, value));
-  return (
-    <div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-ink/10">
-        <div
-          className={`h-full rounded-full transition-[width] duration-700 ease-out ${tone === "brand" ? "bg-brand" : "bg-ink"}`}
-          style={{ width: `${clamped}%` }}
-        />
-      </div>
-      <p className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-ink/60">{label}</p>
-    </div>
-  );
-}
-
 /* ---------------------------------------------------------------- dashboard */
 
 export default function Dashboard() {
@@ -435,13 +419,6 @@ export default function Dashboard() {
                     : formatNumber(uniquePayers)
                 }
                 context={`Across ${formatNumber(stats.length)} collection${stats.length === 1 ? "" : "s"}`}
-                footer={
-                  payerTarget ? (
-                    <Meter value={percent(uniquePayers, payerTarget)} label={`${percent(uniquePayers, payerTarget)}% of target`} tone="brand" />
-                  ) : (
-                    <Meter value={uniquePayers ? 100 : 0} label="No target set" />
-                  )
-                }
               />
             </Reveal>
             <Reveal delay={200} className="h-full">
@@ -453,7 +430,6 @@ export default function Dashboard() {
                 loading={loading}
                 value={formatNumber(successful.length)}
                 context={`${formatNumber(pendingCount)} awaiting confirmation`}
-                footer={<Meter value={successRate} label={`${successRate}% success rate`} />}
               />
             </Reveal>
             <Reveal delay={240} className="h-full">
