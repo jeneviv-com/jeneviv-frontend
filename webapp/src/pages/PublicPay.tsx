@@ -9,8 +9,6 @@ import { useGateway } from "@/lib/gateway";
 import { JENEVIV_LOGO } from "@/lib/brand";
 
 type Step = "details" | "pay" | "done";
-const STEPS: Step[] = ["details", "pay", "done"];
-const STEP_LABEL: Record<Step, string> = { details: "Your details", pay: "Pay", done: "Done" };
 
 /** Page shell for payers: the jeneviv logo, a secure badge, then the content. */
 function Shell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
@@ -30,9 +28,6 @@ function Shell({ children, wide = false }: { children: ReactNode; wide?: boolean
               jeneviv<span className="text-brand">.</span>
             </span>
           </Link>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-[11.5px] font-semibold text-ink">
-            <Lock size={12} className="text-brand" aria-hidden="true" /> Secure payment
-          </span>
         </div>
         {children}
       </div>
@@ -305,7 +300,6 @@ export default function PublicPay() {
     );
   }
 
-  const currentIndex = STEPS.indexOf(step);
   const group = data.group;
 
   return (
@@ -379,28 +373,6 @@ export default function PublicPay() {
 
         {/* the steps */}
         <section className={`${card} p-5 sm:p-7`}>
-          <ol className="mb-7 grid grid-cols-3 gap-2" aria-label="Progress">
-            {STEPS.map((item, index) => {
-              const complete = index < currentIndex || step === "done";
-              const active = item === step;
-              return (
-                <li key={item}>
-                  <span
-                    className={`block h-1.5 rounded-full ${complete ? "bg-ink" : active ? "bg-brand" : "bg-line"}`}
-                    aria-hidden="true"
-                  />
-                  <span
-                    className={`mt-2 flex items-center gap-1.5 text-[12.5px] font-semibold ${
-                      active || complete ? "text-ink" : "text-ink-muted"
-                    }`}
-                  >
-                    {complete ? <Check size={13} aria-hidden="true" /> : <span className="tabular">{index + 1}.</span>}
-                    {STEP_LABEL[item]}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
 
           {/* details */}
           {step === "details" ? (
