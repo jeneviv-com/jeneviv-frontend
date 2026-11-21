@@ -180,9 +180,10 @@ export default function Signup() {
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
     setSubmitting(true);
     try {
-      // The API takes name, email and password only. The role and organization
-      // name are collected here but not stored yet.
-      await signup(fullName, email.trim(), password);
+      await signup(fullName, email.trim(), password, {
+        accountType: role === "organization" ? "organization" : "individual",
+        organizationName: organization.trim() || undefined,
+      });
       setOutcome({
         kind: "success",
         title: "Your workspace is ready",
