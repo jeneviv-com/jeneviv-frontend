@@ -47,7 +47,7 @@ import {
   Input,
   Modal,
   PageHeader,
-  ProgressBar,
+  PeopleToPay,
   FilterMenu,
   SearchInput,
   Select,
@@ -448,10 +448,6 @@ export default function Collections() {
                 }
               ).target_payers ?? 0;
 
-            const progress = target
-              ? percent(paid, target)
-              : Math.min(100, paid);
-
             return (
               <li
                 key={collection.id}
@@ -513,23 +509,7 @@ export default function Collections() {
 
                   {/* Payment progress */}
                   <div className="mt-4 flex-1">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-[12.5px] text-ink-muted">
-                        {paid} {paid === 1 ? "payer" : "payers"}
-                        {target ? ` of ${target}` : ""}
-                      </p>
-
-                      <p className="tabular font-mono text-[11.5px] text-ink-muted">
-                        {progress}%
-                      </p>
-                    </div>
-
-                    <div className="mt-2.5">
-                      <ProgressBar
-                        value={progress}
-                        tone="ink"
-                      />
-                    </div>
+                    <PeopleToPay paid={paid} total={target || null} />
 
                     <p className="mt-3 flex flex-wrap items-center gap-1.5 font-mono text-[11px] text-ink-muted">
                       {collection.group ? (

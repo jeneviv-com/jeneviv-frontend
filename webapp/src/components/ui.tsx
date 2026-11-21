@@ -18,6 +18,7 @@ import {
   AlertCircle,
   ArrowUpRight,
   Check,
+  X,
   CheckCircle2,
   ChevronDown,
   Copy,
@@ -755,7 +756,31 @@ export function Toolbar({
  */
 /** One look for a collection's state, on the list and on its own page. */
 export function CollectionStatusPill({ active }: { active: boolean }) {
-  return <Pill tone={active ? "green" : "amber"}>{active ? "Accepting payments" : "Paused"}</Pill>;
+  return <StatusMark active={active} />;
+}
+
+/** Check when a collection is accepting payments, X when it is not. */
+export function StatusMark({ active }: { active: boolean }) {
+  const label = active ? "Accepting payments" : "Not accepting payments";
+  const Icon = active ? Check : X;
+  return (
+    <span
+      role="img"
+      aria-label={label}
+      title={label}
+      className={`inline-grid h-6 w-6 shrink-0 place-items-center rounded-full border border-ink ${
+        active ? "bg-ink text-white" : "bg-white text-ink"
+      }`}
+    >
+      <Icon size={13} strokeWidth={2.5} aria-hidden="true" />
+    </span>
+  );
+}
+
+/** "3/4 people to pay" under a collection's name. Replaces the progress bars. */
+export function PeopleToPay({ paid, total, className = "" }: { paid: number; total?: number | null; className?: string }) {
+  const text = total ? `${paid}/${total} people to pay` : `${paid} ${paid === 1 ? "person" : "people"} paid`;
+  return <p className={`tabular text-[12.5px] font-semibold text-ink ${className}`}>{text}</p>;
 }
 
 export function PageHeader({
@@ -1077,13 +1102,15 @@ export function SummaryRow({
   footer?: ReactNode;
   className?: string;
 }) {
-  // Colour now comes from the card's place in the stack (first black, the
-  // rest white), so `tone` is accepted but no longer changes the surface.
-  void tone;
+  // Each card takes its colour from the shared palette. Meaning tones map onto
+  // the palette so money, people, attention and neutral cards each keep a colour.
+  const palette: Record<string, string> = { money: "mint", people: "lavender", attention: "peach", neutral: "aqua" };
+  const key = (tone in TONE_CARD ? tone : palette[tone]) as ToneCardTone;
+  const surface = TONE_CARD[key] ?? TONE_CARD.lavender;
 
   const panel = (
     <div
-      className={`wallet-card ${
+      className={`wallet-card ${surface} ${
         href
           ? "transition-[filter] duration-150 hover:brightness-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
           : ""
@@ -1093,7 +1120,7 @@ export function SummaryRow({
         <p className="min-w-0 text-[18px] font-bold leading-tight tracking-[-0.02em] lg:text-[15px] lg:font-semibold">
           {title}
           {href ? (
-            <ArrowUpRight size={14} aria-hidden="true" className="ml-1 hidden align-[-1px] text-brand lg:inline-block" />
+            <ArrowUpRight size={14} aria-hidden="true" className="ml-1 hidden align-[-1px] lg:inline-block" />
           ) : null}
         </p>
         <div className="wallet-side min-w-0 shrink-0 text-right lg:text-left">

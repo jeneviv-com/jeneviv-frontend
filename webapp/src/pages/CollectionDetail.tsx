@@ -55,7 +55,7 @@ import {
   Input,
   Modal,
   Pill,
-  ProgressBar,
+  PeopleToPay,
   FilterMenu,
   SegmentedControl,
   Select,
@@ -496,12 +496,10 @@ export default function CollectionDetail() {
                 <div className="mt-9 border-t border-line pt-7">
                   <div className="flex items-center justify-between">
                     <p className="text-[13.5px] font-semibold">Progress to target</p>
-                    <p className="tabular font-mono text-[12px] text-ink-muted">
-                      {target ? percent(paid, target) : Math.min(100, paid)}%
-                    </p>
+                    
                   </div>
                   <div className="mt-3">
-                    <ProgressBar value={target ? percent(paid, target) : Math.min(100, paid)} />
+                    <PeopleToPay paid={paid} total={target || null} />
                   </div>
                 </div>
               </section>

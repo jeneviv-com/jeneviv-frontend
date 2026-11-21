@@ -1,19 +1,37 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, BadgeCheck, Check, Clock, Copy, Download, Loader2, Lock, ShieldCheck, TriangleAlert } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Check, Clock, Copy, Download, Info, Loader2, Lock, ShieldCheck, TriangleAlert } from "lucide-react";
 import { APIError, paymentsAPI, verifyAPI, type Collection, type InitPaymentResult } from "@/lib/api";
 import { useCollectionByCode, errorMessage } from "@/hooks/useApi";
 import { copyText, currencySymbol, formatMoney, formatTime } from "@/lib/format";
-import { Button, Field, InlineNote, Input, Select, Textarea } from "@/components/ui";
+import { Button, Field, Input, Select, Textarea } from "@/components/ui";
 import { useGateway } from "@/lib/gateway";
 import { JENEVIV_LOGO } from "@/lib/brand";
 
 type Step = "details" | "pay" | "done";
 
+/**
+ * Notice box for this page. Black and white only: the tone changes the icon
+ * and the border weight, never the colour.
+ */
+function Note({ tone = "info", children }: { tone?: "info" | "warning" | "error"; children: ReactNode }) {
+  const Icon = tone === "error" ? TriangleAlert : Info;
+  return (
+    <div
+      className={`flex items-start gap-2.5 rounded-xl border px-3.5 py-3 text-[12.5px] leading-relaxed text-ink ${
+        tone === "info" ? "border-ink/15 bg-white" : "border-ink bg-[#f2f2f2]"
+      }`}
+    >
+      <Icon size={15} className="mt-px shrink-0" aria-hidden="true" />
+      <div>{children}</div>
+    </div>
+  );
+}
+
 /** Page shell for payers: the jeneviv logo, a secure badge, then the content. */
 function Shell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   return (
-    <div className="min-h-screen bg-cream px-4 pb-10 pt-5 sm:px-6 sm:pt-8">
+    <div className="pay-mono min-h-screen bg-[#f4f4f4] px-4 pb-10 pt-5 sm:px-6 sm:pt-8">
       <div className={`mx-auto ${wide ? "max-w-[1040px]" : "max-w-[560px]"}`}>
         <div className="mb-6 flex items-center justify-between sm:mb-10">
           <Link to="/" className="inline-flex items-center gap-2" aria-label="jeneviv">
@@ -25,7 +43,7 @@ function Shell({ children, wide = false }: { children: ReactNode; wide?: boolean
               className="h-[34px] w-[34px] rounded-[10px] bg-white object-cover shadow-[0_1px_2px_rgba(18,16,14,0.12)]"
             />
             <span className="text-[20px] font-extrabold tracking-[-0.05em] text-ink">
-              jeneviv<span className="text-brand">.</span>
+              jeneviv<span className="text-ink">.</span>
             </span>
           </Link>
         </div>
@@ -255,7 +273,7 @@ export default function PublicPay() {
     return (
       <Shell>
         <div className="flex flex-col items-center py-16 text-center">
-          <Loader2 size={22} className="animate-spin text-brand" />
+          <Loader2 size={22} className="animate-spin text-ink" />
           <p className="muted mt-3">Loading this collection…</p>
         </div>
       </Shell>
@@ -266,7 +284,7 @@ export default function PublicPay() {
     return (
       <Shell>
         <div className="py-10">
-          <span className="grid h-12 w-12 place-items-center rounded-full bg-[#ffd6cf] text-ink">
+          <span className="grid h-12 w-12 place-items-center rounded-full bg-[#ececec] text-ink">
             <TriangleAlert size={20} />
           </span>
           <h1 className="mt-6 text-[30px] font-bold leading-[1.05] tracking-[-0.04em]">
@@ -288,7 +306,7 @@ export default function PublicPay() {
     return (
       <Shell>
         <div className="py-10">
-          <span className="grid h-12 w-12 place-items-center rounded-full bg-[#ffc49a] text-ink">
+          <span className="grid h-12 w-12 place-items-center rounded-full bg-[#ececec] text-ink">
             <Clock size={20} />
           </span>
           <h1 className="mt-6 text-[30px] font-bold leading-[1.05] tracking-[-0.04em]">{data.name} is closed</h1>
@@ -334,7 +352,7 @@ export default function PublicPay() {
             </div>
           ) : null}
 
-          <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-brand">Payment request</p>
+          <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-ink">Payment request</p>
           <h1 className="mt-2 text-[28px] font-bold leading-[1.05] tracking-[-0.04em] sm:text-[32px]">{data.name}</h1>
           {data.description ? <p className="muted mt-2">{data.description}</p> : null}
 
@@ -347,12 +365,12 @@ export default function PublicPay() {
                 {formatMoney(data.amount, data.currency)}
               </p>
             </div>
-            <span className="rounded-full bg-cream px-2.5 py-1 font-mono text-[11px] text-ink-muted">{data.short_code}</span>
+            <span className="rounded-full bg-[#f2f2f2] px-2.5 py-1 font-mono text-[11px] text-ink-muted">{data.short_code}</span>
           </div>
 
           {data.payee ? (
-            <div className="mt-5 flex gap-3 rounded-[18px] bg-[#ffeee3] p-4">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-brand">
+            <div className="mt-5 flex gap-3 rounded-[18px] bg-[#f2f2f2] p-4">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-ink">
                 <ShieldCheck size={17} aria-hidden="true" />
               </span>
               <div className="min-w-0">
@@ -378,9 +396,9 @@ export default function PublicPay() {
           {step === "details" ? (
           <div className="space-y-5">
             {fields.length === 0 ? (
-              <InlineNote tone="info">
+              <Note tone="info">
                 This collection does not ask for any details — continue to the payment step and transfer the amount shown.
-              </InlineNote>
+              </Note>
             ) : null}
 
             {fields.map((field) => (
@@ -459,10 +477,10 @@ export default function PublicPay() {
               </Field>
             )}
 
-            {formError ? <InlineNote tone="error">{formError}</InlineNote> : null}
+            {formError ? <Note tone="error">{formError}</Note> : null}
 
             {data.pricing ? (
-              <div className="rounded-[18px] bg-[#ffeee3] px-4 py-4">
+              <div className="rounded-[18px] bg-[#f2f2f2] px-4 py-4">
                 <p className="text-[13px] font-semibold text-ink">What you will pay</p>
                 <dl className="mt-3 space-y-2 text-[13.5px]">
                   <div className="flex justify-between gap-4">
@@ -479,7 +497,7 @@ export default function PublicPay() {
                   </div>
                   <div className="flex justify-between gap-4 border-t border-dashed border-ink/15 pt-2.5">
                     <dt className="font-semibold">Total to transfer</dt>
-                    <dd className="tabular font-bold text-brand">{formatMoney(data.pricing.total, data.currency)}</dd>
+                    <dd className="tabular font-bold text-ink">{formatMoney(data.pricing.total, data.currency)}</dd>
                   </div>
                 </dl>
               </div>
@@ -505,18 +523,18 @@ export default function PublicPay() {
               </p>
             </div>
 
-            <div className="relative isolate overflow-hidden rounded-[22px] bg-ink px-6 py-6 text-cream">
+            <div className="relative isolate overflow-hidden rounded-[22px] bg-ink px-6 py-6 text-white">
               <img
                 src={JENEVIV_LOGO}
                 alt=""
                 aria-hidden="true"
                 className="pointer-events-none absolute -right-8 -top-8 -z-10 h-36 w-36 rotate-6 opacity-[0.14]"
               />
-              <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-cream/60">Account number</p>
+              <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-white/60">Account number</p>
               <p className="tabular mt-2 text-[34px] font-bold leading-none tracking-[-0.02em]">
                 {result.payment_account.account_number}
               </p>
-              <p className="mt-3 text-[14px] text-cream/80">
+              <p className="mt-3 text-[14px] text-white/80">
                 {result.payment_account.account_name} · {result.payment_account.bank_name}
               </p>
               <button
@@ -534,7 +552,7 @@ export default function PublicPay() {
 
             <div className="rounded-[18px] border border-line px-4">
               <Line label="Amount to send">
-                <span className="tabular text-[16px] font-bold text-brand">
+                <span className="tabular text-[16px] font-bold text-ink">
                   {formatMoney(payAmount, data.currency)}
                 </span>
               </Line>
@@ -572,7 +590,7 @@ export default function PublicPay() {
               {confirming ? "Waiting for confirmation…" : "I have sent the money"}
             </Button>
 
-            {statusNote ? <InlineNote tone="warning">{statusNote}</InlineNote> : null}
+            {statusNote ? <Note tone="warning">{statusNote}</Note> : null}
 
             <button
               type="button"
@@ -592,7 +610,7 @@ export default function PublicPay() {
         {/* done */}
         {step === "done" && result ? (
           <div className="text-center">
-            <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#d5e8c4] text-ink">
+            <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#ececec] text-ink">
               <BadgeCheck size={28} />
             </span>
             <h2 className="mt-5 text-[30px] font-bold leading-[1.05] tracking-[-0.04em]">Payment confirmed</h2>
@@ -616,7 +634,7 @@ export default function PublicPay() {
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               <Link
                 to={`/verify/${encodeURIComponent(result.transaction.reference)}`}
-                className="inline-flex h-[52px] items-center justify-center gap-2 rounded-[12px] bg-ink text-[15px] font-semibold text-cream transition-transform duration-150 active:scale-[0.98]"
+                className="inline-flex h-[52px] items-center justify-center gap-2 rounded-[12px] bg-ink text-[15px] font-semibold text-white transition-transform duration-150 active:scale-[0.98]"
               >
                 <BadgeCheck size={15} /> View receipt
               </Link>
