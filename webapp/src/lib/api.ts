@@ -696,10 +696,15 @@ export const authAPI = {
       body: { email, password },
     }),
 
-  signUp: (name: string, email: string, password: string) =>
+  signUp: (
+    name: string,
+    email: string,
+    password: string,
+    extra?: { accountType?: "individual" | "organization"; organizationName?: string },
+  ) =>
     apiFetch<AuthResponse>("/api/auth/sign-up/email", {
       method: "POST",
-      body: { name, email, password },
+      body: { name, email, password, ...extra },
     }),
 
   signOut: async () => {

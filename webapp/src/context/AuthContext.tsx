@@ -32,7 +32,12 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
+  signup: (
+    name: string,
+    email: string,
+    password: string,
+    extra?: { accountType?: "individual" | "organization"; organizationName?: string },
+  ) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
   refreshMerchant: () => Promise<void>;
@@ -127,10 +132,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signup = useCallback(
-    async (name: string, email: string, password: string) => {
+    async (
+      name: string,
+      email: string,
+      password: string,
+      extra?: { accountType?: "individual" | "organization"; organizationName?: string },
+    ) => {
       setError(null);
       // FIX: same as login; the signed token is saved inside apiFetch.
-      const response = await authAPI.signUp(name, email, password);
+      const response = await authAPI.signUp(name, email, password, extra);
       setUser(response.user);
       await loadMerchant();
     },
