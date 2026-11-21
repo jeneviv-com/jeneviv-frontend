@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./marketing.css";
+import "./landing.css";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 

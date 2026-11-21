@@ -1,10 +1,10 @@
-import Link from "next/link";
 import SiteNav from "@/components/marketing/SiteNav";
+import SiteFooter from "@/components/marketing/SiteFooter";
 import Reveal from "@/components/marketing/Reveal";
-import ScaledFrame from "@/components/marketing/ScaledFrame";
-import { BentoCard, SecurityCard, PriceCard } from "@/components/marketing/MarketingCard";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:5173";
+
+/* ------------------------------------------------------------------ icons */
 
 const Arrow = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
@@ -20,14 +20,26 @@ const Arrow = () => (
 );
 
 const Check = () => (
-  <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true">
+  <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
     <path
       d="m3 8.5 3.2 3L13 4.5"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="1.9"
       strokeLinecap="round"
       strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const Cross = () => (
+  <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+    <path
+      d="m3 3 6 6M9 3 3 9"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
     />
   </svg>
 );
@@ -52,911 +64,624 @@ const Shield = () => (
   </svg>
 );
 
+const Plus = () => (
+  <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+    <path
+      d="M6 1v10M1 6h10"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+/* ------------------------------------------------------------------- data */
+
+const AUDIENCES = [
+  "Course reps",
+  "Departments",
+  "PTAs & schools",
+  "Cooperatives",
+  "Thrift groups",
+  "Associations",
+];
+
+const STEPS = [
+  {
+    n: "01",
+    title: "Create",
+    body: "Name the collection, set the amount and choose what each payer must tell you: name, matric number, phone, class.",
+  },
+  {
+    n: "02",
+    title: "Collect",
+    body: "Share one link in the group chat. Payers transfer from any bank to the account shown. No app, no sign up.",
+  },
+  {
+    n: "03",
+    title: "Settle",
+    body: "Every transfer is verified and matched to a payer, then settled to the bank account you verified.",
+  },
+];
+
+const PILLARS = [
+  {
+    id: "reconciliation",
+    title: "Verified, not claimed",
+    body: "A payment is marked paid only when the gateway confirms it with a signed webhook. Late webhooks are caught by a re-check every 15 minutes.",
+  },
+  {
+    title: "Matched to a person",
+    body: "Each transfer is tied to the payer's name and identifier, so you never cross-check narrations against a list again.",
+  },
+  {
+    title: "Your money, your bank",
+    body: "Collections settle to the bank account you verified. Payout history and status sit right in the dashboard.",
+  },
+  {
+    title: "Ready to hand over",
+    body: "Export a verified list as CSV or PDF with names, identifiers, amounts, dates and references. Done before the meeting starts.",
+  },
+];
+
+const FEATURES = [
+  ["Custom payer fields", "Ask for exactly what your group uses to identify people."],
+  ["One account per collection", "Every collection gets its own account to transfer to."],
+  ["Email receipts", "Payers get a receipt the moment the transfer is confirmed."],
+  ["Receipt verification", "Anyone can check a receipt is genuine from its code."],
+  ["Duplicate detection", "Spot the payer who paid twice before they ask."],
+  ["Team roles", "Owner, admin, collector or viewer. Helpers never see bank details."],
+  ["Refunds", "Send money back to a payer from the dashboard."],
+  ["Pause any time", "Close a collection without losing a single record."],
+  ["CSV & PDF export", "The full ledger, filtered the way you need it."],
+];
+
 const USE_CASES = [
   {
     tag: "Universities",
     title: "Course reps & departments",
-    body: "Handouts, manuals, lab fees, departmental levies. Every student on a list, every payment matched to a matric number.",
-    stat: "₦340,000",
-    detail: "collected • 136 of 200",
-    progress: 68,
+    body: "Handouts, manuals, lab fees, departmental levies. Every payment matched to a matric number.",
   },
   {
     tag: "PTAs & schools",
     title: "Termly levies",
-    body: "No more envelopes, no more tellers, no more “I paid Aunty Ngozi”. Parents pay by transfer and the school gets one clean report.",
-    stat: "₦1.28M",
-    detail: "collected • 214 of 240",
-    progress: 89,
+    body: "No envelopes, no tellers, no “I paid Aunty Ngozi”. Parents pay by transfer and the school gets one clean report.",
   },
   {
     tag: "Cooperatives",
     title: "Monthly thrift",
-    body: "Members pay from any bank. Contributions are matched to the member record automatically, month after month.",
-    stat: "₦2.3M",
-    detail: "collected • 88% of target",
-    progress: 88,
+    body: "Members pay from any bank. Contributions are matched to the member record, month after month.",
   },
   {
     tag: "Associations",
     title: "Dues & building funds",
-    body: "Annual dues, event levies, project contributions with an auditable list you can hand to any committee.",
-    stat: "₦615,000",
-    detail: "collected • 52% of target",
-    progress: 52,
+    body: "Annual dues, event levies and project contributions, with an auditable list for any committee.",
   },
 ];
 
 const SECURITY = [
-  {
-    title: "Regulated payment rails",
-    body: "Collections are processed through payment gateways like Paystack, a CBN-licensed payment service provider — not a wallet we invented.",
-  },
-  {
-    title: "Webhook-verified payments",
-    body: "A payment is only marked paid when the gateway confirms it cryptographically. Not from a screenshot. Not from a narration.",
-  },
-  {
-    title: "NDPA-aligned data handling",
-    body: "We collect the minimum needed to identify a payer, encrypt it at rest, and never sell it. Nigeria Data Protection Act, 2023.",
-  },
-  {
-    title: "Two-factor coordinator access",
-    body: "Email verification protects coordinator accounts, so one leaked password cannot expose a group's money or payer list.",
-  },
-  {
-    title: "Continuous reconciliation",
-    body: "A background job re-checks the gateway every 15 minutes, catching transfers that left a payer's bank but arrived late.",
-  },
-  {
-    title: "Role-scoped team access",
-    body: "Everyone you invite gets a role — owner, admin, collector or viewer — so a helper can add payers without ever seeing settlement or bank details.",
-  },
-];
-
-const QUOTES = [
-  {
-    quote:
-      "I stopped keeping a list in my notes app. The report is just there when the department asks for it — names, matric numbers, dates, references.",
-    name: "Blessing E.",
-    role: "Course rep, UNIUYO",
-    initials: "BE",
-  },
-  {
-    quote:
-      "We collected PTA levies for 214 families in one weekend. Last year it took three weeks and I still had to call people one by one.",
-    name: "Mrs. A. Okafor",
-    role: "PTA secretary, Lagos",
-    initials: "AO",
-  },
-  {
-    quote:
-      "Our members transfer from different banks. Jeneviv matches every single one without me touching a spreadsheet.",
-    name: "Tunde A.",
-    role: "Cooperative secretary, Ibadan",
-    initials: "TA",
-  },
+  ["Regulated payment rails", "Collections run through licensed payment gateways, not a wallet we invented."],
+  ["Webhook-verified payments", "Paid means the gateway confirmed it cryptographically. Not a screenshot, not a narration."],
+  ["NDPA-aligned data handling", "We collect the minimum needed to identify a payer, encrypt it at rest and never sell it."],
+  ["Protected coordinator access", "Email verification guards coordinator accounts, so one leaked password can't expose a group's money."],
+  ["Continuous reconciliation", "A background job re-checks the gateway every 15 minutes for transfers that arrived late."],
+  ["Role-scoped team access", "Everyone you invite gets a role, so a helper can add payers without seeing settlement details."],
 ];
 
 const FAQ = [
   {
     q: "How does Jeneviv know a payer has actually paid?",
-    a: "Every collection gets its own payment account. When money lands, the gateway sends a signed webhook to Jeneviv. We verify, match the transfer to the payer record, and mark it paid. If a webhook is delayed, a reconciliation job checks again every 15 minutes.",
+    a: "Every collection gets its own payment account. When money lands, the gateway sends a signed webhook to Jeneviv. We verify it, match the transfer to the payer record and mark it paid. If a webhook is delayed, a reconciliation job checks again every 15 minutes.",
   },
   {
     q: "Do the people paying need to download an app?",
-    a: "No. Payers open a link in any browser, enter the details your collection asks for, and transfer the exact amount to the account shown. Their receipt arrives by email, and the coordinator's dashboard updates in real time.",
+    a: "No. Payers open a link in any browser, enter the details your collection asks for and transfer the exact amount to the account shown. Their receipt arrives by email, and your dashboard updates in real time.",
   },
   {
     q: "What does it cost?",
-    a: "There is no monthly fee and no setup fee. Jeneviv charges 1.5% or 1.5% + 100 in payment gateway fees + ₦75 up to ₦7,500, then 1% capped at ₦1,000 per successful payment. The fee is passed to payers so the collection money is never touched.",
+    a: "There is no monthly fee and no setup fee. You only pay a small fee on each successful payment. See the pricing section above for the exact rate.",
   },
   {
     q: "When does the money reach my bank account?",
-    a: "Settlements run T +1, excluding weekends which run on the next working day. You don't need to initiate a manual payout to any verified bank account you have added because it is settled directly. Payout history and status are visible in the app.",
+    a: "Settlements run T+1. Weekend payments settle on the next working day. Money goes straight to the verified bank account you added, so there is no manual payout to start. Payout history and status are visible in the app.",
   },
   {
     q: "Can more than one person manage a collection?",
-    a: "Yes. The coordinator who creates a collection owns it, and every payer, transaction, field and settlement is visible on one dashboard so a treasurer, chairperson or lecturer can all work from the same verified report.",
+    a: "Yes. Invite your treasurer, chairperson or lecturer with a role that fits, and everyone works from the same verified report.",
   },
   {
     q: "What happens if a payer transfers the wrong amount?",
-    a: "The payment still appears in your ledger with its reference. You can reconcile the transaction, refund it from the dashboard, or record it as a partial payment. Nothing disappears because it did not match exactly.",
+    a: "The payment still appears in your ledger with its reference. You can reconcile it, refund it from the dashboard or record it as a partial payment. Nothing disappears because it didn't match exactly.",
   },
 ];
 
+/* -------------------------------------------------------------- mockups */
+
+function ReceiptMock() {
+  return (
+    <div className="l-receipt">
+      <div className="l-receipt-head">
+        <span className="l-receipt-brand">
+          jeneviv<em>.</em>
+        </span>
+        <span className="l-mono">Receipt</span>
+      </div>
+      <div className="l-receipt-meta">
+        <div>
+          <small>Collection</small>
+          <b>CSC 311 Handout</b>
+        </div>
+        <div>
+          <small>Reference</small>
+          <b className="l-mono-val">JNV-4471</b>
+        </div>
+      </div>
+      <div className="l-receipt-payer">
+        <span className="l-avatar">AO</span>
+        <div>
+          <b>Adaeze Okonkwo</b>
+          <small>20/ENG/001</small>
+        </div>
+      </div>
+      <dl className="l-receipt-lines">
+        <div>
+          <dt>Handout, 2nd semester</dt>
+          <dd>₦2,500.00</dd>
+        </div>
+        <div>
+          <dt>Paid by</dt>
+          <dd>Bank transfer</dd>
+        </div>
+        <div>
+          <dt>Confirmed</dt>
+          <dd>12:04:09</dd>
+        </div>
+      </dl>
+      <div className="l-receipt-total">
+        <span>Total paid</span>
+        <b>₦2,500.00</b>
+      </div>
+      <div className="l-receipt-foot">
+        <span className="l-mono">Verify at jeneviv.com/r/4471</span>
+      </div>
+      <span className="l-stamp" aria-hidden="true">
+        Paid
+      </span>
+    </div>
+  );
+}
+
+function LedgerMock() {
+  const rows: [string, string, string, "paid" | "pending"][] = [
+    ["AO", "Adaeze Okonkwo", "20/ENG/001", "paid"],
+    ["EN", "Emeka Nwosu", "20/ENG/004", "paid"],
+    ["FM", "Fatima Musa", "20/ENG/007", "pending"],
+    ["IK", "Ibrahim Kalu", "20/ENG/012", "paid"],
+  ];
+  return (
+    <div className="l-panel">
+      <div className="l-panel-head">
+        <b>CSC 311 Handout</b>
+        <span className="l-live">
+          <i /> Live
+        </span>
+      </div>
+      <div className="l-ledger-total">
+        <span className="l-big">₦340,000</span>
+        <small>from 136 of 200 payers</small>
+        <div className="l-track">
+          <i style={{ width: "68%" }} />
+        </div>
+      </div>
+      <ul className="l-rows">
+        {rows.map(([ini, name, id, state]) => (
+          <li key={id}>
+            <span className="l-avatar sm">{ini}</span>
+            <div>
+              <b>{name}</b>
+              <small>{id}</small>
+            </div>
+            <span className="l-amt">₦2,500</span>
+            <span className={`l-pill ${state}`}>
+              {state === "paid" ? "Paid" : "Pending"}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function PayerFormMock() {
+  return (
+    <div className="l-panel l-form">
+      <span className="l-mono">CSC 311 Handout</span>
+      <h4>Pay your levy</h4>
+      <label>
+        <small>Full name</small>
+        <span>Adaeze Okonkwo</span>
+      </label>
+      <label>
+        <small>Matric number</small>
+        <span>20/ENG/001</span>
+      </label>
+      <div className="l-account">
+        <small>Transfer exactly ₦2,500.00 to</small>
+        <b>0123 456 789</b>
+        <span>Jeneviv / CSC 311 Handout</span>
+      </div>
+      <div className="l-toast">
+        <span className="l-toast-check">
+          <Check />
+        </span>
+        <div>
+          <b>Payment confirmed</b>
+          <small>Receipt sent to your email</small>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SettlementMock() {
+  return (
+    <div className="l-panel">
+      <div className="l-panel-head">
+        <b>Settlements</b>
+        <span className="l-mono">Wema ••2104</span>
+      </div>
+      <ul className="l-rows">
+        {[
+          ["Thu 19 Nov", "CSC 311 Handout", "₦184,500", "Settled"],
+          ["Wed 18 Nov", "CSC 311 Handout", "₦96,300", "Settled"],
+          ["Tue 17 Nov", "Lab manual", "₦42,000", "Settled"],
+        ].map(([date, what, amt, state]) => (
+          <li key={date}>
+            <span className="l-avatar sm ghost">₦</span>
+            <div>
+              <b>{what}</b>
+              <small>{date}</small>
+            </div>
+            <span className="l-amt">{amt}</span>
+            <span className="l-pill paid">{state}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="l-panel-foot">
+        <span>Next settlement</span>
+        <b>Tomorrow, to Wema ••2104</b>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------- page */
+
 export default function LandingPage() {
   return (
-    <div className="m-page">
+    <div className="m-page l-page">
       <SiteNav />
       <Reveal />
 
-      {/* ---------------------------------------------------------------- hero */}
-      <section className="m-hero" id="top">
-        <div className="m-wrap">
-          <div className="m-hero-grid">
-            <div className="m-hero-copy">
-                            <h1 className="m-h1">
-                Group money,
-                <br />
-                {/* The phrase rolls up into the next, forever, on its own line so
-                    it can never run under the laptop. The first one is repeated
-                    at the end so the loop restarts invisibly, and the wrapper
-                    carries the plain sentence for screen readers. */}
-                <span className="accent">finally</span>
-                <br />
-                <span className="m-roll" aria-label="accounted for.">
-                  <span className="m-roll-track" aria-hidden="true">
-                    <span>accounted for.</span>
-                    <span>settled.</span>
-                    <span>verified.</span>
-                    <span>reconciled.</span>
-                    <span>accounted for.</span>
-                  </span>
-                </span>
-              </h1>
-              <p className="m-lede">
-                Jeneviv turns one payment link into a live ledger. Who has
-                paid, who hasn&apos;t, and what actually hit your bank. For
-                course reps, PTAs, cooperatives and associations.
-              </p>
-              <div className="m-hero-cta">
-                <a href={`${appUrl}/signup`} className="m-btn m-btn-primary">
-                  Create a free collection <Arrow />
-                </a>
-                <a href="#how-it-works" className="m-btn m-btn-outline">
-                  See how it works
-                </a>
-              </div>
-              <p className="m-hero-note">
-                <Check />
-                Free to start • No card required • Set up in under 3 minutes
-              </p>
+      {/* ---------------------------------------------------------- hero */}
+      <section className="l-hero" id="top">
+        <div className="m-wrap l-hero-grid">
+          <div className="l-hero-copy">
+            <span className="l-badge">
+              <i /> For course reps, PTAs, cooperatives and associations
+            </span>
+            <h1 className="l-h1">
+              Group money, <span>finally accounted for.</span>
+            </h1>
+            <p className="l-lede">
+              One payment link that turns into a live ledger. See who has
+              paid, who hasn&apos;t, and what actually hit your bank.
+            </p>
+            <div className="l-cta-row">
+              <a href={`${appUrl}/signup`} className="m-btn l-btn-brand">
+                Create a free collection <Arrow />
+              </a>
+              <a href="#how-it-works" className="m-btn m-btn-outline">
+                See how it works
+              </a>
             </div>
+            <p className="l-note">
+              <Check /> Free to start <span>•</span> No card required{" "}
+              <span>•</span> Live in 3 minutes
+            </p>
+          </div>
 
-            <div className="m-hero-visual" aria-hidden="true">
-              <div className="m-laptop">
-                <div className="m-laptop-lid">
-                  <div className="m-laptop-screen">
-                    <ScaledFrame src={`${appUrl}/preview/dashboard`} width={1280} height={800} title="Jeneviv dashboard" />
-                  </div>
+          <div className="l-hero-visual" aria-hidden="true">
+            <div className="l-hero-stage">
+              <ReceiptMock />
+              <div className="l-float l-float-a">
+                <span className="l-toast-check">
+                  <Check />
+                </span>
+                <div>
+                  <b>Payer matched</b>
+                  <small>20/ENG/001 • 3s after transfer</small>
                 </div>
-                <div className="m-laptop-base" />
+              </div>
+              <div className="l-float l-float-b">
+                <small>CSC 311 Handout</small>
+                <b>136 of 200 paid</b>
+                <div className="l-track">
+                  <i style={{ width: "68%" }} />
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         <div className="m-wrap">
-          <div className="m-ledger-band">
-            <div className="m-ledger-intro">
-              <span className="m-mono">Sample ledger</span>
-              <p>
-                Every confirmed transfer lands on the coordinator&apos;s
-                dashboard with the payer, the reference , the amount and
-                nothing is typed in by hand.
-              </p>
-            </div>
-            <ul className="m-ledger-rows">
-              <li>
-                <b>AO</b>
-                <div className="m-ledger-who">
-                  <span>Adaeze Okonkwo</span>
-                  <em>JNV-4471 • CSC 311 handout</em>
-                </div>
-                <span className="m-ledger-amt">₦2,500</span>
-                <span className="m-ledger-state paid">Paid</span>
-              </li>
-              <li>
-                <b>EN</b>
-                <div className="m-ledger-who">
-                  <span>Emeka Nwosu</span>
-                  <em>JNV-4472 • CSC 311 handout</em>
-                </div>
-                <span className="m-ledger-amt">₦2,500</span>
-                <span className="m-ledger-state paid">Paid</span>
-              </li>
-              <li>
-                <b>IK</b>
-                <div className="m-ledger-who">
-                  <span>Ifeoma Kalu</span>
-                  <em>JNV-4473 • CSC 311 handout</em>
-                </div>
-                <span className="m-ledger-amt">₦1,500</span>
-                <span className="m-ledger-state partial">Part paid</span>
-              </li>
-              <li>
-                <b>TJ</b>
-                <div className="m-ledger-who">
-                  <span>Tunde Jaiyeola</span>
-                  <em>JNV-4474 • CSC 311 handout</em>
-                </div>
-                <span className="m-ledger-amt">₦2,500</span>
-                <span className="m-ledger-state">Awaiting</span>
-              </li>
+          <div className="l-audience reveal">
+            <span className="l-mono">Built for the groups that collect every term</span>
+            <ul>
+              {AUDIENCES.map((a) => (
+                <li key={a}>{a}</li>
+              ))}
             </ul>
           </div>
         </div>
       </section>
 
-      {/* -------------------------------------------------------- maroon band */}
-      <section className="m-maroon">
-        <div className="m-maroon-inner">
-          <svg
-            className="m-maroon-art"
-            viewBox="0 0 1200 420"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <g fill="none" stroke="#ff4a00" strokeWidth="1" opacity="0.45">
-              <path d="M-40 60 120 20l60 120-150 70z" />
-              <path d="M980 40l140 60-60 120-120-40z" />
-              <path d="M-30 300l160-40 40 120-180 40z" />
-              <path d="M1010 260l130 40-40 100-120-30z" />
-              <path d="M560 0v60M600 0v40M520 0v30" />
-            </g>
-          </svg>
-          <h2>Every naira. Every payer. Accounted for.</h2>
-          <p>
-            No screenshots. No “I&apos;ve sent it”. No spreadsheet that nobody
-            updates. Jeneviv verifies the transfer, matches it to the payer and
-            writes it into a ledger you can defend.
-          </p>
-          <div className="m-btn-row">
-            <a href={`${appUrl}/signup`} className="m-btn m-btn-light">
-              Start collecting <Arrow />
-            </a>
-            <a
-              href="#how-it-works"
-              className="m-btn m-btn-outline"
-              style={{ borderColor: "rgba(255,255,255,0.3)", color: "#fff" }}
-            >
-              Take the product tour
-            </a>
-          </div>
-          <p className="m-note">
-            Works on every phone • No payer app • Funds settle to your bank
-          </p>
-        </div>
-      </section>
-
-      {/* ------------------------------------------------------------- bento */}
-      <section className="m-section" id="how-it-works">
+      {/* --------------------------------------------------------- steps */}
+      <section className="l-section" id="how-it-works">
         <div className="m-wrap">
-          <div className="m-section-head reveal">
-            <span className="m-eyebrow">The product</span>
-            <h2 className="m-h2">The boring parts, handled.</h2>
-            <p className="m-sub">
-              Checking transfers, matching names, chasing receipts, updating
-              spreads; the work that eats a coordinator&apos;s evening. It all
-              happens on its own.
+          <div className="l-head center reveal">
+            <span className="l-eyebrow">How it works</span>
+            <h2 className="l-h2">Create. Collect. Settle.</h2>
+            <p className="l-sub">
+              Three steps between a group chat full of screenshots and a ledger
+              you can defend.
             </p>
           </div>
+          <ol className="l-steps">
+            {STEPS.map((s) => (
+              <li key={s.n} className="reveal">
+                <span className="l-step-n">{s.n}</span>
+                <h3>{s.title}</h3>
+                <p>{s.body}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
 
-          <div className="m-bento">
-            <article className="m-bento-card reveal">
-              <span className="m-eyebrow">Share</span>
-              <h3>A payment link that does the bookkeeping.</h3>
-              <p>
-                Name the collection, set the amount, choose what you need to
-                know about each payer. Share one link in the group chat.
-              </p>
-              <div className="m-bento-art">
-                <div className="m-mini-ui">
-                  <div className="m-mini-label">
-                    <span>Collection link</span>
-                    <span>LIVE</span>
-                  </div>
-                  <div className="m-mini-link">
-                    <svg
-                      width="13"
-                      height="13"
-                      viewBox="0 0 16 16"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M6.5 9.5 9.5 6.5M7 3.8l1-1a2.6 2.6 0 0 1 3.7 3.7l-1 1M9 12.2l-1 1a2.6 2.6 0 0 1-3.7-3.7l1-1"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.3"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <span>jeneviv.com/pay/CSC311</span>
-                    <span className="m-mini-copy">Copy</span>
-                  </div>
-                  <div className="m-mini-amount">
-                    <b>₦2,500</b>
-                    <small>per payer</small>
-                  </div>
-                  <div className="m-mini-track">
-                    <i style={{ width: "68%" }} />
-                  </div>
-                </div>
-              </div>
-            </article>
-
-            <article className="m-bento-card reveal">
-              <span className="m-eyebrow">Track</span>
-              <h3>Know exactly who has paid.</h3>
-              <p>
-                Every payment is tied to a name, a student ID, a phone number or
-                whatever your group uses. No more cross-checking narrations.
-              </p>
-              <div className="m-bento-art">
-                <div className="m-mini-ui">
-                  <div className="m-mini-label">
-                    <span>Payers</span>
-                    <span>136 of 200</span>
-                  </div>
-                  <div className="m-mini-rows">
-                    <div className="m-mini-row">
-                      <span className="m-mini-avatar">AO</span>
-                      <div>
-                        <b>Adaeze Okonkwo</b>
-                        <small>20/ENG/001</small>
-                      </div>
-                      <span className="m-mini-tag">Paid</span>
-                    </div>
-                    <div className="m-mini-row">
-                      <span className="m-mini-avatar">EN</span>
-                      <div>
-                        <b>Emeka Nwosu</b>
-                        <small>20/ENG/004</small>
-                      </div>
-                      <span className="m-mini-tag">Paid</span>
-                    </div>
-                    <div className="m-mini-row">
-                      <span className="m-mini-avatar">FM</span>
-                      <div>
-                        <b>Fatima Musa</b>
-                        <small>20/ENG/007</small>
-                      </div>
-                      <span className="m-mini-tag pending">Pending</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </article>
-
-            <article className="m-bento-card reveal" id="reconciliation">
-              <span className="m-eyebrow">Reconcile</span>
-              <h3>Matches that never fall through.</h3>
-              <p>
-                A transfer lands, the gateway confirms it, the payer is matched,
-                the receipt goes out. If a webhook is late, reconciliation
-                catches it within 15 minutes.
-              </p>
-              <div className="m-bento-art">
-                <div className="m-mini-ui">
-                  <div className="m-timeline">
-                    <div className="m-timeline-item done">
-                      <b>Transfer received</b>
-                      <small>12:04:02 • ₦2,500.00</small>
-                    </div>
-                    <div className="m-timeline-item done">
-                      <b>Payer matched</b>
-                      <small>12:04:05 • 20/ENG/001</small>
-                    </div>
-                    <div className="m-timeline-item done">
-                      <b>Receipt sent</b>
-                      <small>12:04:09 • adaeze@…</small>
-                    </div>
-                    <div className="m-timeline-item">
-                      <b>Included in 22:00 settlement</b>
-                      <small>Scheduled</small>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </article>
-
-            <article className="m-bento-card reveal" id="settlement">
-              <span className="m-eyebrow">Settle</span>
-              <h3>Twice a day. Weekends included.</h3>
-              <p>
-                No waiting for the next business day. Collections settle to the
-                bank account you verified — or you can trigger a payout
-                yourself.
-              </p>
-              <div className="m-bento-art">
-                <div className="m-mini-ui">
-                  <div className="m-mini-label">
-                    <span>Settlement</span>
-                    <span>Today</span>
-                  </div>
-                  <div className="m-mini-rows">
-                    <div className="m-mini-row">
-                      <span className="m-mini-avatar">10</span>
-                      <div>
-                        <b>Morning payout</b>
-                        <small>Wema ••2104</small>
-                      </div>
-                      <div style={{ marginLeft: "auto", fontWeight: 700 }}>
-                        ₦184,500
-                      </div>
-                    </div>
-                    <div className="m-mini-row">
-                      <span className="m-mini-avatar">22</span>
-                      <div>
-                        <b>Evening payout</b>
-                        <small>Wema ••2104</small>
-                      </div>
-                      <div style={{ marginLeft: "auto", fontWeight: 700 }}>
-                        ₦96,300
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </article>
-
-            <article className="m-bento-card wide reveal">
-              <div>
-                <span className="m-eyebrow">Report</span>
-                <h3>Hand over a report, not the group chat.</h3>
-                <p>
-                  Filter by collection, status or payer. Export the verified
-                  list as CSV or PDF with names, identifiers, amounts, dates and
-                  transaction references, ready for the department, the
-                  treasurer or the AGM.
-                </p>
-                <a
-                  href={`${appUrl}/signup`}
-                  className="m-link"
-                  style={{ marginTop: 24 }}
-                >
-                  Create your first collection <Arrow />
-                </a>
-              </div>
-              <div className="m-mini-ui">
-                <div className="m-mini-label">
-                  <span>CSC 311 • Handout</span>
-                  <span>Export</span>
-                </div>
-                <div className="m-mini-rows">
-                  {[
-                    ["Adaeze Okonkwo", "20/ENG/001", "Paid"],
-                    ["Emeka Nwosu", "20/ENG/004", "Paid"],
-                    ["Fatima Musa", "20/ENG/007", "Paid"],
-                    ["Ibrahim Kalu", "20/ENG/012", "Paid"],
-                  ].map(([name, id, status]) => (
-                    <div className="m-mini-row" key={id}>
-                      <span className="m-mini-avatar">
-                        {name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </span>
-                      <div>
-                        <b>{name}</b>
-                        <small>{id}</small>
-                      </div>
-                      <span className="m-mini-tag">{status}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </article>
+      {/* ----------------------------------------------------------- gap */}
+      <section className="l-section l-cream">
+        <div className="m-wrap l-gap">
+          <div className="l-gap-copy reveal">
+            <span className="l-eyebrow">The gap</span>
+            <h2 className="l-h2">
+              Collecting money is easy. <span>Knowing who paid</span> is the
+              hard part.
+            </h2>
+            <p className="l-sub">
+              Bank alerts don&apos;t carry matric numbers. Narrations get cut
+              off. Screenshots get edited. So the course rep is still awake at
+              midnight, matching names to a spreadsheet nobody else trusts.
+            </p>
+            <p className="l-sub">
+              <b>Jeneviv closes that gap.</b> The transfer is verified with the
+              gateway, matched to a person and written into a ledger the whole
+              committee can see.
+            </p>
+          </div>
+          <div className="l-compare reveal">
+            <div className="l-compare-col before">
+              <span className="l-mono">The group chat</span>
+              <ul>
+                <li><Cross /> &ldquo;I&apos;ve sent it, check&rdquo;</li>
+                <li><Cross /> Screenshots you can&apos;t verify</li>
+                <li><Cross /> Narrations cut off at 20 characters</li>
+                <li><Cross /> A spreadsheet that&apos;s always behind</li>
+                <li><Cross /> Calling people one by one</li>
+              </ul>
+            </div>
+            <div className="l-compare-col after">
+              <span className="l-mono">With Jeneviv</span>
+              <ul>
+                <li><Check /> Confirmed by the gateway</li>
+                <li><Check /> Matched to name and ID</li>
+                <li><Check /> Receipt in the payer&apos;s inbox</li>
+                <li><Check /> Ledger updates on its own</li>
+                <li><Check /> One list of who hasn&apos;t paid</li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ------------------------------------------------------ feature rows */}
-      <section className="m-section tight" style={{ paddingTop: 0 }} id="collections">
+      {/* ------------------------------------------------------ pillars */}
+      <section className="l-section">
         <div className="m-wrap">
-          <div className="m-row reveal">
-            <div className="m-row-copy">
-              <span className="m-eyebrow">For coordinators</span>
-              <h3>
-                Set it up in the time it takes to send a voice note.
-              </h3>
+          <div className="l-head reveal">
+            <span className="l-eyebrow">Why Jeneviv works</span>
+            <h2 className="l-h2">Built to be boring about money.</h2>
+          </div>
+          <div className="l-pillars">
+            {PILLARS.map((p, i) => (
+              <article key={p.title} id={p.id} className="l-card reveal">
+                <span className="l-card-n">{String(i + 1).padStart(2, "0")}</span>
+                <h3>{p.title}</h3>
+                <p>{p.body}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* --------------------------------------------------------- pairs */}
+      <section className="l-section tight" id="collections">
+        <div className="m-wrap l-pairs">
+          <div className="l-pair reveal">
+            <div className="l-pair-copy">
+              <span className="l-eyebrow">For coordinators</span>
+              <h3>Know exactly who has paid, live.</h3>
               <p>
-                No paperwork, no onboarding call, no bank visit. Create a
-                collection, decide what each payer must provide, and share the
-                link. Your dashboard starts filling up immediately.
+                Every confirmed transfer lands on your dashboard with the
+                payer, the reference and the amount. Nothing is typed in by
+                hand, and the list of who hasn&apos;t paid writes itself.
               </p>
-              <ul className="m-row-points">
-                <li>
-                  <Check /> Fixed amount per payer, in naira
-                </li>
-                <li>
-                  <Check /> Custom fields eg. matric number, department, phone
-                </li>
-                <li>
-                  <Check /> Duplicate payments flagged automatically
-                </li>
-                <li>
-                  <Check /> Pause or close a collection at any time
-                </li>
-              </ul>
-              <a href={`${appUrl}/signup`} className="m-link">
-                Start a collection <Arrow />
+              <a href={`${appUrl}/signup`} className="l-link">
+                Create your first collection <Arrow />
               </a>
             </div>
-            <div className="m-row-visual">
-              <div className="m-collection-card">
-                <div className="m-collection-top">
-                  <b>CSC 311 • Handout</b>
-                  <span className="m-live">Live</span>
-                </div>
-                <div className="m-big-amount">
-                  ₦340,000
-                  <small>collected from 136 of 200 payers</small>
-                </div>
-                <div className="m-progress">
-                  <i style={{ width: "68%" }} />
-                </div>
-                <div className="m-payer-list">
-                  {[
-                    ["AO", "Adaeze Okonkwo", "20/ENG/001", true],
-                    ["EN", "Emeka Nwosu", "20/ENG/004", true],
-                    ["FM", "Fatima Musa", "20/ENG/007", false],
-                  ].map(([initials, name, id, paid]) => (
-                    <div className="m-payer" key={id as string}>
-                      <span className="m-mini-avatar">{initials}</span>
-                      <div>
-                        {name}
-                        <small>{id}</small>
-                      </div>
-                      <span
-                        className={`m-check${paid ? "" : " empty"}`}
-                        aria-hidden="true"
-                      >
-                        {paid ? <Check /> : "•"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div className="l-pair-visual">
+              <LedgerMock />
             </div>
           </div>
 
-          <div className="m-row reverse reveal">
-            <div className="m-row-copy">
-              <span className="m-eyebrow">For payers</span>
+          <div className="l-pair reverse reveal">
+            <div className="l-pair-copy">
+              <span className="l-eyebrow">For payers</span>
               <h3>Pay in under a minute. Receipt in the inbox.</h3>
               <p>
-                Open the link, enter your details, transfer the exact amount to
-                the account shown. Jeneviv confirms the payment automatically
-                and emails a receipt that stays downloadable.
+                Open the link, enter your details and transfer the exact amount
+                to the account shown. Jeneviv confirms it automatically and
+                emails a receipt that anyone can verify.
               </p>
-              <ul className="m-row-points">
-                <li>
-                  <Check /> No login, no app, no account creation
-                </li>
-                <li>
-                  <Check /> Works on any phone and any Nigerian bank
-                </li>
-                <li>
-                  <Check /> Receipt within 60 seconds of confirmation
-                </li>
-                <li>
-                  <Check /> Stop sharing screenshots of transfers
-                </li>
-              </ul>
-              <a href={`${appUrl}/signup`} className="m-link">
-                See the payer experience <Arrow />
+              <a href={`${appUrl}/signup`} className="l-link">
+                See the payer page <Arrow />
               </a>
             </div>
-            <div className="m-row-visual">
-              <div className="m-phone">
-                <div className="m-phone-screen">
-                  <span className="m-phone-label">CSC 311 • Handout</span>
-                  <h4>Pay your levy</h4>
-                  <div className="m-phone-field">
-                    <small>Full name</small>
-                    Adaeze Okonkwo
-                  </div>
-                  <div className="m-phone-field">
-                    <small>Matric number</small>
-                    20/ENG/001
-                  </div>
-                  <div className="m-phone-field">
-                    <small>Amount</small>
-                    ₦2,500.00
-                  </div>
-                  <div className="m-phone-toast">
-                    <span className="m-float-check">
-                      <Check />
-                    </span>
-                    <div>
-                      <b>Payment confirmed</b>
-                      <small>Receipt sent to your email</small>
-                    </div>
-                  </div>
-                  <div className="m-phone-btn-done">Payment complete</div>
-                </div>
-              </div>
+            <div className="l-pair-visual">
+              <PayerFormMock />
             </div>
           </div>
 
-          <div className="m-row reveal">
-            <div className="m-row-copy">
-              <span className="m-eyebrow">For the committee</span>
-              <h3>Everyone works from the same numbers.</h3>
+          <div className="l-pair reveal" id="settlement">
+            <div className="l-pair-copy">
+              <span className="l-eyebrow">For the treasurer</span>
+              <h3>Money goes straight to your bank.</h3>
               <p>
-                The treasurer, the chairperson and the course rep see the same
-                ledger. No version of the spreadsheet is &quot;the latest
-                one&quot;. Export a clean statement whenever money questions
-                come up.
+                Collections settle to the bank account you verified, with no
+                manual payout to start. Every settlement is listed with its
+                date, amount and status, so the books always add up.
               </p>
-              <ul className="m-row-points">
-                <li>
-                  <Check /> Verified payer list with references
-                </li>
-                <li>
-                  <Check /> Transaction history you can filter and export
-                </li>
-                <li>
-                  <Check /> Refunds recorded against the original payment
-                </li>
-                <li>
-                  <Check /> Settlement history matched to collections
-                </li>
-              </ul>
-              <a href={`${appUrl}/signup`} className="m-link">
-                Open a dashboard <Arrow />
+              <a href="#pricing" className="l-link">
+                See pricing <Arrow />
               </a>
             </div>
-            <div className="m-row-visual">
-              <div className="m-settlement">
-                <div className="m-settlement-head">
-                  <b>Recent activity</b>
-                  <span>Live</span>
-                </div>
-                <div className="m-settlement-row">
-                  <span className="m-bank-mark">IN</span>
-                  <div>
-                    <b>Adaeze Okonkwo</b>
-                    <small>CSC 311 handout</small>
-                  </div>
-                  <div className="amount">
-                    +₦2,500
-                    <span>Matched</span>
-                  </div>
-                </div>
-                <div className="m-settlement-row">
-                  <span className="m-bank-mark">IN</span>
-                  <div>
-                    <b>Emeka Nwosu</b>
-                    <small>CSC 311 handout</small>
-                  </div>
-                  <div className="amount">
-                    +₦2,500
-                    <span>Matched</span>
-                  </div>
-                </div>
-                <div className="m-settlement-row">
-                  <span className="m-bank-mark">OUT</span>
-                  <div>
-                    <b>Settlement • Wema ••2104</b>
-                    <small>Evening payout</small>
-                  </div>
-                  <div className="amount">
-                    −₦96,300
-                    <span>Sent</span>
-                  </div>
-                </div>
-                <div className="m-settlement-row">
-                  <span className="m-bank-mark">IN</span>
-                  <div>
-                    <b>Fatima Musa</b>
-                    <small>CSC 311 handout</small>
-                  </div>
-                  <div className="amount">
-                    +₦2,500
-                    <span>Matched</span>
-                  </div>
-                </div>
-              </div>
+            <div className="l-pair-visual">
+              <SettlementMock />
             </div>
           </div>
         </div>
       </section>
 
-      {/* ---------------------------------------------------------- use cases */}
-      <section className="m-section" id="use-cases">
+      {/* ------------------------------------------------------ features */}
+      <section className="l-section l-cream" id="use-cases">
         <div className="m-wrap">
-          <div className="m-section-head reveal">
-            <span className="m-eyebrow">Use cases</span>
-            <h2 className="m-h2">One platform. Every kind of group.</h2>
-            <p className="m-sub">
-              If money moves from many people to one accountable person, Jeneviv
-              fits. The collection changes; the certainty doesn&apos;t.
-            </p>
+          <div className="l-head reveal">
+            <span className="l-eyebrow">Who it&apos;s for</span>
+            <h2 className="l-h2">One platform. Every kind of group.</h2>
           </div>
-          <div className="m-bento" style={{ marginTop: 48 }}>
-            {USE_CASES.map((useCase) => (
-              <article className="m-bento-card reveal" key={useCase.tag}>
-                <span className="m-eyebrow">{useCase.tag}</span>
-                <h3>{useCase.title}</h3>
-                <p>{useCase.body}</p>
-                <div className="m-bento-art">
-                  <div className="m-mini-ui">
-                    <div className="m-mini-amount" style={{ marginTop: 0 }}>
-                      <b>{useCase.stat}</b>
-                      <small>{useCase.detail}</small>
-                    </div>
-                    <div className="m-mini-track">
-                      <i style={{ width: `${useCase.progress}%` }} />
-                    </div>
-                  </div>
-                </div>
+          <div className="l-uses">
+            {USE_CASES.map((u) => (
+              <article key={u.title} className="l-use reveal">
+                <span className="l-mono">{u.tag}</span>
+                <h3>{u.title}</h3>
+                <p>{u.body}</p>
               </article>
             ))}
           </div>
+
+          <div className="l-head reveal" style={{ marginTop: 96 }}>
+            <span className="l-eyebrow">Everything included</span>
+            <h2 className="l-h2">The small things that save the evening.</h2>
+          </div>
+          <ul className="l-features reveal">
+            {FEATURES.map(([t, d]) => (
+              <li key={t}>
+                <span className="l-feature-dot" />
+                <div>
+                  <b>{t}</b>
+                  <p>{d}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
-      {/* ----------------------------------------------------------- security */}
-      <section className="m-section m-security" id="security">
-        <div className="m-wrap">
-          <div className="m-section-head reveal">
-            <span className="m-eyebrow">Security</span>
-            <h2 className="m-h2">Money infrastructure, not a side project.</h2>
-            <p className="m-sub">
-              Jeneviv is the layer on top. The regulated parts, card handling,
-              settlement rails, gateway compliance — stay with licensed
-              infrastructure that is audited for it.
+      {/* ------------------------------------------------------ security */}
+      <section className="l-section" id="security">
+        <div className="m-wrap l-security">
+          <div className="l-head reveal">
+            <span className="l-eyebrow">Security</span>
+            <h2 className="l-h2">Money infrastructure, not a side project.</h2>
+            <p className="l-sub">
+              The checks a finance team would ask for, on every collection,
+              from the first naira.
             </p>
           </div>
-          <div className="m-sec-grid reveal">
-            {SECURITY.map((item) => (
-              <article className="m-sec-card" key={item.title}>
-                <span className="m-sec-icon">
+          <ul className="l-sec-list">
+            {SECURITY.map(([t, d]) => (
+              <li key={t} className="reveal">
+                <span className="l-sec-icon">
                   <Shield />
                 </span>
-                <h4>{item.title}</h4>
-                <p>{item.body}</p>
-              </article>
+                <div>
+                  <b>{t}</b>
+                  <p>{d}</p>
+                </div>
+              </li>
             ))}
-          </div>
-          <p className="m-sec-foot">
-            <Shield />
-            Payments powered by Paystack
-          </p>
+          </ul>
         </div>
       </section>
 
-      {/* -------------------------------------------------------------- stats */}
-      <section className="m-section">
+      {/* ------------------------------------------------------- pricing */}
+      <section className="l-section l-cream" id="pricing">
         <div className="m-wrap">
-          <div className="m-section-head reveal">
-            <span className="m-eyebrow">By the numbers</span>
-            <h2 className="m-h2">Built to be boring about money.</h2>
-          </div>
-          <div className="m-stats-grid reveal">
-            <div className="m-stat">
-              <b>2×</b>
-              <span>Daily settlements, weekends and public holidays included</span>
-            </div>
-            <div className="m-stat">
-              <b>0</b>
-              <span>Screenshots needed to prove a payment was made</span>
-            </div>
-            <div className="m-stat">
-              <b>60<em>sec</em></b>
-              <span>Typical wait for a receipt after confirmation</span>
-            </div>
-            <div className="m-stat">
-              <b>15<em>min</em></b>
-              <span>Reconciliation window for late or delayed webhooks</span>
-            </div>
-          </div>
-          <div className="m-cities reveal">
-            <span className="m-cities-label">Where we&apos;re active</span>
-            {["Lagos", "Uyo", "Port Harcourt", "Enugu", "Abuja", "Ibadan"].map(
-              (city) => (
-                <span className="m-city" key={city}>
-                  {city}
-                </span>
-              ),
-            )}
-            <span className="m-city">and every group with a link</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ------------------------------------------------------- testimonials */}
-      <section className="m-section tight" style={{ paddingTop: 0 }}>
-        <div className="m-wrap">
-          <div className="m-section-head reveal">
-            <span className="m-eyebrow">From pilot coordinators</span>
-            <h2 className="m-h2">The group chat got quieter.</h2>
-          </div>
-          <div className="m-quotes reveal">
-            {QUOTES.map((quote) => (
-              <article className="m-quote" key={quote.name}>
-                <span className="m-quote-mark" aria-hidden="true">
-                  &ldquo;
-                </span>
-                <blockquote>{quote.quote}</blockquote>
-                <footer>
-                  <span className="m-quote-avatar">{quote.initials}</span>
-                  <div>
-                    <b>{quote.name}</b>
-                    <small>{quote.role}</small>
-                  </div>
-                </footer>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ------------------------------------------------------------ pricing */}
-      <section className="m-section m-security" id="pricing">
-        <div className="m-wrap">
-          <div className="m-section-head reveal">
-            <span className="m-eyebrow">Pricing</span>
-            <h2 className="m-h2">Pay only when money moves.</h2>
-            <p className="m-sub">
-              No monthly subscription. No setup fee. No charge to the people
-              paying. If a collection doesn&apos;t collect, you don&apos;t pay.
+          <div className="l-head center reveal">
+            <span className="l-eyebrow">Pricing</span>
+            <h2 className="l-h2">Pay only when money moves.</h2>
+            <p className="l-sub">
+              No monthly subscription. No setup fee. If a collection
+              doesn&apos;t collect, you don&apos;t pay.
             </p>
           </div>
-          <div className="m-price-shell reveal">
-            <div className="m-price-card">
-              <span className="m-price-badge">For coordinators</span>
-              <div className="m-price-amount">
+          <div className="l-prices">
+            <div className="l-price reveal">
+              <span className="l-mono">For coordinators</span>
+              <div className="l-price-amt">
                 1.5% + ₦100 <span>/ successful payment</span>
               </div>
-              <p className="m-price-note">
-                Capped at ₦2,000 per payment, deducted from the collection.
-                A ₦2,500 handout levy costs ₦137.50 in total.
+              <p>
+                Capped at ₦2,000 per payment. A ₦2,500 handout levy costs
+                ₦137.50 in total.
               </p>
-              <ul className="m-price-list">
-                <li>
-                  <Check /> Unlimited collections and payers
-                </li>
-                <li>
-                  <Check /> Custom payer fields and duplicate detection
-                </li>
-                <li>
-                  <Check /> Verified payer export (CSV / PDF)
-                </li>
-                <li>
-                  <Check /> Twice-daily bank settlement
-                </li>
-                <li>
-                  <Check /> Email receipts for every payer
-                </li>
+              <ul>
+                <li><Check /> Unlimited collections and payers</li>
+                <li><Check /> Custom payer fields and duplicate detection</li>
+                <li><Check /> Verified payer export (CSV / PDF)</li>
+                <li><Check /> Automatic bank settlement</li>
+                <li><Check /> Email receipts for every payer</li>
               </ul>
-              <a href={`${appUrl}/signup`} className="m-btn m-btn-primary">
+              <a href={`${appUrl}/signup`} className="m-btn l-btn-brand">
                 Create an account <Arrow />
               </a>
-              <p className="m-price-fine">
-                No card required to start. Fees only apply to successful
-                payments.
-              </p>
             </div>
-            <div className="m-price-card dark">
-              <span className="m-price-badge">For institutions</span>
-              <div className="m-price-amount">
+            <div className="l-price dark reveal">
+              <span className="l-mono">For institutions</span>
+              <div className="l-price-amt">
                 Let&apos;s talk <span>/ custom</span>
               </div>
-              <p className="m-price-note">
+              <p>
                 Running collections across departments, campuses or chapters?
                 We&apos;ll set up consolidated settlement, bulk onboarding and
                 reporting that fits your finance team.
               </p>
-              <ul className="m-price-list">
-                <li>
-                  <Check /> Consolidated multi-department reporting
-                </li>
-                <li>
-                  <Check /> Dedicated onboarding and support
-                </li>
-                <li>
-                  <Check /> Negotiated transaction fees
-                </li>
-                <li>
-                  <Check /> API access and webhook integration
-                </li>
-                <li>
-                  <Check /> Custom settlement schedule
-                </li>
+              <ul>
+                <li><Check /> Consolidated multi-department reporting</li>
+                <li><Check /> Dedicated onboarding and support</li>
+                <li><Check /> Negotiated transaction fees</li>
+                <li><Check /> API access and webhooks</li>
+                <li><Check /> Custom settlement schedule</li>
               </ul>
               <a
                 href="mailto:myjeneviv@gmail.com?subject=Jeneviv%20for%20our%20institution"
@@ -964,35 +689,29 @@ export default function LandingPage() {
               >
                 Talk to the team <Arrow />
               </a>
-              <p className="m-price-fine">
-                We reply within one business day.
-              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- faq */}
-      <section className="m-section">
-        <div className="m-wrap">
-          <div className="m-section-head center reveal">
-            <span className="m-eyebrow center">Questions</span>
-            <h2 className="m-h2">The things people ask first.</h2>
+      {/* ----------------------------------------------------------- faq */}
+      <section className="l-section">
+        <div className="m-wrap l-faq-grid">
+          <div className="l-head reveal">
+            <span className="l-eyebrow">FAQ</span>
+            <h2 className="l-h2">The things people ask first.</h2>
+            <p className="l-sub">
+              Something else? Email{" "}
+              <a href="mailto:myjeneviv@gmail.com">myjeneviv@gmail.com</a>.
+            </p>
           </div>
-          <div className="m-faq reveal">
+          <div className="l-faq reveal">
             {FAQ.map((item) => (
               <details key={item.q}>
                 <summary>
                   {item.q}
                   <span aria-hidden="true">
-                    <svg width="11" height="11" viewBox="0 0 12 12">
-                      <path
-                        d="M6 1v10M1 6h10"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                      />
-                    </svg>
+                    <Plus />
                   </span>
                 </summary>
                 <p>{item.a}</p>
@@ -1002,136 +721,30 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- cta */}
-      <section className="m-cta">
-        <div className="m-cta-inner reveal">
-          <div>
+      {/* ----------------------------------------------------------- cta */}
+      <section className="l-section tight">
+        <div className="m-wrap">
+          <div className="l-cta reveal">
             <h2>Ready to close the WhatsApp group?</h2>
             <p>
               Create your first collection before the next group meeting. It
-              takes about three minutes, and the first payer can pay immediately.
+              takes about three minutes, and the first payer can pay right
+              away.
             </p>
-          </div>
-          <div className="m-cta-actions">
-            <a href={`${appUrl}/signup`} className="m-btn m-btn-light">
-              Create a free account <Arrow />
-            </a>
-            <a href={`${appUrl}/login`} className="m-btn m-btn-outline" style={{ borderColor: "rgba(255,255,255,0.6)", color: "#fff" }}>
-              I already have an account
-            </a>
-            <p className="m-note">Free to start • No card required</p>
+            <div className="l-cta-row center">
+              <a href={`${appUrl}/signup`} className="m-btn l-btn-brand">
+                Start collecting <Arrow />
+              </a>
+              <a href={`${appUrl}/login`} className="m-btn l-btn-ghost">
+                I already have an account
+              </a>
+            </div>
+            <span className="l-cta-note">Free to start • No card required</span>
           </div>
         </div>
       </section>
 
-      {/* -------------------------------------------------------------- footer */}
-      <footer className="m-footer">
-        <div className="m-wrap">
-          <div className="m-footer-top">
-            <div className="m-footer-brand">
-              <Link href="/" className="m-logo">
-                <img
-                  src="/assets/images/jeneviv.png"
-                  alt=""
-                  width={28}
-                  height={28}
-                  className="m-logo-mark"
-                />
-                jeneviv<em>.</em>
-              </Link>
-              <p>
-                Collections, handled. Built for the way Nigerian groups actually
-                collect money — with a record of every naira.
-              </p>
-              <span className="m-footer-status">
-                <span className="m-pill-dot" />
-                All systems operational
-              </span>
-            </div>
-            <div className="m-footer-cols">
-              <div>
-                <h5>Product</h5>
-                <ul>
-                  <li>
-                    <a href="#collections">Collections</a>
-                  </li>
-                  <li>
-                    <a href="#collections">Payment links</a>
-                  </li>
-                  <li>
-                    <a href="#settlement">Payouts</a>
-                  </li>
-                  <li>
-                    <a href="#reconciliation">Reconciliation</a>
-                  </li>
-                  <li>
-                    <a href="#pricing">Pricing</a>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h5>Solutions</h5>
-                <ul>
-                  <li>
-                    <a href="#use-cases">Universities</a>
-                  </li>
-                  <li>
-                    <a href="#use-cases">PTAs & schools</a>
-                  </li>
-                  <li>
-                    <a href="#use-cases">Cooperatives</a>
-                  </li>
-                  <li>
-                    <a href="#use-cases">Associations</a>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h5>Company</h5>
-                <ul>
-                  <li>
-                    <a href="#how-it-works">How it works</a>
-                  </li>
-                  <li>
-                    <a href="#security">Security</a>
-                  </li>
-                  <li>
-                    <a href="mailto:myjeneviv@gmail.com">Contact</a>
-                  </li>
-                  <li>
-                    <a href={`${appUrl}/login`}>Log in</a>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h5>Legal</h5>
-                <ul>
-                  <li>
-                    <Link href="/privacy">Privacy policy</Link>
-                  </li>
-                  <li>
-                    <Link href="/terms">Terms of service</Link>
-                  </li>
-                  <li>
-                    <Link href="/terms#refunds">Refund policy</Link>
-                  </li>
-                  <li>
-                    <a href="mailto:myjeneviv@gmail.com">Data requests</a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className="m-footer-bottom">
-            <p>© 2026 Acadeva Limited. Built in Nigeria, for Nigeria.</p>
-            <div className="m-footer-badges">
-              <span className="m-footer-badge">Paystack powered</span>
-              <span className="m-footer-badge">NDPA aligned</span>
-              <span className="m-footer-badge">CAC registered</span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
